@@ -21,7 +21,7 @@ public final class SpiroCalc
 
     public static CubicCurve2D.Float getBezier(double a, double b, double c, double t1, double t2)
     {
-        double delxrot0, delyrot0, delxrot3, delyrot3;
+        double delxrot0 = 0, delyrot0, delxrot3 = 0, delyrot3;
 
         ptSpiro[0][0] = new Point2D.Double(getX(a, b, c, t1), getY(a, b, c, t1));
         ptSpiro[0][1] = new Point2D.Double(getX(a, b, c, t2), getY(a, b, c, t2));
@@ -72,7 +72,7 @@ public final class SpiroCalc
                        (ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y), 1.5);
             else
                 C[i] = 0;                                       // stationary point
-        System.out.println("angles = " + Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x)*180/Math.PI + ", " + Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x)*180/Math.PI + ", " +  mrot0);
+//        System.out.println("angles = " + Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x)*180/Math.PI + ", " + Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x)*180/Math.PI + ", " +  mrot0);
         System.out.println("angles = " + (float)t1 + ", " + (float)ptSpiro[0][0].x + ", " + (float)ptSpiro[0][0].y + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)C[0]);
         System.out.println("angles = " + (float)t2 + ", " + (float)ptSpiro[0][1].x + ", " + (float)ptSpiro[0][1].y + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)C[1]);
 
@@ -80,7 +80,8 @@ public final class SpiroCalc
         {
             // the parallel case can be solved as two decoupled quadratic equations
             System.out.println("parallel finite : " + (float)(t1/2/Math.PI) + ", " + (float)(t2/2/Math.PI) + ", " + (float)mrot0 + ", " + (float)C[0] + ", " + (float)C[1] + ", " + (float)yrot0 + ", " + (float)yrot3);
-            delxrot0 =  2*(yrot3 - yrot0)/C[0]/3;
+            if (Math.abs(yrot3 - yrot0) > TOL)
+                delxrot0 =  2*(yrot3 - yrot0)/C[0]/3;
             if (delxrot0 < 0)
             {
                 System.out.println("parallel slope, wrong curvature at t = 0 : " + delxrot0 + " : abort");
@@ -89,7 +90,8 @@ public final class SpiroCalc
             }
             else
                 delxrot0 = Math.signum(getrotX(ptSpiro[1][0].x, ptSpiro[1][0].y, (theta[0] + theta[1])/2)*(t2 - t1))*Math.sqrt(delxrot0);
-            delxrot3 = -2*(yrot3 - yrot0)/C[1]/3;
+            if (Math.abs(yrot3 - yrot0) > TOL)
+                delxrot3 = -2*(yrot3 - yrot0)/C[1]/3;
             if (delxrot3 < 0)
             {
                 System.out.println("parallel slope, wrong curvature at t = 1 : " + delxrot3 + " : abort");
@@ -248,7 +250,7 @@ public final class SpiroCalc
         R = Math.sqrt(a*a/4 - b + sol);
         D = Math.sqrt(3*a*a/4 - R*R - 2*b + (4*a*b - 8*c - a*a*a)/4/R);
         E = Math.sqrt(3*a*a/4 - R*R - 2*b - (4*a*b - 8*c - a*a*a)/4/R);
-        System.out.println("\ncubic sol = " + sol + ", " + R + ", " + D + ", " + E);
+//        System.out.println("\ncubic sol = " + sol + ", " + R + ", " + D + ", " + E);
 //        System.out.println(main.t1/2/Math.PI + ", " + main.t2/2/Math.PI);
         System.out.print("root 1 = "); check_quartic(-a/4 + R/2 + D/2);
         System.out.print("root 2 = "); check_quartic(-a/4 + R/2 - D/2);

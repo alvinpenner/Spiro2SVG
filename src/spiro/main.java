@@ -37,7 +37,7 @@ public class main
     private static String draw_style = STYLE_AUTO;
 
     public static final String strHdr = "<?xml version='1.0' encoding='UTF-8' standalone='no'?>\n"
-                          + "<!-- Created with Spiro2SVG v" + VERSION_NO + " (http://launchpad.net/tobedetermined) -->\n\n"
+                          + "<!-- Created with Spiro2SVG v" + VERSION_NO + " (http://github.com/alvinpenner/Spiro2SVG) -->\n\n"
                           + "<svg\n"
                           + "    xmlns:dc='http://purl.org/dc/elements/1.1/'\n"
                           + "    xmlns:cc='http://creativecommons.org/ns#'\n"
