@@ -17,12 +17,13 @@ public final class SpiroConfig
     {
         final JDialog cfg = new JDialog(parent, " Spiro2SVG v" + main.VERSION_NO + " : " + fname, true);
 
+        final boolean isspiro = fname.endsWith(".spiro");
         final JTable jt = new JTable(new AbstractTableModel() {
             public int getRowCount()    { return main.rowData.length;  }
             public int getColumnCount() { return main.rowData[0].length; }
 
             public Object getValueAt(int r, int c) {
-                if (r == 12 || r == 13)                 // fields Argb and FillArgb
+                if (isspiro && (r == 12 || r == 13))     // fields Argb and FillArgb
                     return Integer.toHexString(Integer.parseInt(main.rowData[r][c])).toUpperCase();
                 else
                     return main.rowData[r][c];
@@ -134,9 +135,9 @@ public final class SpiroConfig
         cfg.getContentPane().add(pnl, BorderLayout.SOUTH);
         cfg.getRootPane().setDefaultButton(btnOK);
         if (main.rowData[0].length < 3)
-            cfg.setMinimumSize(new Dimension(140 + 75*3, 368));
+            cfg.setMinimumSize(new Dimension(140 + 75*3, 112 + 16*main.rowData.length));
         else
-            cfg.setMinimumSize(new Dimension(140 + 75*main.rowData[0].length, 368));
+            cfg.setMinimumSize(new Dimension(140 + 75*main.rowData[0].length, 112 + 16*main.rowData.length));
         cfg.setLocationByPlatform(true);
         cfg.setVisible(true);
         return ok;

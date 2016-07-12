@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<spiro>
+  <editor type="advanced" />
+  <shape linewidth="1" linecolor="#000000" fillcolor="#DDDDFF" />
+  <generator steps="420" />
+	<operator type="rotor">
+	  <radius x="50.0" y="50.0" />
+		<frequency x="2.0" y="2.0" />
+	</operator>
+	<operator type="rotor">
+	  <radius x="20.0" y="20.0" />
+		<frequency x="11.0" y="-11.0" />
+	</operator>
+</spiro>

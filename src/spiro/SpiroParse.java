@@ -7,6 +7,10 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.*;
 
+//  this will parse two types of spirograph files:
+//  .spiro files produced by Spirograph_1.0.2.1 - http://mathiversity.com/online-spirograph
+//  .xml   files produced by SpiroJ_1.0.2       - http://sourceforge.net/projects/spiroj
+
 public final class SpiroParse
 {
     private static int spiro_count = 0;
@@ -14,17 +18,13 @@ public final class SpiroParse
 
     public static void parse_spiro_file(String fname, String m_style)
     {
-        if (fname.isEmpty())
-        {
-            JOptionPane.showMessageDialog(null, "No input file name was specified.\nPlease try again." , " No input location ", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
         final File file = new File(fname);
         if (!file.exists())
         {
             JOptionPane.showMessageDialog(null, "The file '" + file.getAbsolutePath() + "' does not exist.\nPlease try again." , " File not found ", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        main.rowNames = main.spiroNames;
         draw_style = m_style;
         DocumentBuilder builder;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -62,6 +62,84 @@ public final class SpiroParse
             }
         }
         catch (Exception e) {JOptionPane.showMessageDialog(null, "DocumentBuilderFactory : " + e, " parse_spiro error ", JOptionPane.WARNING_MESSAGE);}
+    }
+
+    public static void parse_SpiroJ_file(String fname, String m_style)
+    {
+        final File file = new File(fname);
+        if (!file.exists())
+        {
+            JOptionPane.showMessageDialog(null, "The file '" + file.getAbsolutePath() + "' does not exist.\nPlease try again." , " File not found ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        main.rowNames = main.SpiroJNames;
+        draw_style = m_style;
+        DocumentBuilder builder;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try
+        {
+            builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(file);
+            Element root = doc.getDocumentElement();
+            if (!root.getTagName().equals("spiro"))
+            {
+                JOptionPane.showMessageDialog(null, "This does not appear to be a valid SpiroJ file.\nElement 'spiro' not found.", " parse_SpiroJ error ", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (count_Children(root, "operator") != 2)
+            {
+                JOptionPane.showMessageDialog(null, "This does not appear to be a valid SpiroJ file.\nNeed two 'operator' elements.", " parse_SpiroJ error ", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            main.rowData = new String[main.rowNames.length][1];
+            NodeList children = root.getChildNodes();
+            int irotor = 0;
+            for (int i = 0; i < children.getLength(); i++)
+            {
+                Node child = children.item(i);
+                if (child instanceof Element)
+                {
+                    Element childElement = (Element) child;
+                    if (childElement.getTagName().equals("shape"))
+                    {
+                        main.rowData[9][0]  = childElement.getAttribute("linewidth");   // line_width
+                        main.rowData[10][0] = childElement.getAttribute("linecolor");   // line_color
+                        main.rowData[11][0] = childElement.getAttribute("fillcolor");   // fill_color
+                    }
+                    else if (childElement.getTagName().equals("generator"))
+                    {
+                        main.rowData[8][0] = childElement.getAttribute("steps");        // generator_steps
+                    }
+                    else if (childElement.getTagName().equals("operator"))
+                    {
+                        NodeList opchildren = childElement.getChildNodes();
+                        for (int j = 0; j < opchildren.getLength(); j++)
+                        {
+                            Node opchild = opchildren.item(j);
+                            if (opchild instanceof Element)
+                            {
+                                Element opchildElement = (Element) opchild;
+                                if (opchildElement.getTagName().equals("radius"))
+                                {
+                                    main.rowData[4*irotor][0] = opchildElement.getAttribute("x");       // Radius_x[i]
+                                    main.rowData[4*irotor + 1][0] = opchildElement.getAttribute("y");   // Radius_y[i]
+                                }
+                                else if (opchildElement.getTagName().equals("frequency"))
+                                {
+                                    main.rowData[4*irotor + 2][0] = opchildElement.getAttribute("x");   // Frequency_x[i]
+                                    main.rowData[4*irotor + 3][0] = opchildElement.getAttribute("y");   // Frequency_y[i]
+                                }
+                            }
+                        }
+                        irotor++;
+                    }
+                }
+            }
+            main.rowData[main.rowNames.length - 1][0] = draw_style;     // Edit Drawing Style
+            if (draw_style.equals(main.STYLE_AUTO))
+                main.rowData[main.rowNames.length - 1][0] = main.STYLE_BEZIER;
+        }
+        catch (Exception e) {JOptionPane.showMessageDialog(null, "DocumentBuilderFactory : " + e, " parse_SpiroJ error ", JOptionPane.WARNING_MESSAGE);}
     }
 
     private static int count_Children(Element element, String tag)

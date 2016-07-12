@@ -7,9 +7,14 @@
 
 // Nov 28, 2015 - first build - NetBeans 6.9.1 - jdk1.6.0_16
 // Feb 14, 2016 - completed lines and points output to svg
+// June  , 2016 - completed Bezier output
+// Jun 18, 2016 - first commit to http://github.com/alvinpenner/Spiro2SVG
+// Jul 11, 2016 - rev 0.91, support for Lissajous figures from SpiroJ
 
 package spiro;
 
+import java.awt.geom.Point2D;
+import java.awt.geom.CubicCurve2D;
 import java.io.*;
 import java.util.Properties;
 import javax.swing.JOptionPane;
@@ -18,7 +23,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class main
 {
-    public static final String VERSION_NO = "0.9";
+    public static final String VERSION_NO = "0.91";
     public static final String PAGE_UNITS = "mm";
     public static final float PAGE_WIDTH = 210;
     public static final float PAGE_HEIGHT = 297;
@@ -28,10 +33,15 @@ public class main
     public static final String STYLE_POINTS = "Points";
     public static final String STYLE_LINES = "Lines";
     public static final String STYLE_BEZIER = "Bezier";
-    public static final String[][] rowNames = new String[][] {{"StatorRadius"}, {"RotorRadius"}, {"NumRotations"}, {"AnglesPerCycle"},
-                                                              {"RotorSlide"}, {"OriginX"}, {"OriginY"}, {"InitialAngle"},
-                                                              {"PenDistance"}, {"Lock"}, {"CurvePenWidth"}, {"Zoom"},
-                                                              {"Argb"}, {"FillArgb"}, {"FillMode"}, {"Edit Drawing Style"}};
+    public static final String[][] spiroNames = new String[][] {{"StatorRadius"}, {"RotorRadius"}, {"NumRotations"}, {"AnglesPerCycle"},
+                                                                {"RotorSlide"}, {"OriginX"}, {"OriginY"}, {"InitialAngle"},
+                                                                {"PenDistance"}, {"Lock"}, {"CurvePenWidth"}, {"Zoom"},
+                                                                {"Argb"}, {"FillArgb"}, {"FillMode"}, {"Edit Drawing Style"}};
+    public static final String[][] SpiroJNames = new String[][] {{"Radius_x1"}, {"Radius_y1"}, {"Frequency_x1"}, {"Frequency_y1"},
+                                                                 {"Radius_x2"}, {"Radius_y2"}, {"Frequency_x2"}, {"Frequency_y2"},
+                                                                 {"generator_steps"}, {"line_width"}, {"line_color"}, {"fill_color"},
+                                                                 {"Edit Drawing Style"}};
+    public static String[][] rowNames;
     public static String[][] rowData;
     public static int CanvasColor = 0;
     private static String draw_style = STYLE_AUTO;
@@ -57,9 +67,15 @@ public class main
                           + "        </rdf:RDF>\n"
                           + "    </metadata>\n";
     public static final String strFtr = "</svg>\n";
-    public static double t1 = -1, t2 = -1;                      // test parms for testing bezier fit
+    public static double t1 = -1, t2 = -1;                              // test parms for testing bezier fit
 
-//  The parameters fall into four roughly defined classes
+    public static double[] theta = new double[2];                       // Spiro velocity angle[t = (0,1)]
+    public static double[] Cu = new double[2];                          // Spiro curvature[t = (0,1)]
+    private static final double TOL = 0.00001;
+    private static Point2D.Double[] ptBez = new Point2D.Double[4];      // Point[point index (0-3)]
+
+//  The parameters fall into five roughly defined classes
+//  (arbitrarily made up classification)
 
 //  Class 1 - style parameters
 //  overall Argb = CanvasColor : background color only
@@ -91,6 +107,11 @@ public class main
 //  a = stator, b = rotor, c = pen distance
 //  x = (a + b) cos(t) - c cos((a/b + 1)t)
 //  y = (a + b) sin(t) - c sin((a/b + 1)t)
+
+//  Class 5 - SpiroJ roulette parameters
+//  see : http://sourceforge.net/projects/spiroj/
+//  x = rx1*cos(wx1*t) + rx2*cos(wx2*t)
+//  y = ry1*sin(wy1*t) + ry2*sin(wy2*t)
 
     public static void main(String[] args)
     {
@@ -150,19 +171,33 @@ public class main
                 {System.out.println("error reading Spiro2SVGPrefs.ini : " + e);}
 
             JFileChooser chooser = new JFileChooser(pgmProp.getProperty("pathname", System.getProperty("user.home")));
-            chooser.setFileFilter(new FileNameExtensionFilter("spiro files (*.spiro)", "spiro"));
+            chooser.setFileFilter(new FileNameExtensionFilter("spirograph files (.spiro) (.xml)", "spiro", "xml"));
             if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
             pgmProp.setProperty("pathname", chooser.getSelectedFile().getAbsoluteFile().getParent());
             fileName = chooser.getSelectedFile().getAbsolutePath();
-            if (chooser.getFileFilter().getDescription().equals("spiro files")  && !fileName.endsWith(".spiro"))
-                fileName += ".spiro";
+            if (chooser.getFileFilter().getDescription().equals("spirograph files (.spiro) (.xml)")
+            && !fileName.endsWith(".spiro") && !fileName.endsWith(".xml"))
+                if (new File(fileName + ".spiro").exists())
+                    fileName += ".spiro";
+                else if (new File(fileName + ".xml").exists())
+                    fileName += ".xml";
             fileNameOnly = chooser.getSelectedFile().getName();
             if (fileNameOnly.endsWith(".spiro"))
                 fileNameOnly = fileNameOnly.substring(0, fileNameOnly.length() - 6);
+            else if (fileNameOnly.endsWith(".xml"))
+                fileNameOnly = fileNameOnly.substring(0, fileNameOnly.length() - 4);
             fileNameOnly += ".svg";
         }
 
-        SpiroParse.parse_spiro_file(fileName, draw_style);
+        if (fileName.isEmpty())
+        {
+            JOptionPane.showMessageDialog(null, "No input file name was specified.\nPlease try again." , " No input location ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (fileName.endsWith(".spiro"))
+            SpiroParse.parse_spiro_file(fileName, draw_style);
+        else if (fileName.endsWith(".xml"))
+            SpiroParse.parse_SpiroJ_file(fileName, draw_style);
         if (rowData == null) return;
 
         if (args.length == 0)                                           // run with gui
@@ -181,9 +216,9 @@ public class main
             catch (IOException e)
                 {JOptionPane.showMessageDialog(null, e.getMessage(), " Could not save Preferences file", JOptionPane.WARNING_MESSAGE);}
         }
-        SpiroWrite.write_svg_file(exportName);
+        SpiroWrite.write_svg_file(exportName, fileName.endsWith(".spiro"));
 
-        System.out.println("\n" + fileName + " : rowData = " + rowData.length + ", " + rowData[0].length);
+        System.out.println("\n" + fileName + " : ");
         for (int i = 0; i < rowData.length; i++)
         {
             System.out.print(rowNames[i][0] + "\t");
@@ -191,5 +226,248 @@ public class main
                 System.out.print(", " + rowData[i][j]);
             System.out.println();
         }
+    }
+
+    public static CubicCurve2D.Float calcBezier(Point2D.Double[][] ptSpiro, double t1, double t2)
+    {
+        double delxrot0 = 0, delyrot0, delxrot3 = 0, delyrot3;
+        double[] dirx = new double[2];
+
+        ptBez[0] = new Point2D.Double(ptSpiro[0][0].x, ptSpiro[0][0].y);
+        ptBez[1] = new Point2D.Double(ptBez[0].x, ptBez[0].y);
+        ptBez[3] = new Point2D.Double(ptSpiro[0][1].x, ptSpiro[0][1].y);
+        ptBez[2] = new Point2D.Double(ptBez[3].x, ptBez[3].y);
+
+        double xrot0 = getrotX(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
+        double yrot0 = getrotY(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
+        double xrot3 = getrotX(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
+        double yrot3 = getrotY(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
+        double mrot0 = Math.tan((theta[0] - theta[1])/2);
+
+        for (int i = 0; i < ptSpiro[0].length; i++)                     // effective 'rotated' curvature
+        {
+            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
+                dirx[i] = getrotX(ptSpiro[2][i].x, ptSpiro[2][i].y, (theta[0] + theta[1])/2);   // use x″ & y″
+            else                                                                        // moving point
+                dirx[i] = getrotX(ptSpiro[1][i].x, ptSpiro[1][i].y, (theta[0] + theta[1])/2);
+            Cu[i] = Math.signum(dirx[i])*Cu[i]*Math.pow(1 + mrot0*mrot0, 1.5);
+//            System.out.println("slopes " + i + " : " + ptSpiro[1][i].x + ", " + ptSpiro[1][i].y + " : " + ptSpiro[2][i].x + ", " + ptSpiro[2][i].y);
+//            System.out.println(i + " : " + Cu[i] + ", " + dirx[i] + ", " + ptSpiro[2][i].x + ", " + ptSpiro[2][i].y);
+        }
+        for (int i = 0; i < ptSpiro[0].length; i++)
+            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
+            {
+                if (Math.signum(dirx[i]) != Math.signum(dirx[1 - i]))
+                    dirx[i] *= -1;                  // force same sign of dirx
+                if (Math.signum(Cu[i]) != Math.signum(Cu[1 - i]))
+                    Cu[i] *= -1;                    // force same sign of Cu
+            }
+
+//        System.out.println("angles = " + Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x)*180/Math.PI + ", " + Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x)*180/Math.PI + ", " +  mrot0);
+        System.out.println("angles = " + (float)t1 + ", " + (float)ptSpiro[0][0].x + ", " + (float)ptSpiro[0][0].y + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)Cu[0]);
+        System.out.println("angles = " + (float)t2 + ", " + (float)ptSpiro[0][1].x + ", " + (float)ptSpiro[0][1].y + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)Cu[1]);
+        System.out.println("data   = " + (float)xrot0 + ", " + (float)xrot3 + ", " + (float)yrot0 + ", " + (float)yrot3 + ", " + (float)mrot0 + ", " + (float)dirx[0] + ", " + (float)dirx[1]);
+
+        if (Math.abs(theta[1] - theta[0]) < TOL)                // parallel finite slopes
+        {
+            // the parallel case can be solved as two decoupled quadratic equations
+            System.out.println("parallel finite : " + (float)(t1/2/Math.PI) + ", " + (float)(t2/2/Math.PI) + ", " + (float)mrot0 + ", " + (float)Cu[0] + ", " + (float)Cu[1] + ", " + (float)yrot0 + ", " + (float)yrot3);
+            if (Math.abs(yrot3 - yrot0) > TOL)
+                delxrot0 =  2*(yrot3 - yrot0)/Cu[0]/3;
+            if (delxrot0 < 0)
+            {
+                System.out.println("parallel slope, wrong curvature at t = 0 : " + delxrot0 + " : abort");
+                delxrot0 = Double.NaN;
+                return new CubicCurve2D.Float();
+            }
+            else
+                delxrot0 = Math.signum(dirx[0]*(t2 - t1))*Math.sqrt(delxrot0);
+            if (Math.abs(yrot3 - yrot0) > TOL)
+                delxrot3 = -2*(yrot3 - yrot0)/Cu[1]/3;
+            if (delxrot3 < 0)
+            {
+                System.out.println("parallel slope, wrong curvature at t = 1 : " + delxrot3 + " : abort");
+                delxrot3 = Double.NaN;
+                return new CubicCurve2D.Float();
+            }
+            else
+                delxrot3 = Math.signum(dirx[1]*(t2 - t1))*Math.sqrt(delxrot3);
+        }
+        else if (Math.abs(Cu[0]) < TOL)                          // zero curvature at t = 0
+        {
+            System.out.println("zero curvature at t = 0 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[0]);
+            delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2/mrot0;
+            if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL)) // stationary point, clamp it
+                delxrot0 = 0;
+            else
+                delxrot0 =  (yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2)/2/mrot0;
+            System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
+        }
+        else if (Math.abs(Cu[1]) < TOL)                          // zero curvature at t = 1
+        {
+            System.out.println("zero curvature at t = 1 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[1]);
+            delxrot0 = (yrot3 - yrot0 + mrot0*(xrot3 - xrot0))/2/mrot0;
+            if ((Math.abs(ptSpiro[1][1].x) < TOL) && (Math.abs(ptSpiro[1][1].y) < TOL)) // stationary point, clamp it
+                delxrot3 = 0;
+            else
+                delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2)/2/mrot0;
+            System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
+        }
+        else                                                    // general slopes
+        {
+            System.out.println("general slope = " + (float)t1 + ", " + (float)t2 + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)((theta[0] + theta[1])*90/Math.PI) + ", " + (float)mrot0 + ", " + (float)Cu[0] + ", " + (float)Cu[1]);
+            System.out.println("general slope = " + (float)t1 + ", " + (float)t2 + ", " + (float)xrot0 + ", " + (float)yrot0 + ", " + (float)xrot3 + ", " + (float)yrot3);
+            delxrot0 = solve_quartic(-27*Cu[1]*Cu[0]*Cu[0]/8,
+                                      0,
+                                      9*Cu[1]*Cu[0]*(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2,
+                                      8*mrot0*mrot0*mrot0,
+                                     -(yrot3 - yrot0 + mrot0*(xrot3 - xrot0))*4*mrot0*mrot0
+                                     -3*Cu[1]*(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))
+                                             *(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2,
+                                      Math.signum(dirx[0]*(t2 - t1)));
+            delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2)/2/mrot0;
+        }
+        delyrot0 = mrot0*delxrot0;
+        delyrot3 = -mrot0*delxrot3;
+        ptBez[1].x += getrotX(delxrot0, delyrot0, -(theta[0] + theta[1])/2);
+        ptBez[1].y += getrotY(delxrot0, delyrot0, -(theta[0] + theta[1])/2);
+        ptBez[2].x -= getrotX(delxrot3, delyrot3, -(theta[0] + theta[1])/2);
+        ptBez[2].y -= getrotY(delxrot3, delyrot3, -(theta[0] + theta[1])/2);
+/*
+        System.out.println("\nptSpiro[3][2]");
+        for (int i = 0; i < ptSpiro.length; i++)
+            for (int j = 0; j < ptSpiro[0].length; j++)
+                System.out.println(i + " " + j + " : " + ptSpiro[i][j]);
+        System.out.println("\nptBez[4]");
+        for (int i = 0; i < ptBez.length; i++)
+            System.out.println(i + " : " + ptBez[i]);
+        System.out.println("\ntheta[2]");
+        for (int i = 0; i < theta.length; i++)
+            System.out.println(i + " : " + theta[i]);
+        System.out.println("\nCu[2]");
+        for (int i = 0; i < Cu.length; i++)
+            System.out.println(i + " : " + Cu[i]);
+        System.out.println("\ndelxrotx : " + delxrot0 + ", " + delxrot3);
+*/
+        return new CubicCurve2D.Float((float)ptBez[0].x, (float)ptBez[0].y, (float)ptBez[1].x, (float)ptBez[1].y, (float)ptBez[2].x, (float)ptBez[2].y, (float)ptBez[3].x, (float)ptBez[3].y);
+    }
+
+    public static void write_test_cubic(FileWriter out)
+    {
+        // this will write a test cubic bezier, just for testing purposes
+
+        System.out.printf("\ncubic test parms = %f, %f\n\n", t1, t2);
+        SpiroCalc.getBezier(t1, t2);                                    // refresh ptBez[]
+        String strPath;
+        for (int i = 0; i < ptBez.length; i++)                          // re-define origin
+        {
+            ptBez[i].x += main.PAGE_WIDTH*main.mm2px/2;
+            ptBez[i].y += main.PAGE_WIDTH*main.mm2px/2;
+        }
+        try
+        {
+            strPath = "    <path\n"
+                    + "        d='";
+            out.write(strPath);
+            strPath =  "M " + (float)ptBez[0].x + ", " + (float)ptBez[0].y +
+                      " C " + (float)ptBez[1].x + ", " + (float)ptBez[1].y + " " + (float)ptBez[2].x + ", " + (float)ptBez[2].y + " " + (float)ptBez[3].x + ", " + (float)ptBez[3].y;
+            out.write(strPath);
+            strPath = "'\n"
+                    + "        id='test_cubic'\n"
+                    + "        style='fill:none;stroke:#0000ff;stroke-width:1px' />\n";
+            out.write(strPath);
+        }
+        catch (IOException e)
+            {System.out.println("save test cubic Bezier error = " + e);}
+    }
+
+    private static double solve_quartic(double lead, double qua, double qub, double quc, double qud, double sgn)
+    {
+        double sol, R, D, E;
+
+        qua /= lead;
+        qub /= lead;
+        quc /= lead;
+        qud /= lead;
+        System.out.println("quartic      a,b,c,d = " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud + ", " + (float)sgn);
+        sol = solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
+        R = Math.sqrt(qua*qua/4 - qub + sol);
+        D = Math.sqrt(3*qua*qua/4 - R*R - 2*qub + (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
+        E = Math.sqrt(3*qua*qua/4 - R*R - 2*qub - (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
+//        System.out.println("\ncubic sol = " + sol + ", " + R + ", " + D + ", " + E);
+//        System.out.println(t1/2/Math.PI + ", " + t2/2/Math.PI);
+        System.out.print("root 1 = "); check_quartic(-qua/4 + R/2 + D/2);
+        System.out.print("root 2 = "); check_quartic(-qua/4 + R/2 - D/2);
+        System.out.print("root 3 = "); check_quartic(-qua/4 - R/2 + E/2);
+        System.out.print("root 4 = "); check_quartic(-qua/4 - R/2 - E/2);
+        if (!Double.isNaN(D) && (sgn == Math.signum(-qua/4 + R/2 + D/2)))
+        {
+            System.out.println("using root 1 = " + sgn + ", " + (-qua/4 + R/2 + D/2));
+            return (-qua/4 + R/2 + D/2);
+        }
+        else if (!Double.isNaN(E) && (sgn == Math.signum(-qua/4 - R/2 - E/2)))
+        {
+            System.out.println("using root 4 = " + sgn + ", " + (-qua/4 - R/2 - E/2));
+            return (-qua/4 - R/2 - E/2);
+        }
+        else if (!Double.isNaN(E) && (sgn == Math.signum(-qua/4 - R/2 + E/2)))
+        {
+            System.out.println("using root 3 = " + sgn + ", " + (-qua/4 - R/2 + E/2));
+            return (-qua/4 - R/2 + E/2);
+        }
+        else if (!Double.isNaN(D) && (sgn == Math.signum(-qua/4 + R/2 - D/2)))
+        {
+            System.out.println("using root 2 = " + sgn + ", " + (-qua/4 + R/2 - D/2));
+            return (-qua/4 + R/2 - D/2);
+        }
+        System.out.println("general quartic : Bad solution = " + R + ", " + D + ", " + E);
+        return Double.NaN;
+    }
+
+    private static void check_quartic(double delx0)
+    {
+        double xrot0 = getrotX(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
+        double yrot0 = getrotY(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
+        double xrot3 = getrotX(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
+        double yrot3 = getrotY(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
+        double mrot0 = Math.tan((theta[0] - theta[1])/2);
+
+        // calculate other quartic root (delx1), and cross-check
+        double delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
+        System.out.print((float)delx0 + ", " + (float)delx1);
+        System.out.println(", " + (float)(-yrot3 + yrot0 - mrot0*(xrot3 - xrot0) + delx0*2*mrot0 - 3*Cu[1]*delx1*delx1/2));
+    }
+
+    private static double solve_cubic(double p, double q, double r)
+    {
+        // see Math CRC book, page 392
+
+        double cua = (3*q - p*p)/3;
+        double cub = (2*p*p*p - 9*p*q + 27*r)/27;
+        double cud = cub*cub/4 + cua*cua*cua/27;
+
+//        System.out.println("\ncubic p,q,r = " + p + ", " + q + ", " + r);
+//        System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
+        if (cud < 0)
+        {
+            double phi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));
+//            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 4*Math.PI/3) - p/3));
+            return 2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3;
+        }
+        else
+        {
+//            System.out.println("1 cubic d > 0 : " + (Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3));
+            return Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3;
+        }
+    }
+
+    private static double getrotX(double m_x, double m_y, double m_theta)
+    {
+        return m_x*Math.cos(m_theta) + m_y*Math.sin(m_theta);
+    }
+
+    private static double getrotY(double m_x, double m_y, double m_theta)
+    {
+        return -m_x*Math.sin(m_theta) + m_y*Math.cos(m_theta);
     }
 }
