@@ -11,23 +11,23 @@
 or from the program SpiroJ, available at:<br>
 <a target="_new" href="http://sourceforge.net/projects/spiroj/">http://sourceforge.net/projects/spiroj</a><br>
 A gallery of these images is at:
-<a target="_new" href="http://mathiversity.com/online-spirograph/gallery">http://mathiversity.com/online-spirograph/gallery</a><br>
+<a target="_new" href="http://mathiversity.com/online-spirograph/gallery">http://mathiversity.com/online-spirograph/gallery</a>.<br><br>
 The program uses <a target="_new" href="http://en.wikipedia.org/wiki/B%C3%A9zier_curve">B&eacute;zier</a>
 curves to do the rendering of the shapes, which allows them to be saved as a vector graphic, using the 
-<a target="_new" href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> format, instead of the usual bitmap format.<br>
-These can be viewed with <a target="_new" href="http://inkscape.org">Inkscape</a>, or any web browser.<br><br>
-The normal generation of spirograph curves involves calculating dozens, or hundreds, of points on the spirograph,
-and then joining them with lines. The Spiro2SVG program, instead, performs a smooth fit using B&eacute;zier curves.
-For some shapes it may be desirable to keep the original line drawing of the shape, so the drawing method
+<a target="_new" href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> format, instead of the usual bitmap format.
+These can be viewed with <a target="_new" href="http://inkscape.org">Inkscape</a>, or any web browser.<br>
+&nbsp;&nbsp;&nbsp;The normal generation of spirograph curves involves calculating dozens, or hundreds, of points on the spirograph,
+and then joining them with lines. The Spiro2SVG program, instead, performs a smooth fit using Bézier curves.
+The Bézier curves are calculated by matching both the slope and the curvature of the spirograph at selected endpoints, which leads to a very accurate fit.<br><br>
+&nbsp;&nbsp;&nbsp;For some shapes it may be desirable to keep the original line drawing of the shape, so the drawing method
 is separately configurable for each object. The program will make an initial assessment of how best to draw the shape,
 based on the number of points per lobe in the spirograph. Less than 20 points per lobe will be drawn as lines,
-otherwise B&eacute;zier curves will be used to produce a smooth result. These initial choices can be modified in the
+otherwise Bézier curves will be used to produce a smooth result. These initial choices can be modified in the
 configuration display, by clicking on the green boxes in the bottom line.<br>
 The program can also be run silently from the command prompt:<br>
 use the command 'java -jar Spiro2SVG.jar -?' to see the available options.
 <br><br>
-This help file can be viewed at any time by pressing 'F1'.
-<br><br>
+This help file can be viewed at any time by pressing 'F1'.<br>
 &nbsp;&nbsp;&nbsp;Send comments to: <a
  href="mailto:penner@vaxxine.com?subject=Spiro2SVG%20Program">Alvin Penner</a><br>
 &nbsp;&nbsp;&nbsp;Send bug reports to: <a

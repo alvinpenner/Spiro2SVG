@@ -10,6 +10,7 @@
 // June  , 2016 - completed Bezier output
 // Jun 18, 2016 - first commit to http://github.com/alvinpenner/Spiro2SVG
 // Jul 11, 2016 - rev 0.91, support for Lissajous figures from SpiroJ
+// Jul 24, 2016 - rev 0.92, support for all figures from SpiroJ
 
 package spiro;
 
@@ -23,7 +24,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class main
 {
-    public static final String VERSION_NO = "0.91";
+    public static final String VERSION_NO = "0.92";
     public static final String PAGE_UNITS = "mm";
     public static final float PAGE_WIDTH = 210;
     public static final float PAGE_HEIGHT = 297;
@@ -73,6 +74,7 @@ public class main
     public static double[] Cu = new double[2];                          // Spiro curvature[t = (0,1)]
     private static final double TOL = 0.00001;
     private static Point2D.Double[] ptBez = new Point2D.Double[4];      // Point[point index (0-3)]
+    private static double xrot0, yrot0, xrot3, yrot3, mrot0;
 
 //  The parameters fall into five roughly defined classes
 //  (arbitrarily made up classification)
@@ -238,11 +240,11 @@ public class main
         ptBez[3] = new Point2D.Double(ptSpiro[0][1].x, ptSpiro[0][1].y);
         ptBez[2] = new Point2D.Double(ptBez[3].x, ptBez[3].y);
 
-        double xrot0 = getrotX(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
-        double yrot0 = getrotY(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
-        double xrot3 = getrotX(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
-        double yrot3 = getrotY(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
-        double mrot0 = Math.tan((theta[0] - theta[1])/2);
+        xrot0 = getrotX(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
+        yrot0 = getrotY(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
+        xrot3 = getrotX(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
+        yrot3 = getrotY(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
+        mrot0 = Math.tan((theta[0] - theta[1])/2);
 
         for (int i = 0; i < ptSpiro[0].length; i++)                     // effective 'rotated' curvature
         {
@@ -297,18 +299,24 @@ public class main
         {
             System.out.println("zero curvature at t = 0 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[0]);
             delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2/mrot0;
-            if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL)) // stationary point, clamp it
-                delxrot0 = 0;
+//            System.out.println((yrot3 - yrot0 + mrot0*(xrot3 - xrot0)) + ", " + (3*Cu[1]*delxrot3*delxrot3/2) + ", " + (yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2));
+            if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL))
+                delxrot0 = 0;                                   // stationary point, clamp it
+            else if (Math.signum(yrot3 - yrot0 + mrot0*(xrot3 - xrot0)) != Math.signum(yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2))
+                delxrot0 = 0;                                   // unwanted sign reversal
             else
                 delxrot0 =  (yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2)/2/mrot0;
             System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
         }
-        else if (Math.abs(Cu[1]) < TOL)                          // zero curvature at t = 1
+        else if (Math.abs(Cu[1]) < TOL)                         // zero curvature at t = 1
         {
             System.out.println("zero curvature at t = 1 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[1]);
             delxrot0 = (yrot3 - yrot0 + mrot0*(xrot3 - xrot0))/2/mrot0;
-            if ((Math.abs(ptSpiro[1][1].x) < TOL) && (Math.abs(ptSpiro[1][1].y) < TOL)) // stationary point, clamp it
-                delxrot3 = 0;
+//            System.out.println((yrot3 - yrot0 - mrot0*(xrot3 - xrot0)) + ", " + (-3*Cu[0]*delxrot0*delxrot0/2) + ", " + (yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2));
+            if ((Math.abs(ptSpiro[1][1].x) < TOL) && (Math.abs(ptSpiro[1][1].y) < TOL))
+                delxrot3 = 0;                                   // stationary point, clamp it
+            else if (Math.signum(yrot3 - yrot0 - mrot0*(xrot3 - xrot0)) != Math.signum(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2))
+                delxrot3 = 0;                                   // unwanted sign reversal
             else
                 delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2)/2/mrot0;
             System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
@@ -324,7 +332,8 @@ public class main
                                      -(yrot3 - yrot0 + mrot0*(xrot3 - xrot0))*4*mrot0*mrot0
                                      -3*Cu[1]*(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))
                                              *(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2,
-                                      Math.signum(dirx[0]*(t2 - t1)));
+                                      Math.signum(dirx[0]*(t2 - t1)),
+                                      Math.signum(dirx[1]*(t2 - t1)));
             delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2)/2/mrot0;
         }
         delyrot0 = mrot0*delxrot0;
@@ -350,6 +359,17 @@ public class main
         System.out.println("\ndelxrotx : " + delxrot0 + ", " + delxrot3);
 */
         return new CubicCurve2D.Float((float)ptBez[0].x, (float)ptBez[0].y, (float)ptBez[1].x, (float)ptBez[1].y, (float)ptBez[2].x, (float)ptBez[2].y, (float)ptBez[3].x, (float)ptBez[3].y);
+    }
+
+    public static int insert_t_value(int N, int index, double[] t, double new_t)
+    {
+        // push t[index] up by one, insert at location index
+        if (N < index) return 0;
+        if (N > index)
+            for (int i = N; i > index; i--)
+                t[i] = t[i - 1];
+        t[index] = new_t;
+        return N + 1;
     }
 
     public static void write_test_cubic(FileWriter out)
@@ -381,15 +401,16 @@ public class main
             {System.out.println("save test cubic Bezier error = " + e);}
     }
 
-    private static double solve_quartic(double lead, double qua, double qub, double quc, double qud, double sgn)
+    private static double solve_quartic(double lead, double qua, double qub, double quc, double qud, double sgn0, double sgn1)
     {
         double sol, R, D, E;
+        double delx0, delx1;
 
         qua /= lead;
         qub /= lead;
         quc /= lead;
         qud /= lead;
-        System.out.println("quartic      a,b,c,d = " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud + ", " + (float)sgn);
+        System.out.println("quartic      a,b,c,d = " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud + ", " + (float)sgn0 + ", " + (float)sgn1);
         sol = solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
         R = Math.sqrt(qua*qua/4 - qub + sol);
         D = Math.sqrt(3*qua*qua/4 - R*R - 2*qub + (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
@@ -400,25 +421,54 @@ public class main
         System.out.print("root 2 = "); check_quartic(-qua/4 + R/2 - D/2);
         System.out.print("root 3 = "); check_quartic(-qua/4 - R/2 + E/2);
         System.out.print("root 4 = "); check_quartic(-qua/4 - R/2 - E/2);
-        if (!Double.isNaN(D) && (sgn == Math.signum(-qua/4 + R/2 + D/2)))
+        if (!Double.isNaN(D) && (sgn0 == Math.signum(-qua/4 + R/2 + D/2)))
         {
-            System.out.println("using root 1 = " + sgn + ", " + (-qua/4 + R/2 + D/2));
+            System.out.println("using root 1 = " + sgn0 + ", " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
         }
-        else if (!Double.isNaN(E) && (sgn == Math.signum(-qua/4 - R/2 - E/2)))
+        else if (!Double.isNaN(E) && (sgn0 == Math.signum(-qua/4 - R/2 - E/2)))
         {
-            System.out.println("using root 4 = " + sgn + ", " + (-qua/4 - R/2 - E/2));
+            System.out.println("using root 4 = " + sgn0 + ", " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
         }
-        else if (!Double.isNaN(E) && (sgn == Math.signum(-qua/4 - R/2 + E/2)))
+        else if (!Double.isNaN(E) && (sgn0 == Math.signum(-qua/4 - R/2 + E/2)))
         {
-            System.out.println("using root 3 = " + sgn + ", " + (-qua/4 - R/2 + E/2));
+            System.out.println("using root 3 = " + sgn0 + ", " + (-qua/4 - R/2 + E/2));
             return (-qua/4 - R/2 + E/2);
         }
-        else if (!Double.isNaN(D) && (sgn == Math.signum(-qua/4 + R/2 - D/2)))
+        else if (!Double.isNaN(D) && (sgn0 == Math.signum(-qua/4 + R/2 - D/2)))
         {
-            System.out.println("using root 2 = " + sgn + ", " + (-qua/4 + R/2 - D/2));
+            System.out.println("using root 2 = " + sgn0 + ", " + (-qua/4 + R/2 - D/2));
             return (-qua/4 + R/2 - D/2);
+        }
+
+        delx0 = -qua/4 + R/2 + D/2;                     // alternate check of root 1
+        delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
+        if (!Double.isNaN(D) && (sgn1 == Math.signum(delx1)))
+        {
+            System.out.println("alternate root 1 = " + sgn1 + ", " + delx0);
+            return delx0;
+        }
+        delx0 = -qua/4 - R/2 - E/2;                     // alternate check of root 4
+        delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
+        if (!Double.isNaN(E) && (sgn1 == Math.signum(delx1)))
+        {
+            System.out.println("alternate root 4 = " + sgn1 + ", " + delx0);
+            return delx0;
+        }
+        delx0 = -qua/4 - R/2 + E/2;                     // alternate check of root 3
+        delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
+        if (!Double.isNaN(E) && (sgn1 == Math.signum(delx1)))
+        {
+            System.out.println("alternate root 3 = " + sgn1 + ", " + delx0);
+            return delx0;
+        }
+        delx0 = -qua/4 + R/2 - D/2;                     // alternate check of root 2
+        delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
+        if (!Double.isNaN(D) && (sgn1 == Math.signum(delx1)))
+        {
+            System.out.println("alternate root 2 = " + sgn1 + ", " + delx0);
+            return delx0;
         }
         System.out.println("general quartic : Bad solution = " + R + ", " + D + ", " + E);
         return Double.NaN;
@@ -426,12 +476,6 @@ public class main
 
     private static void check_quartic(double delx0)
     {
-        double xrot0 = getrotX(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
-        double yrot0 = getrotY(ptBez[0].x, ptBez[0].y, (theta[0] + theta[1])/2);
-        double xrot3 = getrotX(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
-        double yrot3 = getrotY(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
-        double mrot0 = Math.tan((theta[0] - theta[1])/2);
-
         // calculate other quartic root (delx1), and cross-check
         double delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
         System.out.print((float)delx0 + ", " + (float)delx1);

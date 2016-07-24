@@ -8,7 +8,8 @@ import javax.swing.JOptionPane;
 
 public final class SpiroWrite
 {
-    private static float numrot;                    // number of rotations
+    private static final double TOL = 0.00001;
+    private static double numrot;                   // number of rotations
     private static int segs;                        // number of segments per rotation
     private static boolean isspiro;
 
@@ -115,26 +116,26 @@ public final class SpiroWrite
         // convert from Class 3 parameters - Spirograph 1.0.2.1
         // to Class 4 parameters - standard http://turnbull.mcs.st-and.ac.uk/
 
-        float a, b, c;                          // standard spirograph parameters
-        float newN = 0;                                             // new a/b
-        float slide = Float.parseFloat(main.rowData[4][index])/100; // RotorSlide
+        double a, b, c;                          // standard spirograph parameters
+        double newN = 0;                                            // new a/b
+        double slide = Double.parseDouble(main.rowData[4][index])/100; // RotorSlide
         numrot = Integer.parseInt(main.rowData[2][index]);          // NumRotations
         segs = Integer.parseInt(main.rowData[3][index]);            // AnglesPerCycle
 
         if (main.rowData[9][index].equals("true"))                  // Lock
             main.rowData[8][index] = main.rowData[1][index];        // force hypocycloid behavior
-        if (Float.parseFloat(main.rowData[8][index]) < 0)           // epiTrochoid
+        if (Double.parseDouble(main.rowData[8][index]) < 0)         // epiTrochoid
         {
-            a = Float.parseFloat(main.rowData[0][index])            // StatorRadius
-              - 2*Float.parseFloat(main.rowData[1][index]);
-            b = Float.parseFloat(main.rowData[1][index]);           // RotorRadius
-            c = Float.parseFloat(main.rowData[8][index]);           // PenDistance
+            a = Double.parseDouble(main.rowData[0][index])          // StatorRadius
+              - 2*Double.parseDouble(main.rowData[1][index]);
+            b = Double.parseDouble(main.rowData[1][index]);         // RotorRadius
+            c = Double.parseDouble(main.rowData[8][index]);         // PenDistance
         }
         else                                                        // hypoTrochoid
         {
-            a = Float.parseFloat(main.rowData[0][index]);           // StatorRadius
-            b = -Float.parseFloat(main.rowData[1][index]);          // RotorRadius
-            c = -Float.parseFloat(main.rowData[8][index]);          // PenDistance
+            a = Double.parseDouble(main.rowData[0][index]);         // StatorRadius
+            b = -Double.parseDouble(main.rowData[1][index]);        // RotorRadius
+            c = -Double.parseDouble(main.rowData[8][index]);        // PenDistance
         }
 
         if (b == 0)
@@ -156,13 +157,11 @@ public final class SpiroWrite
         }
         if (a < 0)                                                  // transform to alternate representation
         {                                                           // this is a general fit, independent of .spiro
-            float c_over_b = c/b;
-//            System.out.println("alternate representation numrot = " + a + ", " + b + ", " + c + ", " + numrot);
+            double c_over_b = c/b;
             numrot = round2int(numrot*(1 + a/b));
             c = round2int(-a - b);
             b = round2int(c*c_over_b);
             a = round2int(a*c_over_b);
-//            System.out.println("new       representation numrot = " + a + ", " + b + ", " + c + ", " + numrot);
         }
         getPath(out, getspiroShape(index, a, b, c).getPathIterator(null));
     }
@@ -174,18 +173,18 @@ public final class SpiroWrite
         // - alternatively -
         // render as generic roulette shapes
 
-        numrot = 0;                                                     // number of rotations
-        segs = Integer.parseInt(main.rowData[8][index]);                // generator_steps
+        numrot = 0;                                                         // number of rotations
+        segs = Integer.parseInt(main.rowData[8][index]);                    // generator_steps
         if ((Math.abs(Float.parseFloat(main.rowData[0][index])) == Math.abs(Float.parseFloat(main.rowData[1][index])))
         &&  (Math.abs(Float.parseFloat(main.rowData[2][index])) == Math.abs(Float.parseFloat(main.rowData[3][index])))
         &&  (Math.abs(Float.parseFloat(main.rowData[4][index])) == Math.abs(Float.parseFloat(main.rowData[5][index])))
         &&  (Math.abs(Float.parseFloat(main.rowData[6][index])) == Math.abs(Float.parseFloat(main.rowData[7][index]))))
         {
-            float ratio = Float.parseFloat(main.rowData[7][index])      // Frequency_y2
-                        / Float.parseFloat(main.rowData[3][index]) - 1; // Frequency_y1
-            float b = Float.parseFloat(main.rowData[0][index])/(1 + ratio);   // Radius_x1
-            float a = b*ratio;
-            float c = -Float.parseFloat(main.rowData[4][index]);              // Radius_x2
+            double ratio = Double.parseDouble(main.rowData[7][index])          // Frequency_y2
+                         / Double.parseDouble(main.rowData[3][index]) - 1;     // Frequency_y1
+            double b = Double.parseDouble(main.rowData[0][index])/(1 + ratio); // Radius_x1
+            double a = b*ratio;
+            double c = -Double.parseDouble(main.rowData[4][index]);            // Radius_x2
             for (int i = 1; i < 100; i++)
                 if (Math.round(i*ratio) == round2int(i*ratio))
                 {
@@ -208,10 +207,10 @@ public final class SpiroWrite
                                         Float.parseFloat(main.rowData[7][index])).getPathIterator(null));
     }
 
-    private static float round2int(float fData)
+    private static double round2int(double fData)
     {
         // round only if close to an int
-        if (Math.abs(fData - Math.round(fData)) < 0.00001)
+        if (Math.abs(fData - Math.round(fData)) < TOL)
             fData = Math.round(fData);
         return fData;
     }
@@ -263,7 +262,7 @@ public final class SpiroWrite
         }
     }
 
-    private static Shape getspiroShape(int index, float a, float b, float c)
+    private static Shape getspiroShape(int index, double a, double b, double c)
     {
         Path2D path = new Path2D.Float();
         Rectangle2D.Float rect;
@@ -294,10 +293,10 @@ public final class SpiroWrite
             boolean closed = false;
             for (i = 1; i < numrot*segs; i++)
             {
-                line = new Line2D.Float((a + b)*(float)Math.cos(2*Math.PI*(i - 1)/segs) - c*(float)Math.cos(2*Math.PI*(i - 1)*(a/b + 1)/segs),
-                                        (a + b)*(float)Math.sin(2*Math.PI*(i - 1)/segs) - c*(float)Math.sin(2*Math.PI*(i - 1)*(a/b + 1)/segs),
-                                        (a + b)*(float)Math.cos(2*Math.PI*i/segs) - c*(float)Math.cos(2*Math.PI*i*(a/b + 1)/segs),
-                                        (a + b)*(float)Math.sin(2*Math.PI*i/segs) - c*(float)Math.sin(2*Math.PI*i*(a/b + 1)/segs));
+                line = new Line2D.Float((float)((a + b)*Math.cos(2*Math.PI*(i - 1)/segs) - c*Math.cos(2*Math.PI*(i - 1)*(a/b + 1)/segs)),
+                                        (float)((a + b)*Math.sin(2*Math.PI*(i - 1)/segs) - c*Math.sin(2*Math.PI*(i - 1)*(a/b + 1)/segs)),
+                                        (float)((a + b)*Math.cos(2*Math.PI*i/segs) - c*Math.cos(2*Math.PI*i*(a/b + 1)/segs)),
+                                        (float)((a + b)*Math.sin(2*Math.PI*i/segs) - c*Math.sin(2*Math.PI*i*(a/b + 1)/segs)));
                 path.append(line, true);
                 if (((i + 1) % segs == 0)
                 &&  ((Math.round((i + 1)*a/b/segs) == round2int((i + 1)*a/b/segs)) || (c == 0)))
@@ -311,19 +310,19 @@ public final class SpiroWrite
                 path.closePath();
             else
             {
-                i = Math.round(numrot*segs);
-                line = new Line2D.Float((a + b)*(float)Math.cos(2*Math.PI*(i - 1)/segs) - c*(float)Math.cos(2*Math.PI*(i - 1)*(a/b + 1)/segs),
-                                        (a + b)*(float)Math.sin(2*Math.PI*(i - 1)/segs) - c*(float)Math.sin(2*Math.PI*(i - 1)*(a/b + 1)/segs),
-                                        (a + b)*(float)Math.cos(2*Math.PI*i/segs) - c*(float)Math.cos(2*Math.PI*i*(a/b + 1)/segs),
-                                        (a + b)*(float)Math.sin(2*Math.PI*i/segs) - c*(float)Math.sin(2*Math.PI*i*(a/b + 1)/segs));
+                i = Math.round((float)numrot*segs);
+                line = new Line2D.Float((float)((a + b)*Math.cos(2*Math.PI*(i - 1)/segs) - c*Math.cos(2*Math.PI*(i - 1)*(a/b + 1)/segs)),
+                                        (float)((a + b)*Math.sin(2*Math.PI*(i - 1)/segs) - c*Math.sin(2*Math.PI*(i - 1)*(a/b + 1)/segs)),
+                                        (float)((a + b)*Math.cos(2*Math.PI*i/segs) - c*Math.cos(2*Math.PI*i*(a/b + 1)/segs)),
+                                        (float)((a + b)*Math.sin(2*Math.PI*i/segs) - c*Math.sin(2*Math.PI*i*(a/b + 1)/segs)));
                 path.append(line, true);
             }
         }
         else if (main.rowData[main.rowData.length - 1][index].equals("Points"))
             for (i = 0; i < numrot*segs + 1; i++)
             {
-                rect = new Rectangle2D.Float(-0.5F + (a + b)*(float)Math.cos(2*Math.PI*i/segs) - c*(float)Math.cos(2*Math.PI*i*(a/b + 1)/segs),
-                                             -0.5F + (a + b)*(float)Math.sin(2*Math.PI*i/segs) - c*(float)Math.sin(2*Math.PI*i*(a/b + 1)/segs),
+                rect = new Rectangle2D.Float(-0.5F + (float)((a + b)*Math.cos(2*Math.PI*i/segs) - c*Math.cos(2*Math.PI*i*(a/b + 1)/segs)),
+                                             -0.5F + (float)((a + b)*Math.sin(2*Math.PI*i/segs) - c*Math.sin(2*Math.PI*i*(a/b + 1)/segs)),
                                               1,
                                               1);
                 path.append(rect, false);
@@ -419,20 +418,23 @@ public final class SpiroWrite
         }
         else if (main.rowData[main.rowData.length - 1][0].equals("Bezier"))
         {
-            double[] t_values = new double[100];
+            double[] t_values = new double[500];
             int N = SpiroJCalc.get_t_values(t_values, rx1, ry1, wx1, wy1, rx2, ry2, wx2, wy2);
             t_values[N] = 2*Math.PI;            // terminate the sequence, avoid rollover
-            if ((rx2 != 0 && wx2 != 0) || (ry2 != 0 && wy2 != 0))
-            {
-                System.out.println("This does not appear to be a Lissajous figure, please wait for next release.");
-                return path;
-            }
 
             System.out.println("Converting to Beziers : " + N);
             if (N > 0)
                 for (i = 0; i <= N; i++)
                     System.out.print(" " + t_values[i]*180/Math.PI);
             System.out.println();
+//            for (i = 0; i < N; i++)
+//            {
+//                rect = new Rectangle2D.Float(-0.5F + rx1*(float)Math.cos(wx1*t_values[i]) + rx2*(float)Math.cos(wx2*t_values[i]),
+//                                             -0.5F + ry1*(float)Math.sin(wy1*t_values[i]) + ry2*(float)Math.sin(wy2*t_values[i]),
+//                                              1,
+//                                              1);
+//                path.append(rect, false);
+//            }
             for (i = 0; i < N; i++)
                 path.append(SpiroJCalc.getBezier(t_values[i], t_values[i + 1]), true);
             path.closePath();
