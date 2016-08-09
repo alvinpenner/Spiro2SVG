@@ -16,7 +16,7 @@ public final class SpiroCalc
     private static final double TOL = 0.00001;
     private static double a, b, c;                                          // spiro parameters
 
-    public static CubicCurve2D.Float getBezier(double t1, double t2)
+    protected static CubicCurve2D.Float getBezier(double t1, double t2)
     {
         Point2D.Double[][] ptSpiro = new Point2D.Double[3][2];              // Point[derivative (0-2)][t = (0,1)]
 
@@ -62,7 +62,7 @@ public final class SpiroCalc
         return main.calcBezier(ptSpiro, t1, t2);
     }
 
-    public static void write_test_quadratic(FileWriter out)
+    protected static void write_test_quadratic(FileWriter out)
     {
         // this will write a test quadratic bezier, just for testing purposes
         // this uses the standard parms from the last object rendered
@@ -155,7 +155,7 @@ public final class SpiroCalc
         return t0;
     }
 
-    public static int get_t_values(double[] t, double m_a, double m_b, double m_c)
+    protected static int get_t_values(double[] t, double m_a, double m_b, double m_c)
     {
         int N = 0;                                                  // points per lobe
         a = m_a; b = m_b; c = m_c;

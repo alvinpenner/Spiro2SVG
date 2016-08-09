@@ -5,24 +5,30 @@
 </head>
 <body style="color: rgb(0, 0, 0); background-color: #C8DDF2;"
  alink="#3366ff" link="#000099" vlink="#000099"><br><center>
-&nbsp;&nbsp;&nbsp;Spiro2SVG is a Java program for converting spirographs to SVG.<br>
-&nbsp;&nbsp;&nbsp;The spirograph data files are from the program Spirograph v-1.0.2.1, available at:
-<a target="_new" href="http://mathiversity.com">http://mathiversity.com</a>,<br>
-or from the program SpiroJ, available at:<br>
-<a target="_new" href="http://sourceforge.net/projects/spiroj/">http://sourceforge.net/projects/spiroj</a><br>
+&nbsp;&nbsp;&nbsp;Spiro2SVG is a Java program for converting spirographs and roulettes to SVG.<br>
+&nbsp;&nbsp;&nbsp;The spirograph input data files can come from three sources:</center>
+<ul>
+<li>program Spirograph v-1.0.2.1, available at:
+<a target="_new" href="http://mathiversity.com/downloads">http://mathiversity.com</a>.<br>
 A gallery of these images is at:
-<a target="_new" href="http://mathiversity.com/online-spirograph/gallery">http://mathiversity.com/online-spirograph/gallery</a>.<br><br>
+<a target="_new" href="http://mathiversity.com/online-spirograph/gallery">http://mathiversity.com/.../gallery</a>.</li>
+<li>program SpiroJ, available at:
+<a target="_new" href="http://sourceforge.net/projects/spiroj/">http://sourceforge.net/projects/spiroj</a>.</li>
+<li>download file ShapesDemo.zip, at:
+<a target="_new" href="http://www.codeproject.com/Articles/76878/Spirograph-Shapes-WPF-Bezier-Shapes-from-Math-Form">Spirograph-Shapes-WPF-Bezier-Shapes</a>.<br>
+see Farris Wheels at: <a target="_new" href="http://scholarcommons.scu.edu/cgi/viewcontent.cgi?article=1004&context=math_compsci">Wheels on Wheels on Wheels - Surprising Symmetry</a>.</li>
+</ul><center>
 The program uses <a target="_new" href="http://en.wikipedia.org/wiki/B%C3%A9zier_curve">B&eacute;zier</a>
 curves to do the rendering of the shapes, which allows them to be saved as a vector graphic, using the 
 <a target="_new" href="http://en.wikipedia.org/wiki/Scalable_Vector_Graphics">SVG</a> format, instead of the usual bitmap format.
 These can be viewed with <a target="_new" href="http://inkscape.org">Inkscape</a>, or any web browser.<br>
 &nbsp;&nbsp;&nbsp;The normal generation of spirograph curves involves calculating dozens, or hundreds, of points on the spirograph,
-and then joining them with lines. The Spiro2SVG program, instead, performs a smooth fit using Bézier curves.
-The Bézier curves are calculated by matching both the slope and the curvature of the spirograph at selected endpoints, which leads to a very accurate fit.<br><br>
+and then joining them with lines. The Spiro2SVG program, instead, performs a smooth fit using B&eacute;zier curves.
+The B&eacute;zier curves are calculated by matching both the slope and the curvature of the spirograph at selected endpoints, which leads to a very accurate fit.<br><br>
 &nbsp;&nbsp;&nbsp;For some shapes it may be desirable to keep the original line drawing of the shape, so the drawing method
 is separately configurable for each object. The program will make an initial assessment of how best to draw the shape,
 based on the number of points per lobe in the spirograph. Less than 20 points per lobe will be drawn as lines,
-otherwise Bézier curves will be used to produce a smooth result. These initial choices can be modified in the
+otherwise B&eacute;zier curves will be used to produce a smooth result. These initial choices can be modified in the
 configuration display, by clicking on the green boxes in the bottom line.<br>
 The program can also be run silently from the command prompt:<br>
 use the command 'java -jar Spiro2SVG.jar -?' to see the available options.

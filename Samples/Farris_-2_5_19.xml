@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<spiro>
+   <editor type="Farris" />
+   <shape linewidth="1" linecolor="#000000" fillcolor="#DDDDFF" />
+   <generator steps="300" />
+   <operator type="rotor">
+      <radius r="120" />
+      <frequency w="-2" />
+      <phase phi="0" />
+   </operator>
+   <operator type="rotor">
+      <radius r="60" />
+      <frequency w="5" />
+      <phase phi="0" />
+   </operator>
+   <operator type="rotor">
+      <radius r="30" />
+      <frequency w="19" />
+      <phase phi="0" />
+   </operator>
+</spiro>

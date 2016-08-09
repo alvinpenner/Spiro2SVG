@@ -48,8 +48,8 @@ public final class HelpAbout
 
         help.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         help.add(editorPane);
-        help.setMinimumSize(new Dimension(500, 620));
-        help.setResizable(false);
+        help.setMinimumSize(new Dimension(520, 645));
+//        help.setResizable(false);
         help.setLocationByPlatform(true);
         help.setVisible(true);
     }

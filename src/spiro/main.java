@@ -11,6 +11,7 @@
 // Jun 18, 2016 - first commit to http://github.com/alvinpenner/Spiro2SVG
 // Jul 11, 2016 - rev 0.91, support for Lissajous figures from SpiroJ
 // Jul 24, 2016 - rev 0.92, support for all figures from SpiroJ
+// Aug  8, 2016 - rev 0.93, support for Farris Wheels, with no inflection points
 
 package spiro;
 
@@ -24,7 +25,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class main
 {
-    public static final String VERSION_NO = "0.92";
+    public static final String VERSION_NO = "0.93";
     public static final String PAGE_UNITS = "mm";
     public static final float PAGE_WIDTH = 210;
     public static final float PAGE_HEIGHT = 297;
@@ -40,6 +41,10 @@ public class main
                                                                 {"Argb"}, {"FillArgb"}, {"FillMode"}, {"Edit Drawing Style"}};
     public static final String[][] SpiroJNames = new String[][] {{"Radius_x1"}, {"Radius_y1"}, {"Frequency_x1"}, {"Frequency_y1"},
                                                                  {"Radius_x2"}, {"Radius_y2"}, {"Frequency_x2"}, {"Frequency_y2"},
+                                                                 {"generator_steps"}, {"line_width"}, {"line_color"}, {"fill_color"},
+                                                                 {"Edit Drawing Style"}};
+    public static final String[][] FarrisNames = new String[][] {{"Radius_1"}, {"Frequency_1"}, {"Phase_1"}, {"Radius_2"},
+                                                                 {"Frequency_2"}, {"Phase_2"}, {"Radius_3"}, {"Frequency_3"}, {"Phase_3"},
                                                                  {"generator_steps"}, {"line_width"}, {"line_color"}, {"fill_color"},
                                                                  {"Edit Drawing Style"}};
     public static String[][] rowNames;
@@ -230,7 +235,7 @@ public class main
         }
     }
 
-    public static CubicCurve2D.Float calcBezier(Point2D.Double[][] ptSpiro, double t1, double t2)
+    protected static CubicCurve2D.Float calcBezier(Point2D.Double[][] ptSpiro, double t1, double t2)
     {
         double delxrot0 = 0, delyrot0, delxrot3 = 0, delyrot3;
         double[] dirx = new double[2];
@@ -361,7 +366,7 @@ public class main
         return new CubicCurve2D.Float((float)ptBez[0].x, (float)ptBez[0].y, (float)ptBez[1].x, (float)ptBez[1].y, (float)ptBez[2].x, (float)ptBez[2].y, (float)ptBez[3].x, (float)ptBez[3].y);
     }
 
-    public static int insert_t_value(int N, int index, double[] t, double new_t)
+    protected static int insert_t_value(int N, int index, double[] t, double new_t)
     {
         // push t[index] up by one, insert at location index
         if (N < index) return 0;
@@ -372,7 +377,7 @@ public class main
         return N + 1;
     }
 
-    public static void write_test_cubic(FileWriter out)
+    protected static void write_test_cubic(FileWriter out)
     {
         // this will write a test cubic bezier, just for testing purposes
 

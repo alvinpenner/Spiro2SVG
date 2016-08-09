@@ -13,7 +13,7 @@ public final class SpiroWrite
     private static int segs;                        // number of segments per rotation
     private static boolean isspiro;
 
-    public static void write_svg_file(String fname, boolean m_isspiro)
+    protected static void write_svg_file(String fname, boolean m_isspiro)
     {
         isspiro = m_isspiro;
         String strPath;
@@ -54,26 +54,28 @@ public final class SpiroWrite
             }
             for (int iTemp = 0; iTemp < main.rowData[0].length; iTemp++)
             {
-                float stroke_width = isspiro ? Float.parseFloat(main.rowData[10][iTemp])    // CurvePenWidth
-                                             : Float.parseFloat(main.rowData[9][iTemp]);    // linewidth
-                if (main.rowData[main.rowData.length - 1][iTemp].equals("Points"))          // Edit Drawing Style
+                float stroke_width = isspiro ? Float.parseFloat(main.rowData[10][iTemp])                        // CurvePenWidth
+                                             : Float.parseFloat(main.rowData[main.rowData.length - 4][iTemp]);  // linewidth
+                if (main.rowData[main.rowData.length - 1][iTemp].equals("Points"))                              // Edit Drawing Style
                     stroke_width = 1;
                 strPath = "    <path\n"
                         + "        d='";
                 out.write(strPath);
-                if (isspiro)
+                if (isspiro)                                            // .spiro file
                     convertspiroParms(iTemp, out);
-                else
+                else if (main.rowData.length == 13)                     // SpiroJ file
                     convertSpiroJParms(iTemp, out);
+                else if (main.rowData.length == 14)                     // Farris Wheel file
+                    convertFarrisParms(iTemp, out);
                 strPath = "'\n"
                         + "        style='"
-                        + (isspiro ? getspiroColor("fill", Integer.parseInt(main.rowData[13][iTemp]))   // FillArgb
-                                   : getSpiroJColor("fill", main.rowData[11][iTemp]))                   // fillcolor
-                        + (isspiro ? getspiroColor("stroke", Integer.parseInt(main.rowData[12][iTemp])) // Argb
-                                   : getSpiroJColor("stroke", main.rowData[10][iTemp]))                 // linecolor
-                        + getStrokeWidth(stroke_width)                                                  // CurvePenWidth
-                        + getFillRule(isspiro ? Integer.parseInt(main.rowData[14][iTemp]) : 0)          // FillMode
-                        + "stroke-miterlimit:" + main.MITER_LIMIT + "' />\n";                           // arbitrary number
+                        + (isspiro ? getspiroColor("fill", Integer.parseInt(main.rowData[13][iTemp]))           // FillArgb
+                                   : getSpiroJColor("fill", main.rowData[main.rowData.length - 2][iTemp]))      // fillcolor
+                        + (isspiro ? getspiroColor("stroke", Integer.parseInt(main.rowData[12][iTemp]))         // Argb
+                                   : getSpiroJColor("stroke", main.rowData[main.rowData.length - 3][iTemp]))    // linecolor
+                        + getStrokeWidth(stroke_width)                                                          // CurvePenWidth
+                        + getFillRule(isspiro ? Integer.parseInt(main.rowData[14][iTemp]) : 0)                  // FillMode
+                        + "stroke-miterlimit:" + main.MITER_LIMIT + "' />\n";                                   // arbitrary number
                 out.write(strPath);
             }
 //            SpiroCalc.write_test_quadratic(out);                    // fix fix for testing only
@@ -197,14 +199,31 @@ public final class SpiroWrite
                 System.out.println("SpiroJ error: could not determine number of rotations");
         }
         else
-            getPath(out, getSpiroJShape(Float.parseFloat(main.rowData[0][index]),
-                                        Float.parseFloat(main.rowData[1][index]),
-                                        Float.parseFloat(main.rowData[2][index]),
-                                        Float.parseFloat(main.rowData[3][index]),
-                                        Float.parseFloat(main.rowData[4][index]),
-                                        Float.parseFloat(main.rowData[5][index]),
-                                        Float.parseFloat(main.rowData[6][index]),
-                                        Float.parseFloat(main.rowData[7][index])).getPathIterator(null));
+            getPath(out, getSpiroJShape(Double.parseDouble(main.rowData[0][index]),
+                                        Double.parseDouble(main.rowData[1][index]),
+                                        Double.parseDouble(main.rowData[2][index]),
+                                        Double.parseDouble(main.rowData[3][index]),
+                                        Double.parseDouble(main.rowData[4][index]),
+                                        Double.parseDouble(main.rowData[5][index]),
+                                        Double.parseDouble(main.rowData[6][index]),
+                                        Double.parseDouble(main.rowData[7][index])).getPathIterator(null));
+    }
+
+    private static void convertFarrisParms(int index, FileWriter out)
+    {
+        // render as three generic Farris Wheels
+
+        numrot = 0;                                                         // not used
+        segs = Integer.parseInt(main.rowData[9][index]);                    // generator_steps
+        getPath(out, getFarrisShape(Double.parseDouble(main.rowData[0][index]),
+                                    Double.parseDouble(main.rowData[1][index]),
+                                    Double.parseDouble(main.rowData[2][index])*Math.PI/180,
+                                    Double.parseDouble(main.rowData[3][index]),
+                                    Double.parseDouble(main.rowData[4][index]),
+                                    Double.parseDouble(main.rowData[5][index])*Math.PI/180,
+                                    Double.parseDouble(main.rowData[6][index]),
+                                    Double.parseDouble(main.rowData[7][index]),
+                                    Double.parseDouble(main.rowData[8][index])*Math.PI/180).getPathIterator(null));
     }
 
     private static double round2int(double fData)
@@ -366,7 +385,7 @@ public final class SpiroWrite
         return trans.createTransformedShape(path);
     }
 
-    private static Shape getSpiroJShape(float rx1, float ry1, float wx1, float wy1, float rx2, float ry2, float wx2, float wy2)
+    private static Shape getSpiroJShape(double rx1, double ry1, double wx1, double wy1, double rx2, double ry2, double wx2, double wy2)
     {
         Path2D path = new Path2D.Float();
         Rectangle2D.Float rect;
@@ -390,10 +409,10 @@ public final class SpiroWrite
                     path.closePath();
                 else
                 {
-                    line = new Line2D.Float(rx1*(float)Math.cos(2*Math.PI*(i - 1)*wx1/segs) + rx2*(float)Math.cos(2*Math.PI*(i - 1)*wx2/segs),
-                                            ry1*(float)Math.sin(2*Math.PI*(i - 1)*wy1/segs) + ry2*(float)Math.sin(2*Math.PI*(i - 1)*wy2/segs),
-                                            rx1*(float)Math.cos(2*Math.PI*i*wx1/segs) + rx2*(float)Math.cos(2*Math.PI*i*wx2/segs),
-                                            ry1*(float)Math.sin(2*Math.PI*i*wy1/segs) + ry2*(float)Math.sin(2*Math.PI*i*wy2/segs));
+                    line = new Line2D.Float((float)(rx1*Math.cos(2*Math.PI*(i - 1)*wx1/segs) + rx2*Math.cos(2*Math.PI*(i - 1)*wx2/segs)),
+                                            (float)(ry1*Math.sin(2*Math.PI*(i - 1)*wy1/segs) + ry2*Math.sin(2*Math.PI*(i - 1)*wy2/segs)),
+                                            (float)(rx1*Math.cos(2*Math.PI*i*wx1/segs) + rx2*Math.cos(2*Math.PI*i*wx2/segs)),
+                                            (float)(ry1*Math.sin(2*Math.PI*i*wy1/segs) + ry2*Math.sin(2*Math.PI*i*wy2/segs)));
                     path.append(line, true);
                 }
         }
@@ -403,8 +422,8 @@ public final class SpiroWrite
             //SpiroJCalc.get_t_values(t_values, rx1, ry1, wx1, wy1, rx2, ry2, wx2, wy2);  // fix fix testing only
             for (i = 0; i < segs; i++)
             {
-                rect = new Rectangle2D.Float(-0.5F + rx1*(float)Math.cos(2*Math.PI*i*wx1/segs) + rx2*(float)Math.cos(2*Math.PI*i*wx2/segs),
-                                             -0.5F + ry1*(float)Math.sin(2*Math.PI*i*wy1/segs) + ry2*(float)Math.sin(2*Math.PI*i*wy2/segs),
+                rect = new Rectangle2D.Float(-0.5F + (float)(rx1*Math.cos(2*Math.PI*i*wx1/segs) + rx2*Math.cos(2*Math.PI*i*wx2/segs)),
+                                             -0.5F + (float)(ry1*Math.sin(2*Math.PI*i*wy1/segs) + ry2*Math.sin(2*Math.PI*i*wy2/segs)),
                                               1,
                                               1);
                 path.append(rect, false);
@@ -420,7 +439,7 @@ public final class SpiroWrite
         {
             double[] t_values = new double[500];
             int N = SpiroJCalc.get_t_values(t_values, rx1, ry1, wx1, wy1, rx2, ry2, wx2, wy2);
-            t_values[N] = 2*Math.PI;            // terminate the sequence, avoid rollover
+            t_values[N] = t_values[0] + 2*Math.PI;  // terminate the sequence, avoid rollover
 
             System.out.println("Converting to Beziers : " + N);
             if (N > 0)
@@ -437,6 +456,69 @@ public final class SpiroWrite
 //            }
             for (i = 0; i < N; i++)
                 path.append(SpiroJCalc.getBezier(t_values[i], t_values[i + 1]), true);
+            path.closePath();
+        }
+        return trans.createTransformedShape(path);
+    }
+
+    private static Shape getFarrisShape(double r1, double w1, double phi1, double r2, double w2, double phi2, double r3, double w3, double phi3)
+    {
+        Path2D path = new Path2D.Float();
+        Rectangle2D.Float rect;
+        Line2D.Float line;
+        AffineTransform trans = AffineTransform.getTranslateInstance(
+                                main.PAGE_WIDTH*main.mm2px/2,
+                                main.PAGE_WIDTH*main.mm2px/2);
+
+        System.out.println("Farris parms = " + segs + ", " + r1 + ", " + w1 + ", " + phi1 + ", " + r2 + ", " + w2 + ", " + phi2 + ", " + r3 + ", " + w3 + ", " + phi3);
+        if (segs == 0)
+            return path;
+
+        int i;
+        if (main.rowData[main.rowData.length - 1][0].equals("Lines"))
+        {
+            for (i = 1; i < segs; i++)
+            {
+                line = new Line2D.Float((float)(r1*Math.cos(2*Math.PI*(i - 1)*w1/segs + phi1) + r2*Math.cos(2*Math.PI*(i - 1)*w2/segs + phi2) + r3*Math.cos(2*Math.PI*(i - 1)*w3/segs + phi3)),
+                                        (float)(r1*Math.sin(2*Math.PI*(i - 1)*w1/segs + phi1) + r2*Math.sin(2*Math.PI*(i - 1)*w2/segs + phi2) + r3*Math.sin(2*Math.PI*(i - 1)*w3/segs + phi3)),
+                                        (float)(r1*Math.cos(2*Math.PI*i*w1/segs + phi1) + r2*Math.cos(2*Math.PI*i*w2/segs + phi2) + r3*Math.cos(2*Math.PI*i*w3/segs + phi3)),
+                                        (float)(r1*Math.sin(2*Math.PI*i*w1/segs + phi1) + r2*Math.sin(2*Math.PI*i*w2/segs + phi2) + r3*Math.sin(2*Math.PI*i*w3/segs + phi3)));
+                path.append(line, true);
+            }
+            path.closePath();
+        }
+        else if (main.rowData[main.rowData.length - 1][0].equals("Points"))
+        {
+            for (i = 0; i < segs; i++)
+            {
+                rect = new Rectangle2D.Float(-0.5F + (float)(r1*Math.cos(2*Math.PI*i*w1/segs + phi1) + r2*Math.cos(2*Math.PI*i*w2/segs + phi2) + r3*Math.cos(2*Math.PI*i*w3/segs + phi3)),
+                                             -0.5F + (float)(r1*Math.sin(2*Math.PI*i*w1/segs + phi1) + r2*Math.sin(2*Math.PI*i*w2/segs + phi2) + r3*Math.sin(2*Math.PI*i*w3/segs + phi3)),
+                                              1,
+                                              1);
+                path.append(rect, false);
+            }
+        }
+        else if (main.rowData[main.rowData.length - 1][0].equals("Bezier"))
+        {
+            double[] t_values = new double[500];
+            int N = FarrisCalc.get_t_values(t_values, r1, w1, phi1, r2, w2, phi2, r3, w3, phi3);
+            t_values[N] = t_values[0] + 2*Math.PI;  // terminate the sequence, avoid rollover
+
+            System.out.println("Converting to Beziers : " + N);
+            if (N > 0)
+                for (i = 0; i <= N; i++)
+                    System.out.print(" " + (float) (t_values[i]*180/Math.PI));
+            System.out.println();
+//            for (i = 0; i < N; i++)
+//            {
+//                rect = new Rectangle2D.Float(-0.5F + (float)(r1*Math.cos(w1*t_values[i] + phi1) + r2*Math.cos(w2*t_values[i] + phi2) + r3*Math.cos(w3*t_values[i] + phi3)),
+//                                             -0.5F + (float)(r1*Math.sin(w1*t_values[i] + phi1) + r2*Math.sin(w2*t_values[i] + phi2) + r3*Math.sin(w3*t_values[i] + phi3)),
+//                                              1,
+//                                              1);
+//                path.append(rect, false);
+//            }
+            for (i = 0; i < N; i++)
+                path.append(FarrisCalc.getBezier(t_values[i], t_values[i + 1]), true);
             path.closePath();
         }
         return trans.createTransformedShape(path);

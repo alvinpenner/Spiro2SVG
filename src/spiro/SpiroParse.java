@@ -72,7 +72,11 @@ public final class SpiroParse
             JOptionPane.showMessageDialog(null, "The file '" + file.getAbsolutePath() + "' does not exist.\nPlease try again." , " File not found ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        main.rowNames = main.SpiroJNames;
+
+        // SpiroJ file  has 2 rotors, 4 parameters per rotor (2 size, 2 frequency)
+        // Farris Wheel has 3 rotors, 3 parameters per rotor (size, frequency, phase)
+        // both types use the same tags: shape, generator, operator
+
         draw_style = m_style;
         DocumentBuilder builder;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -86,9 +90,14 @@ public final class SpiroParse
                 JOptionPane.showMessageDialog(null, "This does not appear to be a valid SpiroJ file.\nElement 'spiro' not found.", " parse_SpiroJ error ", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            if (count_Children(root, "operator") != 2)
+            int nrotor = count_Children(root, "operator");
+            if (nrotor == 2)                                            // SpiroJ format
+                main.rowNames = main.SpiroJNames;
+            else if (nrotor == 3)                                       // my version of Farris Wheel format
+                main.rowNames = main.FarrisNames;
+            else
             {
-                JOptionPane.showMessageDialog(null, "This does not appear to be a valid SpiroJ file.\nNeed two 'operator' elements.", " parse_SpiroJ error ", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(null, "This does not appear to be a valid SpiroJ file or a Farris Wheel file.\nNeed two or three 'operator' elements.", " parse_SpiroJ error ", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             main.rowData = new String[main.rowNames.length][1];
@@ -102,13 +111,13 @@ public final class SpiroParse
                     Element childElement = (Element) child;
                     if (childElement.getTagName().equals("shape"))
                     {
-                        main.rowData[9][0]  = childElement.getAttribute("linewidth");   // line_width
-                        main.rowData[10][0] = childElement.getAttribute("linecolor");   // line_color
-                        main.rowData[11][0] = childElement.getAttribute("fillcolor");   // fill_color
+                        main.rowData[7 + nrotor][0]  = childElement.getAttribute("linewidth");  // line_width
+                        main.rowData[8 + nrotor][0] = childElement.getAttribute("linecolor");   // line_color
+                        main.rowData[9 + nrotor][0] = childElement.getAttribute("fillcolor");   // fill_color
                     }
                     else if (childElement.getTagName().equals("generator"))
                     {
-                        main.rowData[8][0] = childElement.getAttribute("steps");        // generator_steps
+                        main.rowData[6 + nrotor][0] = childElement.getAttribute("steps");   // generator_steps
                     }
                     else if (childElement.getTagName().equals("operator"))
                     {
@@ -121,14 +130,27 @@ public final class SpiroParse
                                 Element opchildElement = (Element) opchild;
                                 if (opchildElement.getTagName().equals("radius"))
                                 {
-                                    main.rowData[4*irotor][0] = opchildElement.getAttribute("x");       // Radius_x[i]
-                                    main.rowData[4*irotor + 1][0] = opchildElement.getAttribute("y");   // Radius_y[i]
+                                    if (nrotor == 2)
+                                    {
+                                        main.rowData[4*irotor][0] = opchildElement.getAttribute("x");       // Radius_x[i]
+                                        main.rowData[4*irotor + 1][0] = opchildElement.getAttribute("y");   // Radius_y[i]
+                                    }
+                                    else if (nrotor == 3)
+                                        main.rowData[3*irotor][0] = opchildElement.getAttribute("r");       // Radius[i]
                                 }
                                 else if (opchildElement.getTagName().equals("frequency"))
                                 {
-                                    main.rowData[4*irotor + 2][0] = opchildElement.getAttribute("x");   // Frequency_x[i]
-                                    main.rowData[4*irotor + 3][0] = opchildElement.getAttribute("y");   // Frequency_y[i]
+                                    if (nrotor == 2)
+                                    {
+                                        main.rowData[4*irotor + 2][0] = opchildElement.getAttribute("x");   // Frequency_x[i]
+                                        main.rowData[4*irotor + 3][0] = opchildElement.getAttribute("y");   // Frequency_y[i]
+                                    }
+                                    else if (nrotor == 3)
+                                        main.rowData[3*irotor + 1][0] = opchildElement.getAttribute("w");   // Frequency[i]
                                 }
+                                else if (opchildElement.getTagName().equals("phase"))
+                                    if (nrotor == 3)
+                                        main.rowData[3*irotor + 2][0] = opchildElement.getAttribute("phi"); // Phase[i]
                             }
                         }
                         irotor++;
