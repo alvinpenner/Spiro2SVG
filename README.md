@@ -14,14 +14,14 @@ The Bézier curves are calculated by matching both the slope and the curvature o
 The input spirograph data files can come from four sources:  
 <ul>
 <li>program Spirograph v-1.0.2.1, available at:
-<a target="_new" href="http://mathiversity.com/downloads">http://mathiversity.com</a>.<br>
+<a target="_blank" href="http://mathiversity.com/downloads">http://mathiversity.com</a>.<br>
 A gallery of these images is at:
-<a target="_new" href="http://mathiversity.com/online-spirograph/gallery">http://mathiversity.com/.../gallery</a>.</li>
+<a target="_blank" href="http://mathiversity.com/online-spirograph/gallery">http://mathiversity.com/.../gallery</a>.</li>
 <li>program SpiroJ, available at:
-<a target="_new" href="http://sourceforge.net/projects/spiroj/">http://sourceforge.net/projects/spiroj</a>.</li>
+<a target="_blank" href="http://sourceforge.net/projects/spiroj/">http://sourceforge.net/projects/spiroj</a>.</li>
 <li>download file ShapesDemo.zip, at:
-<a target="_new" href="http://www.codeproject.com/Articles/76878/Spirograph-Shapes-WPF-Bezier-Shapes-from-Math-Form">Spirograph-Shapes-WPF-Bezier-Shapes</a>.<br>
-see also Farris Wheels at: <a target="_new" href="http://scholarcommons.scu.edu/cgi/viewcontent.cgi?article=1004&context=math_compsci">Wheels on Wheels on Wheels - Surprising Symmetry</a>.</li>
+<a target="_blank" href="http://www.codeproject.com/Articles/76878/Spirograph-Shapes-WPF-Bezier-Shapes-from-Math-Form">Spirograph-Shapes-WPF-Bezier-Shapes</a>.<br>
+see also Farris Wheels at: <a target="_blank" href="http://scholarcommons.scu.edu/cgi/viewcontent.cgi?article=1004&context=math_compsci">Wheels on Wheels on Wheels - Surprising Symmetry</a>.</li>
 <li>see also the .spiro and .xml files in the Spiro2SVG/Samples folder.</li>
 </ul>
 to run from the gui: double-click on dist/Spiro2SVG.jar  

@@ -12,6 +12,7 @@
 // Jul 11, 2016 - rev 0.91, support for Lissajous figures from SpiroJ
 // Jul 24, 2016 - rev 0.92, support for all figures from SpiroJ
 // Aug  8, 2016 - rev 0.93, support for Farris Wheels, with no inflection points
+// Aug 10, 2016 - fix Farris Wheel crash caused by multiple simultaneous roots
 
 package spiro;
 

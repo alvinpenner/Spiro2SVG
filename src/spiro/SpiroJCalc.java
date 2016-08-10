@@ -155,12 +155,16 @@ public final class SpiroJCalc
         int loop = 0;
 
         if (Math.abs(t0) < TOL) t0 = 0;
-        t0 = (t0 + 2*Math.PI) % (2*Math.PI);        // in case of negative phase shift
+        t0 = (t0 + 2*Math.PI) % (2*Math.PI);            // in case of negative phase shift
 
         System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI);
 //        for (int i = 0; i < r.length; i++)
 //            System.out.println(r[i].A + ", " + r[i].w + ", " + r[i].phi);
-        do
+        f = 0;
+        fprime = 0;
+        for (int i = 0; i < r.length; i++)              // test for multiple roots
+            f += Math.abs(r[i][0]*Math.cos(r[i][1]*t0 + r[i][2]));
+        if (f > TOL/10) do
         {
             f = 0;
             fprime = 0;
@@ -171,7 +175,7 @@ public final class SpiroJCalc
             }
             if (Math.abs(fprime) < 10*TOL)
             {
-                System.out.println("too small slope = " + fprime + " : Abort");
+                System.out.println("too small slope t =, " + t0*180/Math.PI + ", " + f + ", " + fprime + " : Abort");
                 return 999999;
             }
             if (loop > 100)
