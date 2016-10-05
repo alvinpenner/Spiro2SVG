@@ -85,6 +85,7 @@ public final class FarrisCalc
         r1 = m_r1; w1 = m_w1; phi1 = m_phi1;
         r2 = m_r2; w2 = m_w2; phi2 = m_phi2;
         r3 = m_r3; w3 = m_w3; phi3 = m_phi3;
+        System.out.println("Farris parms = " + r1 + ", " + w1 + ", " + phi1 + ", " + r2 + ", " + w2 + ", " + phi2);
 
         double[][] rotors = new double[][] {{r1*w1, w1, phi1 - Math.PI/2},
                                             {r2*w2, w2, phi2 - Math.PI/2},
@@ -128,6 +129,7 @@ public final class FarrisCalc
             for (i = 0; i < Math.round(2*Math.abs(w3 - w1)); i++)           // inflection using w3-w1
                 N = main.insert_t_value(N, N, t, SpiroJCalc.solve_cos_t(rotors, (Math.PI*(i + 0.5) - phi3 + phi1)/Math.abs(w3 - w1)));
 
+        N = main.insert_t_value(N, N, t, Math.PI/4);                    // fix fix temporary code
         System.out.println("initial t array N = " + N);
         Arrays.sort(t, 0, N);
         if (N > 1)                                                      // check for duplicates
