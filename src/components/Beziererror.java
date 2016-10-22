@@ -15,16 +15,16 @@ package components;
 public class Beziererror
 {
     private static final double a_b = 180;          // spiro 'a - b'
-    private static final double c = 7;              // spiro 'c'
+    private static final double c = 3.6;            // spiro 'c'
     private static final double l1 = a_b + c;       // distance to start point (l1, 0)
     private static final double l2 = a_b - c;       // distance to end   point (l2/√2, l2/√2)
 
     public static void main (String[] args)
     {
         double d1, d2;
-        double start = 0;                           // d1 range
+        double start = 35.4931802054;                           // d1 range
         double incr = 1;
-        int steps = 100;
+        int steps = 0;
         double err0 = 0, err1 = 0, err2;            // previous error levels
         double d2old = 0;
         String strout = "";                         // record extrema
@@ -32,35 +32,59 @@ public class Beziererror
         System.out.printf("a-b c =, %f, %f\n", a_b, c);
         System.out.println("    ,         ,       C0,         C1,        area,        <x>,        <y>");
         System.out.printf( "    ,         ,       %f, %f, %f, %f, %f\n\n", spiro_curvature(c), spiro_curvature(-c), spiro_area(), spiro_moment("x"), spiro_moment("y"));
-        System.out.println("  d1,       d2,       C0,         C1,        area,        <x>,        <y>,        err");
 
-//        d1 = 60;
-        for (d1 = start; d1 <= start + steps*incr; d1 += incr)
+        if (steps > 0)
         {
-//            d2 = -l2 - (3*spiro_curvature(c)*d1*d1/2 - l1)*Math.sqrt(2);    // satisfy C0 constraint
-            d2 = (20*spiro_area()/3 - 2*d1*(l1 - l2/Math.sqrt(2)))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2)); // satisfy area constraint
-            err2 = calc_error(d1, d2);
-            System.out.printf("%f, %f, %f, %f, %f, %f, %f, %.8f\n", d1, d2, bezier_C0(d1, d2), bezier_C1(d1, d2), bezier_area(d1, d2), bezier_moment_x(d1, d2), bezier_moment_y(d1, d2), err2);
-            if ( d1 > start + incr)
+            System.out.println("  d1,       d2,       C0,         C1,        area,        <x>,        <y>,        err");
+            for (d1 = start; d1 <= start + steps*incr; d1 += incr)
             {
-                if (err2 > err1 && err0 > err1) strout += "\nlocal min at, " + (d1 - incr) + ", " + d2old + ", " + err1;
-                if (err2 < err1 && err0 < err1) strout += "\nlocal max at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+//                d2 = -l2 - (3*spiro_curvature(c)*d1*d1/2 - l1)*Math.sqrt(2);    // satisfy C0 constraint
+                d2 = (20*spiro_area()/3 - 2*d1*(l1 - l2/Math.sqrt(2)))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2)); // satisfy area constraint
+                err2 = calc_error(d1, d2);                  // search for extrema in rms error
+                System.out.printf("%f, %f, %f, %f, %f, %f, %f, %.8f\n", d1, d2, bezier_C0(d1, d2), bezier_C1(d1, d2), bezier_area(d1, d2), bezier_moment_x(d1, d2), bezier_moment_y(d1, d2), err2);
+//                err2 = bezier_moment_y(d1, d2);             // search for extrema in <y>
+                if ( d1 > start + incr)
+                {
+                    if (err2 > err1 && err0 > err1) strout += "\nlocal min at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+                    if (err2 < err1 && err0 < err1) strout += "\nlocal max at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+                }
+                err0 = err1;
+                err1 = err2;
+                d2old = d2;
             }
-            err0 = err1;
-            err1 = err2;
-            d2old = d2;
+            if (!strout.isEmpty())
+                System.out.println("\nList of extrema:" + strout);
         }
-        if (!strout.isEmpty()) 
-            System.out.println("\nList of extrema:" + strout);
 //        check_neighbours(50, 39.5);
-//        calc_one(46.8, 44.024364);
+//        d2 = (20*spiro_area()/3 - 2*start*(l1 - l2/Math.sqrt(2)))/(2*(l2 - l1/Math.sqrt(2)) - start/Math.sqrt(2)); // satisfy area constraint
+//        calc_one(start, d2);
+        calc_one(4.761144971219153, 87.359877107);
+//        calc_array();
     }
 
     private static void calc_one(double d1, double d2)
     {
 //        d1 /= Math.cos(Math.PI/8);            // use only if data comes from Spiro2SVG
 //        d2 /= Math.cos(Math.PI/8);
-        System.out.printf("\nc d1 d2 err = %f, %f, %f, %.7f\n", c, d1, d2, calc_error(d1, d2));
+//        System.out.printf("c         ,d1        ,d2        ,spiro_area  ,spiro <x>     ,spiro <y>     ,bezier_area ,bezier <x>    ,bezier <y>    ,err\n");
+//        System.out.printf("%f ,%f ,%f ,%f ,%f ,%f ,%f ,%f ,%f ,%.7f\n", c, d1, d2, spiro_area(), spiro_moment("x"), spiro_moment("y"), bezier_area(d1, d2), bezier_moment_x(d1, d2), bezier_moment_y(d1, d2), calc_error(d1, d2));
+        System.out.printf("c         ,d1        ,d2        ,err\n");
+        System.out.printf("%f ,%f ,%f ,%.7f\n", c, d1, d2, calc_error(d1, d2));
+    }
+
+    private static void calc_array()
+    {
+        // generate data suitable for the contour plot pgm 3DField
+        double d1, d2;
+        double startd1 = 55-12, startd2 = 35-12;
+        double incr = 4;
+        int steps = 6;
+
+        System.out.println("Contour Map");
+        System.out.println("d1, d2, rms error Map by Alvin Penner");
+        for (d1 = startd1; d1 <= startd1 + steps*incr; d1 += incr)
+            for (d2 = startd2; d2 <= startd2 + steps*incr; d2 += incr)
+                System.out.printf("%f, %f, %.7f, \n", d1, d2, calc_error(d1, d2));
     }
 
     private static double calc_error(double d1, double d2)
@@ -99,7 +123,7 @@ public class Beziererror
             r_bez = Math.sqrt(x_bez*x_bez + y_bez*y_bez);
             err += (r_bez - r_spiro)*(r_bez - r_spiro);
             theta_bez = Math.atan2(y_bez, x_bez);           // just a double check
-//            System.out.printf("%f, %f, %f, %f, %f, %f\n", t_bez, x_bez, y_bez, r_bez, theta_bez*180/Math.PI, r_bez/r_spiro - 1);
+//            System.out.printf("%f, %f, %f, %f, %f, %.7f\n", t_bez, x_bez, y_bez, r_bez, theta_bez*180/Math.PI, r_bez/r_spiro - 1);
         }
         return Math.sqrt(err/100)/a_b;
     }
