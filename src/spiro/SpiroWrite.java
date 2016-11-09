@@ -500,7 +500,7 @@ public final class SpiroWrite
         }
         else if (main.rowData[main.rowData.length - 1][0].equals("Bezier"))
         {
-            double[] t_values = new double[500];
+            double[] t_values = new double[1000];
             int N = FarrisCalc.get_t_values(t_values, r1, w1, phi1, r2, w2, phi2, r3, w3, phi3);
             t_values[N] = t_values[0] + 2*Math.PI;  // terminate the sequence, avoid rollover
 
@@ -509,7 +509,6 @@ public final class SpiroWrite
                 for (i = 0; i <= N; i++)
                     System.out.print(" " + (float) (t_values[i]*180/Math.PI));
             System.out.println();
-            System.out.println("Farris c = " + r2);
 //            for (i = 0; i < N; i++)
 //            {
 //                rect = new Rectangle2D.Float(-0.5F + (float)(r1*Math.cos(w1*t_values[i] + phi1) + r2*Math.cos(w2*t_values[i] + phi2) + r3*Math.cos(w3*t_values[i] + phi3)),

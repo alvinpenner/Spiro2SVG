@@ -76,27 +76,23 @@ public final class SpiroJCalc
 
     protected static int get_t_values(double[] t, double m_rx1, double m_ry1, double m_wx1, double m_wy1, double m_rx2, double m_ry2, double m_wx2, double m_wy2)
     {
-        int i, N = 0;                                                   // points per object
+        int i, N = 0;                                   // N = fit points per object
         rx1 = m_rx1; ry1 = m_ry1; wx1 = m_wx1; wy1 = m_wy1;
         rx2 = m_rx2; ry2 = m_ry2; wx2 = m_wx2; wy2 = m_wy2;
 
         double[][] rotors = new double[][] {{rx1*wx1, wx1, -Math.PI/2},
                                             {rx2*wx2, wx2, -Math.PI/2}};
-        if ((rx1 != 0) && (wx1 != 0))
-            for (i = 0; i < Math.round(Math.abs(2*wx1)); i++)           // x′ = 0
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*i/Math.abs(wx1)));
-        if ((rx2 != 0) && (wx2 != 0))
-            for (i = 0; i < Math.round(Math.abs(2*wx2)); i++)           // x′ = 0
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*i/Math.abs(wx2)));
+        for (i = 0; i < rotors.length; i++)                                         // solve x′ = 0
+            if ((Math.abs(rotors[i][0]) > TOL) && (Math.abs(rotors[i][1]) > TOL))   // check amplitude and frequency
+                for (int j = 0; j < Math.round(Math.abs(2*rotors[i][1])); j++)
+                    N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*j/Math.abs(rotors[i][1])));
 
         rotors = new double[][] {{ry1*wy1, wy1, 0},
                                  {ry2*wy2, wy2, 0}};
-        if ((ry1 != 0) && (wy1 != 0))
-            for (i = 0; i < Math.round(Math.abs(2*wy1)); i++)           // y′ = 0
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wy1)));
-        if ((ry2 != 0) && (wy2 != 0))
-            for (i = 0; i < Math.round(Math.abs(2*wy2)); i++)           // y′ = 0
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wy2)));
+        for (i = 0; i < rotors.length; i++)                                         // solve y′ = 0
+            if ((Math.abs(rotors[i][0]) > TOL) && (Math.abs(rotors[i][1]) > TOL))   // check amplitude and frequency
+                for (int j = 0; j < Math.round(Math.abs(2*rotors[i][1])); j++)
+                    N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(j + 0.5)/Math.abs(rotors[i][1])));
 
         rotors = new double[][] {{rx1*ry1*wx1*wy1*(wx1 + wy1)/2, wx1 - wy1, 0},
                                  {rx1*ry1*wx1*wy1*(wx1 - wy1)/2, wx1 + wy1, 0},
@@ -106,38 +102,27 @@ public final class SpiroJCalc
                                  {rx2*ry1*wx2*wy1*(wx2 - wy1)/2, wx2 + wy1, 0},
                                  {rx2*ry2*wx2*wy2*(wx2 + wy2)/2, wx2 - wy2, 0},
                                  {rx2*ry2*wx2*wy2*(wx2 - wy2)/2, wx2 + wy2, 0}};
-        if (Math.abs(wx1 + wy1) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx1 + wy1)); i++)     // inflection using wx1+wy1
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx1 + wy1)));
-        if (Math.abs(wx1 - wy1) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx1 - wy1)); i++)     // inflection using wx1-wy1
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx1 - wy1)));
-        if (Math.abs(wx1 + wy2) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx1 + wy2)); i++)     // inflection using wx1+wy2
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx1 + wy2)));
-        if (Math.abs(wx1 - wy2) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx1 - wy2)); i++)     // inflection using wx1-wy2
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx1 - wy2)));
-        if (Math.abs(wx2 + wy1) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx2 + wy1)); i++)     // inflection using wx2+wy1
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx2 + wy1)));
-        if (Math.abs(wx2 - wy1) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx2 - wy1)); i++)     // inflection using wx2-wy1
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx2 - wy1)));
-        if (Math.abs(wx2 + wy2) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx2 + wy2)); i++)     // inflection using wx2+wy2
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx2 + wy2)));
-        if (Math.abs(wx2 - wy2) > TOL)
-            for (i = 0; i < Math.round(2*Math.abs(wx2 - wy2)); i++)     // inflection using wx2-wy2
-                N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(i + 0.5)/Math.abs(wx2 - wy2)));
+        for (i = 0; i < rotors.length; i++)                                         // get inflection points
+            if ((Math.abs(rotors[i][0]) > TOL) && (Math.abs(rotors[i][1]) > TOL))   // check amplitude and frequency
+                for (int j = 0; j < Math.round(Math.abs(2*rotors[i][1])); j++)
+                    N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(j + 0.5)/Math.abs(rotors[i][1])));
+
+//        for (i = 0; i < rotors.length; i++)
+//            System.out.println(i + ", " + rotors[i][0] + ", " + rotors[i][1] + ", " + rotors[i][2]);
         System.out.println("initial t array N = " + N);
-        Arrays.sort(t, 0, N);
-        if (N > 1)                                                      // check for duplicates
-            for (i = 0; i < N - 1; i++)
+        return sort_t_values(t, N);
+    }
+
+    protected static int sort_t_values(double[] t, int n)
+    {
+        int i;
+        Arrays.sort(t, 0, n);
+        if (n > 1)                                                      // check for duplicates
+            for (i = 0; i < n - 1; i++)
                 if (t[i + 1] < t[i] + TOL)
                     t[i] = 999999;
-        Arrays.sort(t, 0, N);
-        for (i = 0; i < N; i++)                                         // remove duplicates
+        Arrays.sort(t, 0, n);
+        for (i = 0; i < n; i++)                                         // remove duplicates
             if (t[i] == 999999)
                 break;
         return i;
@@ -157,9 +142,7 @@ public final class SpiroJCalc
         if (Math.abs(t0) < TOL) t0 = 0;
         t0 = (t0 + 2*Math.PI) % (2*Math.PI);            // in case of negative phase shift
 
-        System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI);
-//        for (int i = 0; i < r.length; i++)
-//            System.out.println(r[i].A + ", " + r[i].w + ", " + r[i].phi);
+        System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI + ", " + t0);
         f = 0;
         fprime = 0;
         for (int i = 0; i < r.length; i++)              // test for multiple roots
@@ -186,14 +169,14 @@ public final class SpiroJCalc
             del_t = -f/fprime;
             t0 += del_t;
             loop++;
-            System.out.println("      t =, " + t0*180/Math.PI + ", " + f + ", " + fprime);
+//            System.out.println("      t =, " + t0*180/Math.PI + ", " + f + ", " + fprime);
         } while (Math.abs(del_t) > TOL/2);
 
         if (Math.abs(t0) < TOL) t0 = 0;
         t0 = (t0 + 2*Math.PI) % (2*Math.PI);        // in case of negative phase shift
         if ((t0 < 0) || (t0 > 2*Math.PI - TOL))
             return 999999;
-        System.out.println("final t =, " + t0*180/Math.PI + ", " + f + ", " + fprime);
+        System.out.println("final t =, " + t0 + ", " + t0*180/Math.PI + ", " + f + ", " + fprime);
         return t0;
     }
 
