@@ -15,6 +15,7 @@
 // Aug 10, 2016 - fix Farris Wheel crash caused by multiple simultaneous roots
 // Aug 11, 2016 - support for inflection points in Farris Wheels
 // Nov  9, 2016 - for Farris Wheel, use extrema of curvature, plus perpendicular slope
+// Nov 25, 2016 - rev 0.94, support for cusps in Farris Wheels
 
 package spiro;
 
@@ -28,7 +29,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class main
 {
-    public static final String VERSION_NO = "0.93";
+    public static final String VERSION_NO = "0.94";
     public static final String PAGE_UNITS = "mm";
     public static final float PAGE_WIDTH = 210;
     public static final float PAGE_HEIGHT = 297;
@@ -238,10 +239,11 @@ public class main
         }
     }
 
-    protected static CubicCurve2D.Float calcBezier(Point2D.Double[][] ptSpiro, double t1, double t2)
+    protected static CubicCurve2D.Float calcBezier(Point2D.Double[][] ptSpiro, double t1, double t2, double max_v)
     {
         double delxrot0 = 0, delyrot0, delxrot3 = 0, delyrot3;
         double[] dirx = new double[2];
+        double[] scaled_v = new double[2];                                  // check for stationary point
 
         ptBez[0] = new Point2D.Double(ptSpiro[0][0].x, ptSpiro[0][0].y);
         ptBez[1] = new Point2D.Double(ptBez[0].x, ptBez[0].y);
@@ -254,18 +256,24 @@ public class main
         yrot3 = getrotY(ptBez[3].x, ptBez[3].y, (theta[0] + theta[1])/2);
         mrot0 = Math.tan((theta[0] - theta[1])/2);
 
-        for (int i = 0; i < ptSpiro[0].length; i++)                     // effective 'rotated' curvature
+        for (int i = 0; i < ptSpiro[0].length; i++)                         // effective 'rotated' curvature
         {
-            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
+            scaled_v[i] = Math.sqrt(ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y)/max_v;
+//            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
+            if (scaled_v[i] < TOL)                                          // stationary point
+            {
+                System.out.println("calcBezier stationary point at i = " + i + " : " + t1 + ", " + t2 + ", " + Math.sqrt(ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y));
                 dirx[i] = getrotX(ptSpiro[2][i].x, ptSpiro[2][i].y, (theta[0] + theta[1])/2);   // use x″ & y″
-            else                                                                        // moving point
+            }
+            else                                                            // moving point
                 dirx[i] = getrotX(ptSpiro[1][i].x, ptSpiro[1][i].y, (theta[0] + theta[1])/2);
             Cu[i] = Math.signum(dirx[i])*Cu[i]*Math.pow(1 + mrot0*mrot0, 1.5);
 //            System.out.println("slopes " + i + " : " + ptSpiro[1][i].x + ", " + ptSpiro[1][i].y + " : " + ptSpiro[2][i].x + ", " + ptSpiro[2][i].y);
 //            System.out.println(i + " : " + Cu[i] + ", " + dirx[i] + ", " + ptSpiro[2][i].x + ", " + ptSpiro[2][i].y);
         }
         for (int i = 0; i < ptSpiro[0].length; i++)
-            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
+//            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
+            if (scaled_v[i] < TOL)                                          // stationary point
             {
                 if (Math.signum(dirx[i]) != Math.signum(dirx[1 - i]))
                     dirx[i] *= -1;                  // force same sign of dirx
@@ -303,12 +311,14 @@ public class main
             else
                 delxrot3 = Math.signum(dirx[1]*(t2 - t1))*Math.sqrt(delxrot3);
         }
-        else if (Math.abs(Cu[0]) < TOL)                          // zero curvature at t = 0
+        else if ((Math.abs(Cu[0]) < TOL)                        // zero curvature at t = 0
+             &&  (scaled_v[1] > TOL))                           // not stationary at t = 1
         {
             System.out.println("zero curvature at t = 0 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[0]);
             delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2/mrot0;
 //            System.out.println((yrot3 - yrot0 + mrot0*(xrot3 - xrot0)) + ", " + (3*Cu[1]*delxrot3*delxrot3/2) + ", " + (yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2));
-            if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL))
+//            if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL))
+            if (scaled_v[0] < TOL)
                 delxrot0 = 0;                                   // stationary point, clamp it
             else if (Math.signum(yrot3 - yrot0 + mrot0*(xrot3 - xrot0)) != Math.signum(yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2))
                 delxrot0 = 0;                                   // unwanted sign reversal
@@ -321,7 +331,8 @@ public class main
             System.out.println("zero curvature at t = 1 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[1]);
             delxrot0 = (yrot3 - yrot0 + mrot0*(xrot3 - xrot0))/2/mrot0;
 //            System.out.println((yrot3 - yrot0 - mrot0*(xrot3 - xrot0)) + ", " + (-3*Cu[0]*delxrot0*delxrot0/2) + ", " + (yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2));
-            if ((Math.abs(ptSpiro[1][1].x) < TOL) && (Math.abs(ptSpiro[1][1].y) < TOL))
+//            if ((Math.abs(ptSpiro[1][1].x) < TOL) && (Math.abs(ptSpiro[1][1].y) < TOL))
+            if (scaled_v[1] < TOL)
                 delxrot3 = 0;                                   // stationary point, clamp it
             else if (Math.signum(yrot3 - yrot0 - mrot0*(xrot3 - xrot0)) != Math.signum(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2))
                 delxrot3 = 0;                                   // unwanted sign reversal

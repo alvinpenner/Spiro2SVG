@@ -59,7 +59,7 @@ public final class SpiroCalc
                            /  Math.pow((ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y), 1.5);
             else
                 main.Cu[i] = 0;                                             // stationary point
-        return main.calcBezier(ptSpiro, t1, t2);
+        return main.calcBezier(ptSpiro, t1, t2, 1);
     }
 
     protected static void write_test_quadratic(FileWriter out)

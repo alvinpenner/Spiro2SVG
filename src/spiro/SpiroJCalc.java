@@ -71,7 +71,7 @@ public final class SpiroJCalc
             else
                 main.Cu[i] = rx1*ry1*wx1*wx1*wy1*wy1*(wx1*wx1 - wy1*wy1)/3  // stationary point
                            / Math.pow(rx1*rx1*wx1*wx1*wx1*wx1 + ry1*ry1*wy1*wy1*wy1*wy1, 1.5);
-        return main.calcBezier(ptSpiro, t1, t2);
+        return main.calcBezier(ptSpiro, t1, t2, 1);
     }
 
     protected static int get_t_values(double[] t, double m_rx1, double m_ry1, double m_wx1, double m_wy1, double m_rx2, double m_ry2, double m_wx2, double m_wy2)
@@ -139,10 +139,10 @@ public final class SpiroJCalc
         double f, fprime, del_t;
         int loop = 0;
 
-        if (Math.abs(t0) < TOL) t0 = 0;
         t0 = (t0 + 2*Math.PI) % (2*Math.PI);            // in case of negative phase shift
+        if (Math.abs(t0) < TOL) t0 = 0;
 
-        System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI + ", " + t0);
+        System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI + ", (" + t0 + ")");
         f = 0;
         fprime = 0;
         for (int i = 0; i < r.length; i++)              // test for multiple roots
@@ -172,11 +172,11 @@ public final class SpiroJCalc
 //            System.out.println("      t =, " + t0*180/Math.PI + ", " + f + ", " + fprime);
         } while (Math.abs(del_t) > TOL/2);
 
-        if (Math.abs(t0) < TOL) t0 = 0;
         t0 = (t0 + 2*Math.PI) % (2*Math.PI);        // in case of negative phase shift
+        if (Math.abs(t0) < TOL) t0 = 0;
         if ((t0 < 0) || (t0 > 2*Math.PI - TOL))
             return 999999;
-        System.out.println("final t =, " + t0 + ", " + t0*180/Math.PI + ", " + f + ", " + fprime);
+        System.out.println("final t =, " + t0*180/Math.PI + ", (" + t0 + "), " + f + ", " + fprime);
         return t0;
     }
 
