@@ -16,6 +16,7 @@
 // Aug 11, 2016 - support for inflection points in Farris Wheels
 // Nov  9, 2016 - for Farris Wheel, use extrema of curvature, plus perpendicular slope
 // Nov 25, 2016 - rev 0.94, support for cusps in Farris Wheels
+// Dec  5, 2016 - for standard spirograph, Class 4, switch from -c to c
 
 package spiro;
 
@@ -31,14 +32,18 @@ public class main
 {
     public static final String VERSION_NO = "0.94";
     public static final String PAGE_UNITS = "mm";
-    public static final float PAGE_WIDTH = 210;
-    public static final float PAGE_HEIGHT = 297;
+//    public static final float PAGE_WIDTH = 210;               // A4 page in mm
+//    public static final float PAGE_HEIGHT = 297;
+    public static final float PAGE_WIDTH = 158.75F;             // 600 px
+    public static final float PAGE_HEIGHT = 158.75F;
     public static final float mm2px = 96F/25.4F;
     public static final float MITER_LIMIT = 20;
     public static final String STYLE_AUTO = "Auto";
     public static final String STYLE_POINTS = "Points";
     public static final String STYLE_LINES = "Lines";
     public static final String STYLE_BEZIER = "Bezier";
+    public static final boolean FIT_POINTS_ONLY = false;        // for debugging only
+    public static final boolean IS_DEBUG = false;               // for debugging only
     public static final String[][] spiroNames = new String[][] {{"StatorRadius"}, {"RotorRadius"}, {"NumRotations"}, {"AnglesPerCycle"},
                                                                 {"RotorSlide"}, {"OriginX"}, {"OriginY"}, {"InitialAngle"},
                                                                 {"PenDistance"}, {"Lock"}, {"CurvePenWidth"}, {"Zoom"},
@@ -116,8 +121,8 @@ public class main
 //  Class 4 - standard epi/hypoTrochoid rendering parameters
 //  see : http://turnbull.mcs.st-and.ac.uk/~history/Curves/Epitrochoid.html
 //  a = stator, b = rotor, c = pen distance
-//  x = (a + b) cos(t) - c cos((a/b + 1)t)
-//  y = (a + b) sin(t) - c sin((a/b + 1)t)
+//  x = (a + b) cos(t) + c cos((a/b + 1)t)
+//  y = (a + b) sin(t) + c sin((a/b + 1)t)
 
 //  Class 5 - SpiroJ roulette parameters
 //  see : http://sourceforge.net/projects/spiroj/
@@ -229,13 +234,16 @@ public class main
         }
         SpiroWrite.write_svg_file(exportName, fileName.endsWith(".spiro"));
 
-        System.out.println("\n" + fileName + " : ");
-        for (int i = 0; i < rowData.length; i++)
+        if (IS_DEBUG)
         {
-            System.out.print(rowNames[i][0] + "\t");
-            for (int j = 0; j < rowData[0].length; j++)
-                System.out.print(", " + rowData[i][j]);
-            System.out.println();
+            System.out.println("\n" + fileName + " : ");
+            for (int i = 0; i < rowData.length; i++)
+            {
+                System.out.print(rowNames[i][0] + "\t");
+                for (int j = 0; j < rowData[0].length; j++)
+                    System.out.print(", " + rowData[i][j]);
+                System.out.println();
+            }
         }
     }
 
@@ -259,10 +267,10 @@ public class main
         for (int i = 0; i < ptSpiro[0].length; i++)                         // effective 'rotated' curvature
         {
             scaled_v[i] = Math.sqrt(ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y)/max_v;
-//            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
             if (scaled_v[i] < TOL)                                          // stationary point
             {
-                System.out.println("calcBezier stationary point at i = " + i + " : " + t1 + ", " + t2 + ", " + Math.sqrt(ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y));
+                if (IS_DEBUG)
+                    System.out.println("calcBezier stationary point at i = " + i + " : " + t1 + ", " + t2 + ", " + Math.sqrt(ptSpiro[1][i].x*ptSpiro[1][i].x + ptSpiro[1][i].y*ptSpiro[1][i].y));
                 dirx[i] = getrotX(ptSpiro[2][i].x, ptSpiro[2][i].y, (theta[0] + theta[1])/2);   // use x″ & y″
             }
             else                                                            // moving point
@@ -272,7 +280,6 @@ public class main
 //            System.out.println(i + " : " + Cu[i] + ", " + dirx[i] + ", " + ptSpiro[2][i].x + ", " + ptSpiro[2][i].y);
         }
         for (int i = 0; i < ptSpiro[0].length; i++)
-//            if ((Math.abs(ptSpiro[1][i].x) < TOL) && (Math.abs(ptSpiro[1][i].y) < TOL)) // stationary point
             if (scaled_v[i] < TOL)                                          // stationary point
             {
                 if (Math.signum(dirx[i]) != Math.signum(dirx[1 - i]))
@@ -281,15 +288,19 @@ public class main
                     Cu[i] *= -1;                    // force same sign of Cu
             }
 
-//        System.out.println("angles = " + Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x)*180/Math.PI + ", " + Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x)*180/Math.PI + ", " +  mrot0);
-        System.out.println("angles = " + (float)t1 + ", " + (float)ptSpiro[0][0].x + ", " + (float)ptSpiro[0][0].y + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)Cu[0]);
-        System.out.println("angles = " + (float)t2 + ", " + (float)ptSpiro[0][1].x + ", " + (float)ptSpiro[0][1].y + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)Cu[1]);
-        System.out.println("data   = " + (float)xrot0 + ", " + (float)xrot3 + ", " + (float)yrot0 + ", " + (float)yrot3 + ", " + (float)mrot0 + ", " + (float)dirx[0] + ", " + (float)dirx[1]);
+        if (IS_DEBUG)
+        {
+//          System.out.println("angles = " + Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x)*180/Math.PI + ", " + Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x)*180/Math.PI + ", " +  mrot0);
+            System.out.println("angles = " + (float)t1 + ", " + (float)ptSpiro[0][0].x + ", " + (float)ptSpiro[0][0].y + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)Cu[0]);
+            System.out.println("angles = " + (float)t2 + ", " + (float)ptSpiro[0][1].x + ", " + (float)ptSpiro[0][1].y + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)Cu[1]);
+            System.out.println("data   = " + (float)xrot0 + ", " + (float)xrot3 + ", " + (float)yrot0 + ", " + (float)yrot3 + ", " + (float)mrot0 + ", " + (float)dirx[0] + ", " + (float)dirx[1]);
+        }
 
         if (Math.abs(theta[1] - theta[0]) < TOL)                // parallel finite slopes
         {
             // the parallel case can be solved as two decoupled quadratic equations
-            System.out.println("parallel finite : " + (float)(t1/2/Math.PI) + ", " + (float)(t2/2/Math.PI) + ", " + (float)mrot0 + ", " + (float)Cu[0] + ", " + (float)Cu[1] + ", " + (float)yrot0 + ", " + (float)yrot3);
+            if (IS_DEBUG)
+                System.out.println("parallel finite : " + (float)(t1/2/Math.PI) + ", " + (float)(t2/2/Math.PI) + ", " + (float)mrot0 + ", " + (float)Cu[0] + ", " + (float)Cu[1] + ", " + (float)yrot0 + ", " + (float)yrot3);
             if (Math.abs(yrot3 - yrot0) > TOL)
                 delxrot0 =  2*(yrot3 - yrot0)/Cu[0]/3;
             if (delxrot0 < 0)
@@ -314,36 +325,39 @@ public class main
         else if ((Math.abs(Cu[0]) < TOL)                        // zero curvature at t = 0
              &&  (scaled_v[1] > TOL))                           // not stationary at t = 1
         {
-            System.out.println("zero curvature at t = 0 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[0]);
+            if (IS_DEBUG)
+                System.out.println("zero curvature at t = 0 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[0]);
             delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2/mrot0;
-//            System.out.println((yrot3 - yrot0 + mrot0*(xrot3 - xrot0)) + ", " + (3*Cu[1]*delxrot3*delxrot3/2) + ", " + (yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2));
-//            if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL))
             if (scaled_v[0] < TOL)
                 delxrot0 = 0;                                   // stationary point, clamp it
             else if (Math.signum(yrot3 - yrot0 + mrot0*(xrot3 - xrot0)) != Math.signum(yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2))
                 delxrot0 = 0;                                   // unwanted sign reversal
             else
                 delxrot0 =  (yrot3 - yrot0 + mrot0*(xrot3 - xrot0) + 3*Cu[1]*delxrot3*delxrot3/2)/2/mrot0;
-            System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
+            if (IS_DEBUG)
+                System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
         }
         else if (Math.abs(Cu[1]) < TOL)                         // zero curvature at t = 1
         {
-            System.out.println("zero curvature at t = 1 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[1]);
+            if (IS_DEBUG)
+                System.out.println("zero curvature at t = 1 : " + Math.signum(ptSpiro[1][0].y) + ", " + Math.signum(t2 - t1) + ", " + Cu[1]);
             delxrot0 = (yrot3 - yrot0 + mrot0*(xrot3 - xrot0))/2/mrot0;
-//            System.out.println((yrot3 - yrot0 - mrot0*(xrot3 - xrot0)) + ", " + (-3*Cu[0]*delxrot0*delxrot0/2) + ", " + (yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2));
-//            if ((Math.abs(ptSpiro[1][1].x) < TOL) && (Math.abs(ptSpiro[1][1].y) < TOL))
             if (scaled_v[1] < TOL)
                 delxrot3 = 0;                                   // stationary point, clamp it
             else if (Math.signum(yrot3 - yrot0 - mrot0*(xrot3 - xrot0)) != Math.signum(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2))
                 delxrot3 = 0;                                   // unwanted sign reversal
             else
                 delxrot3 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delxrot0*delxrot0/2)/2/mrot0;
-            System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
+            if (IS_DEBUG)
+                System.out.println("delxrot0/3 = " + delxrot0 + ", " + delxrot3);
         }
         else                                                    // general slopes
         {
-            System.out.println("general slope = " + (float)t1 + ", " + (float)t2 + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)((theta[0] + theta[1])*90/Math.PI) + ", " + (float)mrot0 + ", " + (float)Cu[0] + ", " + (float)Cu[1]);
-            System.out.println("general slope = " + (float)t1 + ", " + (float)t2 + ", " + (float)xrot0 + ", " + (float)yrot0 + ", " + (float)xrot3 + ", " + (float)yrot3);
+            if (IS_DEBUG)
+            {
+                System.out.println("general slope = " + (float)t1 + ", " + (float)t2 + ", " + (float)(theta[0]*180/Math.PI) + ", " + (float)(theta[1]*180/Math.PI) + ", " + (float)((theta[0] + theta[1])*90/Math.PI) + ", " + (float)mrot0 + ", " + (float)Cu[0] + ", " + (float)Cu[1]);
+                System.out.println("general slope = " + (float)t1 + ", " + (float)t2 + ", " + (float)xrot0 + ", " + (float)yrot0 + ", " + (float)xrot3 + ", " + (float)yrot3);
+            }
             delxrot0 = solve_quartic(-27*Cu[1]*Cu[0]*Cu[0]/8,
                                       0,
                                       9*Cu[1]*Cu[0]*(yrot3 - yrot0 - mrot0*(xrot3 - xrot0))/2,
@@ -429,35 +443,43 @@ public class main
         qub /= lead;
         quc /= lead;
         qud /= lead;
-        System.out.println("quartic      a,b,c,d = " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud + ", " + (float)sgn0 + ", " + (float)sgn1);
+        if (IS_DEBUG)
+            System.out.println("quartic      a,b,c,d = " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud + ", " + (float)sgn0 + ", " + (float)sgn1);
         sol = solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
         R = Math.sqrt(qua*qua/4 - qub + sol);
         D = Math.sqrt(3*qua*qua/4 - R*R - 2*qub + (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
         E = Math.sqrt(3*qua*qua/4 - R*R - 2*qub - (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
-//        System.out.println("\ncubic sol = " + sol + ", " + R + ", " + D + ", " + E);
-//        System.out.println(t1/2/Math.PI + ", " + t2/2/Math.PI);
-        System.out.print("root 1 = "); check_quartic(-qua/4 + R/2 + D/2);
-        System.out.print("root 2 = "); check_quartic(-qua/4 + R/2 - D/2);
-        System.out.print("root 3 = "); check_quartic(-qua/4 - R/2 + E/2);
-        System.out.print("root 4 = "); check_quartic(-qua/4 - R/2 - E/2);
+        if (IS_DEBUG)
+        {
+//          System.out.println("\ncubic sol = " + sol + ", " + R + ", " + D + ", " + E);
+//          System.out.println(t1/2/Math.PI + ", " + t2/2/Math.PI);
+            System.out.print("root 1 = "); check_quartic(-qua/4 + R/2 + D/2);
+            System.out.print("root 2 = "); check_quartic(-qua/4 + R/2 - D/2);
+            System.out.print("root 3 = "); check_quartic(-qua/4 - R/2 + E/2);
+            System.out.print("root 4 = "); check_quartic(-qua/4 - R/2 - E/2);
+        }
         if (!Double.isNaN(D) && (sgn0 == Math.signum(-qua/4 + R/2 + D/2)))
         {
-            System.out.println("using root 1 = " + sgn0 + ", " + (-qua/4 + R/2 + D/2));
+            if (IS_DEBUG)
+                System.out.println("using root 1 = " + sgn0 + ", " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
         }
         else if (!Double.isNaN(E) && (sgn0 == Math.signum(-qua/4 - R/2 - E/2)))
         {
-            System.out.println("using root 4 = " + sgn0 + ", " + (-qua/4 - R/2 - E/2));
+            if (IS_DEBUG)
+                System.out.println("using root 4 = " + sgn0 + ", " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
         }
         else if (!Double.isNaN(E) && (sgn0 == Math.signum(-qua/4 - R/2 + E/2)))
         {
-            System.out.println("using root 3 = " + sgn0 + ", " + (-qua/4 - R/2 + E/2));
+            if (IS_DEBUG)
+                System.out.println("using root 3 = " + sgn0 + ", " + (-qua/4 - R/2 + E/2));
             return (-qua/4 - R/2 + E/2);
         }
         else if (!Double.isNaN(D) && (sgn0 == Math.signum(-qua/4 + R/2 - D/2)))
         {
-            System.out.println("using root 2 = " + sgn0 + ", " + (-qua/4 + R/2 - D/2));
+            if (IS_DEBUG)
+                System.out.println("using root 2 = " + sgn0 + ", " + (-qua/4 + R/2 - D/2));
             return (-qua/4 + R/2 - D/2);
         }
 
@@ -465,28 +487,32 @@ public class main
         delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
         if (!Double.isNaN(D) && (sgn1 == Math.signum(delx1)))
         {
-            System.out.println("alternate root 1 = " + sgn1 + ", " + delx0);
+            if (IS_DEBUG)
+                System.out.println("alternate root 1 = " + sgn1 + ", " + delx0);
             return delx0;
         }
         delx0 = -qua/4 - R/2 - E/2;                     // alternate check of root 4
         delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
         if (!Double.isNaN(E) && (sgn1 == Math.signum(delx1)))
         {
-            System.out.println("alternate root 4 = " + sgn1 + ", " + delx0);
+            if (IS_DEBUG)
+                System.out.println("alternate root 4 = " + sgn1 + ", " + delx0);
             return delx0;
         }
         delx0 = -qua/4 - R/2 + E/2;                     // alternate check of root 3
         delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
         if (!Double.isNaN(E) && (sgn1 == Math.signum(delx1)))
         {
-            System.out.println("alternate root 3 = " + sgn1 + ", " + delx0);
+            if (IS_DEBUG)
+                System.out.println("alternate root 3 = " + sgn1 + ", " + delx0);
             return delx0;
         }
         delx0 = -qua/4 + R/2 - D/2;                     // alternate check of root 2
         delx1 = -(yrot3 - yrot0 - mrot0*(xrot3 - xrot0) - 3*Cu[0]*delx0*delx0/2)/2/mrot0;
         if (!Double.isNaN(D) && (sgn1 == Math.signum(delx1)))
         {
-            System.out.println("alternate root 2 = " + sgn1 + ", " + delx0);
+            if (IS_DEBUG)
+                System.out.println("alternate root 2 = " + sgn1 + ", " + delx0);
             return delx0;
         }
         System.out.println("general quartic : Bad solution = " + R + ", " + D + ", " + E);

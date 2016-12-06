@@ -33,7 +33,8 @@ public final class SpiroCalc
                 main.theta[0] = Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x);
             else
             {
-                System.out.println("spiro motion is stationary at t = " + t1);
+                if (main.IS_DEBUG)
+                    System.out.println("spiro motion is stationary at t = " + t1);
                 main.theta[0] = Math.atan2(ptSpiro[2][0].y, ptSpiro[2][0].x);   // use x″ & y″
             }
         }
@@ -43,10 +44,11 @@ public final class SpiroCalc
             main.theta[1] = Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x);
         else                                                                // point is stationary
         {
-            System.out.println("spiro motion is stationary at t = " + t2);
+            if (main.IS_DEBUG)
+                System.out.println("spiro motion is stationary at t = " + t2);
             main.theta[1] = Math.atan2(ptSpiro[2][1].y, ptSpiro[2][1].x);   // use x″ & y″
         }
-        if ((b < 0) && (-c > -b))                   // hypo with extra loop
+        if ((b < 0) && (c > -b))                   // hypo with extra loop
             main.theta[1] = main.theta[0] - Math.PI + (main.theta[1] - main.theta[0] + Math.PI) % (2*Math.PI);
         else                                        // hypo with no loop, plus all epi's
             main.theta[1] = main.theta[0] + Math.PI + (main.theta[1] - main.theta[0] - Math.PI) % (-2*Math.PI);
@@ -123,12 +125,14 @@ public final class SpiroCalc
             t0 = Math.PI/2/fFreq;
         else
             return 0;
-        System.out.println("\ncalc_cos_t = " + fAmp + ", " + fFreq + ", " + t0);
+        if (main.IS_DEBUG)
+            System.out.println("\ncalc_cos_t = " + fAmp + ", " + fFreq + ", " + t0);
         do
         {
             del_t = (fAmp*Math.cos(fFreq*t0) - Math.cos(t0))/(fFreq*fAmp*Math.sin(fFreq*t0) - Math.sin(t0));
             t0 += del_t;
-            System.out.println("     t = " + t0);
+            if (main.IS_DEBUG)
+                System.out.println("     t = " + t0);
         } while (Math.abs(del_t) > 0.0000001);
         return t0;
     }
@@ -145,12 +149,14 @@ public final class SpiroCalc
             t0 = Math.PI/fFreq;
         else
             return 0;
-        System.out.println("\ncalc_sin_t = " + fAmp + ", " + fFreq + ", " + t0);
+        if (main.IS_DEBUG)
+            System.out.println("\ncalc_sin_t = " + fAmp + ", " + fFreq + ", " + t0);
         do
         {
             del_t = (fAmp*Math.sin(fFreq*t0) - Math.sin(t0))/(fFreq*fAmp*Math.cos(fFreq*t0) - Math.cos(t0));
             t0 -= del_t;
-            System.out.println("     t = " + t0);
+            if (main.IS_DEBUG)
+                System.out.println("     t = " + t0);
         } while (Math.abs(del_t) > 0.0000001);
         return t0;
     }
@@ -162,57 +168,66 @@ public final class SpiroCalc
 
         if (b < 0)                                                  // hypo
         {
-            N = main.insert_t_value(N, 0, t, 0);                         // at max R
-            if (-c > -b)                                            // extra loop
+            N = main.insert_t_value(N, 0, t, 0);                    // at max R
+            if (c > -b)                                             // extra loop
             {
-                N = main.insert_t_value(N, 1, t, calc_cos_t(c/b, 1 + a/b));   // at max width of small lobe
-                System.out.println("hypo max width : " + t[1]);
+                N = main.insert_t_value(N, 1, t, calc_cos_t(-c/b, 1 + a/b));   // at max width of small lobe
+                if (main.IS_DEBUG)
+                    System.out.println("hypo max width : " + t[1]);
             }
-            else if (c == b)                                        // cycloid
+            else if (c == -b)                                       // cycloid
             {
-                System.out.println("cycloid case : " + t[1]);
+                if (main.IS_DEBUG)
+                    System.out.println("cycloid case : " + t[1]);
             }
-            else if (-c > b/(1 + a/b))                              // no loop
+            else if (c > b/(1 + a/b))                               // no loop
             {
-                N = main.insert_t_value(N, 1, t, -b/a*Math.acos((1 + c*c*(1 + a/b)/b/b)*b/c/(2 + a/b)));  // inflection point
-                System.out.println("hypo inflection : " + t[1]);
+                N = main.insert_t_value(N, 1, t, -b/a*Math.acos(-(1 + c*c*(1 + a/b)/b/b)*b/c/(2 + a/b)));  // inflection point
+                if (main.IS_DEBUG)
+                    System.out.println("hypo inflection : " + t[1]);
             }
             else                                                    // no inflection
             {
-                System.out.println("hypo no inflection");
+                if (main.IS_DEBUG)
+                    System.out.println("hypo no inflection");
             }
         }
         else if (b > 0)                                             // epi
         {
-            N = main.insert_t_value(N, 0, t, 0);                         // at max R
-            if (-c > b)                                             // extra loop
+            N = main.insert_t_value(N, 0, t, 0);                    // at max R
+            if (c > b)                                              // extra loop
             {
-                N = main.insert_t_value(N, 1, t, Math.PI*b/a - calc_sin_t(-c/b, 1 + a/b));   // perpendicular to max width of small lobe
-                System.out.println("epi perpendicular to small width : " + t[1]);
-                N = main.insert_t_value(N, 2, t, Math.PI*b/a - calc_cos_t(-c/b, 1 + a/b));   // at max width of small lobe
-                System.out.println("epi small lobe width : " + t[2]);
-                N = main.insert_t_value(N, 2, t, (t[1] + t[2])/2);       // interpolate
+                N = main.insert_t_value(N, 1, t, Math.PI*b/a - calc_sin_t(c/b, 1 + a/b));    // perpendicular to max width of small lobe
+                if (main.IS_DEBUG)
+                    System.out.println("epi perpendicular to small width : " + t[1]);
+                N = main.insert_t_value(N, 2, t, Math.PI*b/a - calc_cos_t(c/b, 1 + a/b));    // at max width of small lobe
+                if (main.IS_DEBUG)
+                    System.out.println("epi small lobe width : " + t[2]);
+                N = main.insert_t_value(N, 2, t, (t[1] + t[2])/2);  // interpolate
                 if (a < 2*b)
-                    N = main.insert_t_value(N, 1, t, calc_cos_t(c/b, 1 + a/b));  // at max width of large lobe
+                    N = main.insert_t_value(N, 1, t, calc_cos_t(-c/b, 1 + a/b));    // at max width of large lobe
             }
-            else if (-c == b)                                       // cycloid
+            else if (c == b)                                        // cycloid
             {
-                N = main.insert_t_value(N, 1, t, Math.PI*b/a - calc_sin_t(-c/b, 1 + a/b));   // perpendicular to max width of small lobe
-                System.out.println("cycloid case : " + t[1]);
+                N = main.insert_t_value(N, 1, t, Math.PI*b/a - calc_sin_t(c/b, 1 + a/b));    // perpendicular to max width of small lobe
+                if (main.IS_DEBUG)
+                    System.out.println("cycloid case : " + t[1]);
                 N = main.insert_t_value(N, 2, t, (t[1] + Math.PI*b/a)/2);// interpolate
                 if (a < 2*b)
-                    N = main.insert_t_value(N, 1, t, calc_cos_t(c/b, 1 + a/b));  // at max width of large lobe
+                    N = main.insert_t_value(N, 1, t, calc_cos_t(-c/b, 1 + a/b));    // at max width of large lobe
             }
-            else if (-c > b/(1 + a/b))                              // no loop
+            else if (c > b/(1 + a/b))                               // no loop
             {
-                N = main.insert_t_value(N, 1, t, Math.PI*b/a - calc_sin_t(-c/b, 1 + a/b));   // perpendicular to max width of small lobe
-                System.out.println("epi perpendicular to small width : " + t[1]);
-                N = main.insert_t_value(N, 2, t, b/a*Math.acos((1 + c*c*(1 + a/b)/b/b)*b/c/(2 + a/b)));  // inflection point
-                System.out.println("epi inflection : " + t[2]);
-                N = main.insert_t_value(N, 2, t, (t[1] + t[2])/2);       // interpolate
+                N = main.insert_t_value(N, 1, t, Math.PI*b/a - calc_sin_t(c/b, 1 + a/b));    // perpendicular to max width of small lobe
+                if (main.IS_DEBUG)
+                    System.out.println("epi perpendicular to small width : " + t[1]);
+                N = main.insert_t_value(N, 2, t, b/a*Math.acos(-(1 + c*c*(1 + a/b)/b/b)*b/c/(2 + a/b)));  // inflection point
+                if (main.IS_DEBUG)
+                    System.out.println("epi inflection : " + t[2]);
+                N = main.insert_t_value(N, 2, t, (t[1] + t[2])/2);  // interpolate
                 if (a < 2*b)
                 {
-                    N = main.insert_t_value(N, 1, t, calc_cos_t(c/b, 1 + a/b));  // at max width of large lobe
+                    N = main.insert_t_value(N, 1, t, calc_cos_t(-c/b, 1 + a/b));  // at max width of large lobe
                     N = main.insert_t_value(N, 2, t, (t[1] + t[2])/2);   // interpolate
                 }
                 else
@@ -222,12 +237,13 @@ public final class SpiroCalc
             {
                 if (a < 2*b)
                 {
-                    N = main.insert_t_value(N, 1, t, calc_cos_t(c/b, 1 + a/b));  // at max width of large lobe
+                    N = main.insert_t_value(N, 1, t, calc_cos_t(-c/b, 1 + a/b)); // at max width of large lobe
                     N = main.insert_t_value(N, 2, t, (t[1] + Math.PI*b/a)/2);    // interpolate
                 }
                 else
                     N = main.insert_t_value(N, 1, t, Math.PI*b/a/2);     // interpolate
-                System.out.println("epi no inflection");
+                if (main.IS_DEBUG)
+                    System.out.println("epi no inflection");
             }
         }
         if (N > 0) t[N] = Math.PI*Math.abs(b)/a;                    // at min R
@@ -249,31 +265,31 @@ public final class SpiroCalc
 */
     private static double getX(double t)
     {
-        return (a + b)*Math.cos(t) - c*Math.cos(t*(a/b + 1));
+        return (a + b)*Math.cos(t) + c*Math.cos(t*(a/b + 1));
     }
 
     private static double getY(double t)
     {
-        return (a + b)*Math.sin(t) - c*Math.sin(t*(a/b + 1));
+        return (a + b)*Math.sin(t) + c*Math.sin(t*(a/b + 1));
     }
 
     private static double getdX(double t)
     {
-        return -(a + b)*Math.sin(t) + c*(a/b + 1)*Math.sin(t*(a/b + 1));
+        return -(a + b)*Math.sin(t) - c*(a/b + 1)*Math.sin(t*(a/b + 1));
     }
 
     private static double getdY(double t)
     {
-        return (a + b)*Math.cos(t) - c*(a/b + 1)*Math.cos(t*(a/b + 1));
+        return (a + b)*Math.cos(t) + c*(a/b + 1)*Math.cos(t*(a/b + 1));
     }
 
     private static double getd2X(double t)
     {
-        return -(a + b)*Math.cos(t) + c*(a/b + 1)*(a/b + 1)*Math.cos(t*(a/b + 1));
+        return -(a + b)*Math.cos(t) - c*(a/b + 1)*(a/b + 1)*Math.cos(t*(a/b + 1));
     }
 
     private static double getd2Y(double t)
     {
-        return -(a + b)*Math.sin(t) + c*(a/b + 1)*(a/b + 1)*Math.sin(t*(a/b + 1));
+        return -(a + b)*Math.sin(t) - c*(a/b + 1)*(a/b + 1)*Math.sin(t*(a/b + 1));
     }
 }
