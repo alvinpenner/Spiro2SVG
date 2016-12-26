@@ -90,16 +90,18 @@ public final class SpiroWrite
 
     private static String getspiroColor(String type, long clr)
     {
-        if (clr == 0) return type + ":none;";
-        if (clr < 0) clr += 4294967296L;                            // 32 bit color
         if (main.FIT_POINTS_ONLY)               // show only the t_values for one lobe
             clr = 4294901760L;                  // red
+        if (clr == 0) return type + ":none;";
+        if (clr < 0) clr += 4294967296L;                            // 32 bit color
         return type + ":#" + String.format("%06x", clr % 16777216) + ";"
              + type + "-opacity:" + (clr/16777216)/255.0F + ";";
     }
 
     private static String getSpiroJColor(String type, String clr)
     {
+        if (main.FIT_POINTS_ONLY)               // show only the t_values for one lobe
+            clr = "#FF0000";                    // red
         if (clr.isEmpty()) return type + ":none;";
         return type + ":" + clr + ";"
              + type + "-opacity:1.0;";
@@ -167,7 +169,7 @@ public final class SpiroWrite
             b = round2int(c*c_over_b);
             a = round2int(-a*c_over_b);
         }
-        getPath(out, getspiroShape(index, a, b, c).getPathIterator(null));
+        getPath(out, getSpiroShape(index, a, b, c).getPathIterator(null));
     }
 
     private static void convertSpiroJParms(int index, FileWriter out)
@@ -196,7 +198,7 @@ public final class SpiroWrite
                     break;
                 }
             if (numrot > 0)
-                getPath(out, getspiroShape(index, a, b, c).getPathIterator(null));
+                getPath(out, getSpiroShape(index, a, b, c).getPathIterator(null));
             else
                 System.out.println("SpiroJ error: could not determine number of rotations");
         }
@@ -283,7 +285,7 @@ public final class SpiroWrite
         }
     }
 
-    private static Shape getspiroShape(int index, double a, double b, double c)
+    private static Shape getSpiroShape(int index, double a, double b, double c)
     {
         Path2D path = new Path2D.Float();
         Rectangle2D.Float rect;
@@ -349,10 +351,6 @@ public final class SpiroWrite
                                               1,
                                               1);
                 path.append(rect, false);
-                //double numer = SpiroCalc.getdX(2*Math.PI*i/segs)*SpiroCalc.getd2Y(2*Math.PI*i/segs) - SpiroCalc.getdY(2*Math.PI*i/segs)*SpiroCalc.getd2X(2*Math.PI*i/segs); // fix fix generate curvature
-                //double denom = SpiroCalc.getdX(2*Math.PI*i/segs)*SpiroCalc.getdX(2*Math.PI*i/segs) + SpiroCalc.getdY(2*Math.PI*i/segs)*SpiroCalc.getdY(2*Math.PI*i/segs);   // fix fix generate curvature
-                //denom = -Math.pow(denom, 1.5);
-                //System.out.println(i + "/" + segs + " = ," + numer + ", " + denom + ", " + numer/denom);
                 if (((i + 1) % segs == 0)
                 &&  ((Math.round((i + 1)*a/b/segs) == round2int((i + 1)*a/b/segs)) || (c == 0)))
                 {
@@ -449,12 +447,6 @@ public final class SpiroWrite
                                               1,
                                               1);
                 path.append(rect, false);
-                //double ptx = SpiroJCalc.getX(2*Math.PI*i/segs);     // fix fix testing only
-                //double pty = SpiroJCalc.getY(2*Math.PI*i/segs);
-                //double numer = SpiroJCalc.getdX(2*Math.PI*i/segs)*SpiroJCalc.getd2Y(2*Math.PI*i/segs) - SpiroJCalc.getdY(2*Math.PI*i/segs)*SpiroJCalc.getd2X(2*Math.PI*i/segs); // fix fix generate curvature
-                //double denom = SpiroJCalc.getdX(2*Math.PI*i/segs)*SpiroJCalc.getdX(2*Math.PI*i/segs) + SpiroJCalc.getdY(2*Math.PI*i/segs)*SpiroJCalc.getdY(2*Math.PI*i/segs);   // fix fix generate curvature
-                //denom = -Math.pow(denom, 1.5);
-                //System.out.println(i + "/" + segs + " = ," + ptx + ", " + pty + ", " + numer + ", " + denom + ", " + numer/denom);
             }
         }
         else if (main.rowData[main.rowData.length - 1][0].equals("Bezier"))
@@ -471,17 +463,21 @@ public final class SpiroWrite
                         System.out.print(" " + t_values[i]*180/Math.PI);
                 System.out.println();
             }
-//            for (i = 0; i < N; i++)
-//            {
-//                rect = new Rectangle2D.Float(-0.5F + rx1*(float)Math.cos(wx1*t_values[i]) + rx2*(float)Math.cos(wx2*t_values[i]),
-//                                             -0.5F + ry1*(float)Math.sin(wy1*t_values[i]) + ry2*(float)Math.sin(wy2*t_values[i]),
-//                                              1,
-//                                              1);
-//                path.append(rect, false);
-//            }
-            for (i = 0; i < N; i++)
-                path.append(SpiroJCalc.getBezier(t_values[i], t_values[i + 1]), true);
-            path.closePath();
+            if (main.FIT_POINTS_ONLY)               // show only the t_values for one lobe
+                for (i = 0; i < N; i++)
+                {
+                    rect = new Rectangle2D.Float(-1.5F + (float)(rx1*Math.cos(wx1*t_values[i]) + rx2*Math.cos(wx2*t_values[i])),
+                                                 -1.5F + (float)(ry1*Math.sin(wy1*t_values[i]) + ry2*Math.sin(wy2*t_values[i])),
+                                                  3,
+                                                  3);
+                    path.append(rect, false);
+                }
+            else
+            {
+                for (i = 0; i < N; i++)
+                    path.append(SpiroJCalc.getBezier(t_values[i], t_values[i + 1]), true);
+                path.closePath();
+            }
         }
         return trans.createTransformedShape(path);
     }
@@ -538,17 +534,21 @@ public final class SpiroWrite
                         System.out.print(" " + (float) (t_values[i]*180/Math.PI));
                 System.out.println();
             }
-//            for (i = 0; i < N; i++)
-//            {
-//                rect = new Rectangle2D.Float(-0.5F + (float)(r1*Math.cos(w1*t_values[i] + phi1) + r2*Math.cos(w2*t_values[i] + phi2) + r3*Math.cos(w3*t_values[i] + phi3)),
-//                                             -0.5F + (float)(r1*Math.sin(w1*t_values[i] + phi1) + r2*Math.sin(w2*t_values[i] + phi2) + r3*Math.sin(w3*t_values[i] + phi3)),
-//                                              1,
-//                                              1);
-//                path.append(rect, false);
-//            }
-            for (i = 0; i < N; i++)
-                path.append(FarrisCalc.getBezier(t_values[i], t_values[i + 1]), true);
-            path.closePath();
+            if (main.FIT_POINTS_ONLY)               // show only the t_values for one lobe
+                for (i = 0; i < N; i++)
+                {
+                    rect = new Rectangle2D.Float(-1.5F + (float)(r1*Math.cos(w1*t_values[i] + phi1) + r2*Math.cos(w2*t_values[i] + phi2) + r3*Math.cos(w3*t_values[i] + phi3)),
+                                                 -1.5F + (float)(r1*Math.sin(w1*t_values[i] + phi1) + r2*Math.sin(w2*t_values[i] + phi2) + r3*Math.sin(w3*t_values[i] + phi3)),
+                                                  3,
+                                                  3);
+                    path.append(rect, false);
+                }
+            else
+            {
+                for (i = 0; i < N; i++)
+                    path.append(FarrisCalc.getBezier(t_values[i], t_values[i + 1]), true);
+                path.closePath();
+            }
         }
         return trans.createTransformedShape(path);
     }

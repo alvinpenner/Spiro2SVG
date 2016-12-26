@@ -27,14 +27,16 @@ public final class SpiroJCalc
         ptSpiro[2][0] = new Point2D.Double(getd2X(t1), getd2Y(t1));
         ptSpiro[2][1] = new Point2D.Double(getd2X(t2), getd2Y(t2));
 
-        System.out.println("");
+        if (main.IS_DEBUG)
+            System.out.println("");
         if (t1 == 0)
         {
             if ((Math.abs(ptSpiro[1][0].x) > TOL) || (Math.abs(ptSpiro[1][0].y) > TOL))
                 main.theta[0] = Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x);
             else
             {
-                System.out.println("spiroJ motion is stationary at t = " + t1);
+                if (main.IS_DEBUG)
+                    System.out.println("spiroJ motion is stationary at t = " + t1);
                 main.theta[0] = Math.atan2(ptSpiro[2][0].y, ptSpiro[2][0].x);   // use x″ & y″
             }
         }
@@ -43,7 +45,8 @@ public final class SpiroJCalc
             main.theta[0] = main.theta[1];
             if ((Math.abs(ptSpiro[1][0].x) < TOL) && (Math.abs(ptSpiro[1][0].y) < TOL))
             {
-                System.out.println("spiroJ motion is stationary at t = " + t1);
+                if (main.IS_DEBUG)
+                    System.out.println("spiroJ motion is stationary at t = " + t1);
                 main.theta[0] -= isCCW ? Math.PI : -Math.PI;                // reverse direction
                 isCCW = !isCCW;
             }
@@ -52,7 +55,8 @@ public final class SpiroJCalc
             main.theta[1] = Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x);
         else                                                                // point is stationary
         {
-            System.out.println("spiroJ motion is stationary at t = " + t2);
+            if (main.IS_DEBUG)
+                System.out.println("spiroJ motion is stationary at t = " + t2);
             main.theta[1] = Math.atan2(ptSpiro[2][1].y, ptSpiro[2][1].x);   // use x″ & y″
             main.theta[1] += isCCW ? Math.PI : -Math.PI;
         }
@@ -94,6 +98,14 @@ public final class SpiroJCalc
                 for (int j = 0; j < Math.round(Math.abs(2*rotors[i][1])); j++)
                     N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(j + 0.5)/Math.abs(rotors[i][1])));
 
+        N = SpiroJCalc.sort_t_values(t, N);
+        if (main.IS_DEBUG)
+        {
+            System.out.println("sorted solutions for x/y extrema N = " + N);
+            for (i = 0; i < N; i++)
+                System.out.println(i + ", " + t[i]);
+        }
+
         rotors = new double[][] {{rx1*ry1*wx1*wy1*(wx1 + wy1)/2, wx1 - wy1, 0},
                                  {rx1*ry1*wx1*wy1*(wx1 - wy1)/2, wx1 + wy1, 0},
                                  {rx1*ry2*wx1*wy2*(wx1 + wy2)/2, wx1 - wy2, 0},
@@ -102,14 +114,31 @@ public final class SpiroJCalc
                                  {rx2*ry1*wx2*wy1*(wx2 - wy1)/2, wx2 + wy1, 0},
                                  {rx2*ry2*wx2*wy2*(wx2 + wy2)/2, wx2 - wy2, 0},
                                  {rx2*ry2*wx2*wy2*(wx2 - wy2)/2, wx2 + wy2, 0}};
+        int N_old = N;                              // previous number of points (cusps or inflections)
+        boolean tooclose;
+        double temp_t;                              // temporary t value
         for (i = 0; i < rotors.length; i++)                                         // get inflection points
             if ((Math.abs(rotors[i][0]) > TOL) && (Math.abs(rotors[i][1]) > TOL))   // check amplitude and frequency
                 for (int j = 0; j < Math.round(Math.abs(2*rotors[i][1])); j++)
-                    N = main.insert_t_value(N, N, t, solve_cos_t(rotors, Math.PI*(j + 0.5)/Math.abs(rotors[i][1])));
-
+                {
+                    temp_t = solve_cos_t(rotors, Math.PI*(j + 0.5)/Math.abs(rotors[i][1]));
+                    tooclose = false;
+                    for (int k = 0; k < N_old; k++)
+                        if ((Math.abs(temp_t - t[k]) < 100*TOL)                     // compare inflections to extrema
+                        ||  (Math.abs(temp_t - t[k] - 2*Math.PI) < 100*TOL))        // with a very loose tolerance
+                            tooclose = true;
+                    if (tooclose)
+                    {
+                        if (main.IS_DEBUG)
+                            System.out.println("inflection at " + temp_t + " is too close to x/y extremum");
+                    }
+                    else
+                        N = main.insert_t_value(N, N, t, temp_t);
+                }
 //        for (i = 0; i < rotors.length; i++)
 //            System.out.println(i + ", " + rotors[i][0] + ", " + rotors[i][1] + ", " + rotors[i][2]);
-        System.out.println("initial t array N = " + N);
+        if (main.IS_DEBUG)
+            System.out.println("initial t array N = " + N);
         return sort_t_values(t, N);
     }
 
@@ -142,7 +171,8 @@ public final class SpiroJCalc
         t0 = (t0 + 2*Math.PI) % (2*Math.PI);            // in case of negative phase shift
         if (Math.abs(t0) < TOL) t0 = 0;
 
-        System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI + ", (" + t0 + ")");
+        if (main.IS_DEBUG)
+            System.out.println("solve_cos_t = " + r.length + ", " + t0*180/Math.PI + ", (" + t0 + ")");
         f = 0;
         fprime = 0;
         for (int i = 0; i < r.length; i++)              // test for multiple roots
@@ -158,25 +188,28 @@ public final class SpiroJCalc
             }
             if (Math.abs(fprime) < 10*TOL)
             {
-                System.out.println("too small slope t =, " + t0*180/Math.PI + ", " + f + ", " + fprime + " : Abort");
+                if (main.IS_DEBUG)
+                    System.out.println("too small slope t =, " + t0*180/Math.PI + ", " + f + ", " + fprime + " : Abort");
                 return 999999;
             }
             if (loop > 100)
             {
-                System.out.println("too many loops = " + loop + " : Abort");
+                if (main.IS_DEBUG)
+                    System.out.println("too many loops = " + loop + " : Abort");
                 return 999999;
             }
             del_t = -f/fprime;
             t0 += del_t;
             loop++;
 //            System.out.println("      t =, " + t0*180/Math.PI + ", " + f + ", " + fprime);
-        } while (Math.abs(del_t) > TOL/2);
+        } while (Math.abs(del_t) > TOL/4);
 
         t0 = (t0 + 2*Math.PI) % (2*Math.PI);        // in case of negative phase shift
         if (Math.abs(t0) < TOL) t0 = 0;
         if ((t0 < 0) || (t0 > 2*Math.PI - TOL))
             return 999999;
-        System.out.println("final t =, " + t0*180/Math.PI + ", (" + t0 + "), " + f + ", " + fprime);
+        if (main.IS_DEBUG)
+            System.out.println("final t =, " + t0*180/Math.PI + ", (" + t0 + "), " + f + ", " + fprime);
         return t0;
     }
 

@@ -36,7 +36,8 @@ public final class FarrisCalc
         ptSpiro[2][0] = new Point2D.Double(getd2X(t1), getd2Y(t1));
         ptSpiro[2][1] = new Point2D.Double(getd2X(t2), getd2Y(t2));
 
-        System.out.println();
+        if (main.IS_DEBUG)
+            System.out.println();
         if (firstCall)
         {
             firstCall = false;
@@ -45,7 +46,8 @@ public final class FarrisCalc
                 main.theta[0] = Math.atan2(ptSpiro[1][0].y, ptSpiro[1][0].x);
             else
             {
-                System.out.println("Farris motion is stationary at t = " + t1);
+                if (main.IS_DEBUG)
+                    System.out.println("Farris motion is stationary at t = " + t1);
                 main.theta[0] = Math.atan2(ptSpiro[2][0].y, ptSpiro[2][0].x);   // use x″ & y″
             }
         }
@@ -54,7 +56,8 @@ public final class FarrisCalc
             main.theta[0] = main.theta[1];
             if (Math.sqrt((ptSpiro[1][0].x*ptSpiro[1][0].x + ptSpiro[1][0].y*ptSpiro[1][0].y)/Sum22) < 50*TOL)
             {
-                System.out.println("Farris motion is stationary at t = " + t1);
+                if (main.IS_DEBUG)
+                    System.out.println("Farris motion is stationary at t = " + t1);
                 main.theta[0] -= isCCW ? Math.PI : -Math.PI;                // reverse direction
                 isCCW = !isCCW;
             }
@@ -63,7 +66,8 @@ public final class FarrisCalc
             main.theta[1] = Math.atan2(ptSpiro[1][1].y, ptSpiro[1][1].x);
         else                                                                // point is stationary
         {
-            System.out.println("Farris motion is stationary at t = " + t2);
+            if (main.IS_DEBUG)
+                System.out.println("Farris motion is stationary at t = " + t2);
             main.theta[1] = Math.atan2(ptSpiro[2][1].y, ptSpiro[2][1].x);   // use x″ & y″
             main.theta[1] += isCCW ? Math.PI : -Math.PI;
         }
@@ -123,9 +127,12 @@ public final class FarrisCalc
         }
         N = SpiroJCalc.sort_t_values(t, N);
         N_old = N;
-        System.out.println("sorted solutions for cusp points N = " + N);
-        for (i = 0; i < N; i++)
-            System.out.println(i + ", " + t[i]);
+        if (main.IS_DEBUG)
+        {
+            System.out.println("sorted solutions for cusp points N = " + N);
+            for (i = 0; i < N; i++)
+                System.out.println(i + ", " + t[i]);
+        }
 
         double[][] rotors = new double[][] {{Sum23, 0, 0},
                                             {A12*(w1 + w2), w1 - w2, phi1 - phi2},
@@ -148,17 +155,23 @@ public final class FarrisCalc
                         ||  (Math.abs(temp_t - t[k] - 2*Math.PI) < 100*TOL))         // with a very loose tolerance
                             tooclose = true;
                     if (tooclose)
-                        System.out.println("inflection at " + temp_t + " is too close to cusp");
+                    {
+                        if (main.IS_DEBUG)
+                            System.out.println("inflection at " + temp_t + " is too close to cusp");
+                    }
                     else
                         N = main.insert_t_value(N, N, t, temp_t);
                 }
         N = SpiroJCalc.sort_t_values(t, N);
         N_old = N;
-        System.out.println("sorted solutions for inflection points N = " + N);
-        for (i = 0; i < N; i++)
-            System.out.println(i + ", " + t[i] + ", " + (float)((getdX(t[i])*getd2Y(t[i]) - getdY(t[i])*getd2X(t[i]))/Math.pow(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]), 1.5))
-                                               + ", " + (float)getdX(t[i]) + ", " + (float)getdY(t[i]) + ", " + (float)(180*Math.atan2(getdY(t[i]), getdX(t[i]))/Math.PI)
-                                               + ", " + (float)getd2X(t[i]) + ", " + (float)getd2Y(t[i]) + ", " + (float)(180*Math.atan2(getd2Y(t[i]), getd2X(t[i]))/Math.PI));
+        if (main.IS_DEBUG)
+        {
+            System.out.println("sorted solutions for inflection points N = " + N);
+            for (i = 0; i < N; i++)
+                System.out.println(i + ", " + t[i] + ", " + (float)((getdX(t[i])*getd2Y(t[i]) - getdY(t[i])*getd2X(t[i]))/Math.pow(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]), 1.5))
+                                                   + ", " + (float)getdX(t[i]) + ", " + (float)getdY(t[i]) + ", " + (float)(180*Math.atan2(getdY(t[i]), getdX(t[i]))/Math.PI)
+                                                   + ", " + (float)getd2X(t[i]) + ", " + (float)getd2Y(t[i]) + ", " + (float)(180*Math.atan2(getd2Y(t[i]), getd2X(t[i]))/Math.PI));
+        }
 
         rotors = new double[][] {{A12*(w1 - w2)*(3*Sum23 - (w1 + w2)*Sum22), w1 - w2, phi1 - phi2 - Math.PI/2},
                                  {A23*(w2 - w3)*(3*Sum23 - (w2 + w3)*Sum22), w2 - w3, phi2 - phi3 - Math.PI/2},
@@ -199,18 +212,24 @@ public final class FarrisCalc
                         ||  (Math.abs(temp_t - t[k] - 2*Math.PI) < 100*TOL))        // with a very loose tolerance
                             tooclose = true;
                     if (tooclose)
-                        System.out.println("extremum at " + temp_t + " is too close to inflection");
+                    {
+                        if (main.IS_DEBUG)
+                            System.out.println("extremum at " + temp_t + " is too close to inflection");
+                    }
                     else
                         N = main.insert_t_value(N, N, t, temp_t);
                 }
 //        N = main.insert_t_value(N, N, t, Math.PI/4);                    // fix fix temporary code
 //        System.out.println("initial t array N = " + N);
         N = SpiroJCalc.sort_t_values(t, N);
-        System.out.println("sorted inflection points plus curvature extrema N = " + N);
-        for (i = 0; i < N; i++)
-            System.out.println(i + ", " + t[i] + ", " + (float)((getdX(t[i])*getd2Y(t[i]) - getdY(t[i])*getd2X(t[i]))/Math.pow(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]), 1.5))
-                                               + ", " + (float)Math.sqrt(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i])));
-        System.out.println("i, t,         x′,         y′,         v,         theta,     K");
+        if (main.IS_DEBUG)
+        {
+            System.out.println("sorted inflection points plus curvature extrema N = " + N);
+            for (i = 0; i < N; i++)
+                System.out.println(i + ", " + t[i] + ", " + (float)((getdX(t[i])*getd2Y(t[i]) - getdY(t[i])*getd2X(t[i]))/Math.pow(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]), 1.5))
+                                                   + ", " + (float)Math.sqrt(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i])));
+            System.out.println("i, t,         x′,         y′,         v,         theta,     K");
+        }
         boolean bFirst = true;
         double old_t = 0, old_theta = 0, new_theta, old_K = -1, new_K;
         for (i = 0; i <= N; i++)                                                // check for perpendicular slope
@@ -220,9 +239,10 @@ public final class FarrisCalc
             else
                 new_K = (getdX(t[i])*getd2Y(t[i]) - getdY(t[i])*getd2X(t[i]))/Math.pow(getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]), 1.5);
             new_theta = Math.atan2(getdY(t[i]), getdX(t[i]));
-            System.out.printf("%d, %f, %f, %f, %f, %f, %g\n", i, t[i], getdX(t[i]), getdY(t[i]),
-                               Math.sqrt((getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]))/Sum22),
-                               getdX(old_t)*getdX(t[i]) + getdY(old_t)*getdY(t[i]), new_K);
+            if (main.IS_DEBUG)
+                System.out.printf("%d, %f, %f, %f, %f, %f, %g\n", i, t[i], getdX(t[i]), getdY(t[i]),
+                                   Math.sqrt((getdX(t[i])*getdX(t[i]) + getdY(t[i])*getdY(t[i]))/Sum22),
+                                   getdX(old_t)*getdX(t[i]) + getdY(old_t)*getdY(t[i]), new_K);
             if (bFirst)
                 t[N] = t[i] + 2*Math.PI;                                        // save for last loop
             else if ((getdX(old_t)*getdX(t[i]) + getdY(old_t)*getdY(t[i]) < 0)  // greater than 90° arc (dot product)
@@ -235,7 +255,8 @@ public final class FarrisCalc
                                          {r2*w2, w2, phi2 - old_theta - Math.PI/2},
                                          {r3*w3, w3, phi3 - old_theta - Math.PI/2}};
                 t_perp[N_perp] = SpiroJCalc.solve_cos_t(rotors, (old_t + t[i])/2);
-                System.out.println("test t = ,,,,,,," + old_t + ", " + t_perp[N_perp] + ", " + old_theta*180/Math.PI + ", " + Math.atan2(getdY(t_perp[N_perp]), getdX(t_perp[N_perp]))*180/Math.PI);
+                if (main.IS_DEBUG)
+                    System.out.println("test t = ,,,,,,," + old_t + ", " + t_perp[N_perp] + ", " + old_theta*180/Math.PI + ", " + Math.atan2(getdY(t_perp[N_perp]), getdX(t_perp[N_perp]))*180/Math.PI);
                 N_perp++;
             }
             old_K = new_K;
@@ -243,10 +264,13 @@ public final class FarrisCalc
             old_t = t[i];
             bFirst = false;
         }
-        System.out.println();
-        System.out.println("perpendicular list = " + N_perp);
-        for (i = 0; i < N_perp; i++)
-            System.out.println(i + ", " + t_perp[i]);
+        if (main.IS_DEBUG)
+        {
+            System.out.println();
+            System.out.println("perpendicular list = " + N_perp);
+            for (i = 0; i < N_perp; i++)
+                System.out.println(i + ", " + t_perp[i]);
+        }
         System.arraycopy(t_perp, 0, t, N, N_perp);
         N += N_perp;
         return SpiroJCalc.sort_t_values(t, N);

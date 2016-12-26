@@ -34,16 +34,16 @@ public class main
     public static final String PAGE_UNITS = "mm";
 //    public static final float PAGE_WIDTH = 210;               // A4 page in mm
 //    public static final float PAGE_HEIGHT = 297;
-    public static final float PAGE_WIDTH = 158.75F;             // 600 px
-    public static final float PAGE_HEIGHT = 158.75F;
-    public static final float mm2px = 96F/25.4F;
+    public static final float PAGE_WIDTH = 300*25.4F/96;        // 300 px
+    public static final float PAGE_HEIGHT = 350*25.4F/96;
+    public static final float mm2px = 96F/25.4F;                // SVG resolution is 96 dpi
     public static final float MITER_LIMIT = 20;
     public static final String STYLE_AUTO = "Auto";
     public static final String STYLE_POINTS = "Points";
     public static final String STYLE_LINES = "Lines";
     public static final String STYLE_BEZIER = "Bezier";
-    public static final boolean FIT_POINTS_ONLY = false;        // for debugging only
-    public static final boolean IS_DEBUG = false;               // for debugging only
+    public static final boolean FIT_POINTS_ONLY = false;         // for debugging only
+    public static final boolean IS_DEBUG = false;                // for debugging only
     public static final String[][] spiroNames = new String[][] {{"StatorRadius"}, {"RotorRadius"}, {"NumRotations"}, {"AnglesPerCycle"},
                                                                 {"RotorSlide"}, {"OriginX"}, {"OriginY"}, {"InitialAngle"},
                                                                 {"PenDistance"}, {"Lock"}, {"CurvePenWidth"}, {"Zoom"},

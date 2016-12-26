@@ -166,6 +166,15 @@ public final class SpiroCalc
         int N = 0;                                                  // points per lobe
         a = m_a; b = m_b; c = m_c;
 
+//        int iMax = 1200;                                            // fix fix for debugging only
+//        for (int i = 0; i <= iMax; i++)                             // dump out curvature
+//        {
+//            double numer = getdX(2*Math.PI*i/iMax)*getd2Y(2*Math.PI*i/iMax) - getdY(2*Math.PI*i/iMax)*getd2X(2*Math.PI*i/iMax);
+//            double denom = getdX(2*Math.PI*i/iMax)*getdX(2*Math.PI*i/iMax) + getdY(2*Math.PI*i/iMax)*getdY(2*Math.PI*i/iMax);
+//            denom = -Math.pow(denom, 1.5);
+//            System.out.println(i + ", " + numer + ", " + denom + ", " + numer/denom);
+//        }
+
         if (b < 0)                                                  // hypo
         {
             N = main.insert_t_value(N, 0, t, 0);                    // at max R
