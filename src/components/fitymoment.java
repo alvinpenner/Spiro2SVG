@@ -22,7 +22,7 @@ public class fitymoment
 
     public static void main (String[] args)
     {
-        c = 3.6;         // 3.5297135;
+        c = -3.5298;         // 3.5297135;
         l1 = a_b + c;
         l2 = a_b - c;
 //        phi = Math.atan(l1*Math.sqrt(2)/l2 - 1);    // general transform that rotates with the object baseline
@@ -61,8 +61,9 @@ public class fitymoment
 //        setup_quartic_area_x();
 //        setup_quartic_extremum_y();
 //        setup_quintic_x_y();
-        setup_quartic_cofmx_cofmy();
+//        setup_quartic_cofmx_cofmy();
 //        scan_spiro_moment_y();              // for testing only fix fix
+        scan_discriminant_vs_c();
     }
 
     private static void setup_quartic_area_y()
@@ -365,7 +366,8 @@ public class fitymoment
         double cud = cub*cub/4 + cua*cua*cua/27;
 
 //        System.out.println("\ncubic p,q,r = " + p + ", " + q + ", " + r);
-        System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
+//        System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
+        System.out.println(cud);
         if (cud < 0)
         {
             double myphi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));
@@ -409,6 +411,45 @@ public class fitymoment
                     area,
                     midx*Math.cos(myphi) + midy*Math.sin(myphi),
                    -midx*Math.sin(myphi) + midy*Math.cos(myphi));
+        }
+    }
+
+    private static void scan_discriminant_vs_c()
+    {
+        // try to determine where two solutions of d2 vs d1 coalesce
+        // when fitting the anti-symmetric <y> moment (Spiro2SVG Book2, p.10)
+        // by scanning the discriminant of the quartic equation for d1
+
+        double startc = -3.37158;
+        double incr = .000001;
+        int steps = 10;
+        double lead, qua, qub, quc, qud;
+
+        for (c = startc; c < startc + steps*incr + .00001; c += incr)
+        {
+            l1 = a_b + c;
+            l2 = a_b - c;
+
+            e1 = (l1 - l2*Math.cos(2*theta))*(-50*l1 + 34*l2)*Math.sin(theta);
+            e2 = 15*(l1 - l2*Math.cos(2*theta))*Math.cos(theta);
+            e3 = (l2 - l1*Math.cos(2*theta))*(-34*l1 + 50*l2)*Math.sin(theta);
+            e4 = (l1 - l2)*(21*Math.sin(2*theta)*Math.sin(theta) - 12*(1 + Math.cos(2*theta))*Math.cos(theta));
+            e5 = -9*Math.sin(2*theta)*Math.cos(theta);
+            e6 = -15*(l2 - l1*Math.cos(2*theta))*Math.cos(theta);
+            e7 = 9*Math.sin(2*theta)*Math.cos(theta);
+
+            lead = e5*e5;
+            qua = 2*e4*e5 - 4*e2*e7;
+            qub = 2*e3*e5 + e4*e4 - 4*e1*e7 - 4*e2*e6;
+            quc = 2*e3*e4 + 1120*spiro_moment_y()*e7 - 4*e1*e6;
+            qud = e3*e3 + 1120*spiro_moment_y()*e6;
+            System.out.printf("a-b, c, <y> = %f, %f, %f, ", a_b, c, 280*spiro_moment_y());
+            qua /= lead;
+            qub /= lead;
+            quc /= lead;
+            qud /= lead;
+            //System.out.println("quartic      a,b,c,d =, " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud);
+            solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
         }
     }
 }

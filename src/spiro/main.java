@@ -32,10 +32,10 @@ public class main
 {
     public static final String VERSION_NO = "0.94";
     public static final String PAGE_UNITS = "mm";
-//    public static final float PAGE_WIDTH = 210;               // A4 page in mm
-//    public static final float PAGE_HEIGHT = 297;
-    public static final float PAGE_WIDTH = 300*25.4F/96;        // 300 px
-    public static final float PAGE_HEIGHT = 350*25.4F/96;
+    public static final float PAGE_WIDTH = 210;                 // A4 page in mm
+    public static final float PAGE_HEIGHT = 297;
+//    public static final float PAGE_WIDTH = 150*25.4F/96;        // 150 px
+//    public static final float PAGE_HEIGHT = 170*25.4F/96;
     public static final float mm2px = 96F/25.4F;                // SVG resolution is 96 dpi
     public static final float MITER_LIMIT = 20;
     public static final String STYLE_AUTO = "Auto";
@@ -43,7 +43,7 @@ public class main
     public static final String STYLE_LINES = "Lines";
     public static final String STYLE_BEZIER = "Bezier";
     public static final boolean FIT_POINTS_ONLY = false;         // for debugging only
-    public static final boolean IS_DEBUG = false;                // for debugging only
+    public static final boolean IS_DEBUG = true;                // for debugging only
     public static final String[][] spiroNames = new String[][] {{"StatorRadius"}, {"RotorRadius"}, {"NumRotations"}, {"AnglesPerCycle"},
                                                                 {"RotorSlide"}, {"OriginX"}, {"OriginY"}, {"InitialAngle"},
                                                                 {"PenDistance"}, {"Lock"}, {"CurvePenWidth"}, {"Zoom"},
@@ -446,6 +446,18 @@ public class main
         if (IS_DEBUG)
             System.out.println("quartic      a,b,c,d = " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud + ", " + (float)sgn0 + ", " + (float)sgn1);
         sol = solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
+        System.out.println("slope y = " + sol + ", " + (2*sol*sol - 4*qub*sol/3 - 8*qud/3));
+        System.out.println("quartic = " + sol + ", " + ((sol - qub)*(sol + qub)*(sol + qub) - 4*quc*quc));
+//        System.out.println("test y = " + sol + ", " + (sol*(12*qud + qub*qub) - qub*(4*qud + 3*qub*qub) - 9*quc*quc));
+//        System.out.println("cubic sol = " + sol + ", " + (sol*sol*sol + qub*sol*sol - qub*qub*sol - qub*qub*qub - 4*quc*quc));
+//        System.out.print("coalesced quad : ");
+//        solve_cubic(qub, -qub*qub, -qub*qub*qub - 4*quc*quc); // fix fix dummy call temporary code
+//        System.out.print("derivative of quad : ");
+//        solve_cubic(3*qua/4, 2*qub/4, quc/4);                 // fix fix dummy call temporary code
+//        double qa = 3;
+//        double qb = -2*qub;
+//        double qc = qua*quc - 4*qud;
+//        System.out.println("derivative of resolvent cubic : " + (-qb - Math.sqrt(qb*qb - 4*qa*qc))/2/qa); // fix fix dummy call temporary code
         R = Math.sqrt(qua*qua/4 - qub + sol);
         D = Math.sqrt(3*qua*qua/4 - R*R - 2*qub + (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
         E = Math.sqrt(3*qua*qua/4 - R*R - 2*qub - (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
@@ -540,12 +552,13 @@ public class main
         if (cud < 0)
         {
             double phi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));
-//            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 4*Math.PI/3) - p/3));
-            return 2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3;
+            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 4*Math.PI/3) - p/3));
+//            return 2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3;       // original code - KEEP
+            return 2*Math.sqrt(-cua/3)*Math.cos(phi/3) - p/3;           // fix fix temporary code
         }
         else
         {
-//            System.out.println("1 cubic d > 0 : " + (Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3));
+            System.out.println("1 cubic d > 0 : " + (Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3));
             return Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3;
         }
     }
