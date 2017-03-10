@@ -4,6 +4,8 @@
 // source : C:\APP\Java\CoreJava\v2ch02\DOMTreeTest\DOMTreeTest.java
 // source : C:\Program Files\Java\jdk1.6.0_16\demo\jfc\TableExample\src\TableExample4.java
 // source : C:\APP\Java\jswing2\ch15\ColorTable.java
+// documentation : https://www.codeproject.com/Articles/1160697/Spiro-SVG-Convert-Spirographs-to-SVG-Using-Bezier
+// documentation : https://www.codeproject.com/Articles/1163857/Spiro-SVG-II-Roulettes-Lissajous-Figures-and-Farri
 
 // Nov 28, 2015 - first build - NetBeans 6.9.1 - jdk1.6.0_16
 // Feb 14, 2016 - completed lines and points output to svg

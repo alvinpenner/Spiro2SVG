@@ -315,7 +315,7 @@ public class fitymoment
         return 3*(2*d1*(l1 - l2*Math.cos(2*theta)) + 2*d2*(l2 - l1*Math.cos(2*theta)) - d1*d2*Math.sin(2*theta))/20;
     }
 
-    private static double solve_quartic(double lead, double qua, double qub, double quc, double qud)
+    public static double solve_quartic(double lead, double qua, double qub, double quc, double qud)
     {
         double sol, R, D, E;
 
@@ -333,17 +333,17 @@ public class fitymoment
         System.out.print(", " + (-qua/4 + R/2 - D/2));
         System.out.print(", " + (-qua/4 - R/2 + E/2));
         System.out.println(", " + (-qua/4 - R/2 - E/2));
-        if (!Double.isNaN(E))
+        if (!Double.isNaN(E) && false)
         {
             System.out.println("using root 4 = " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
         }
-        if (!Double.isNaN(D) && false)
+        if (!Double.isNaN(D))
         {
             System.out.println("using root 1 = " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
         }
-        if (!Double.isNaN(D))
+        if (!Double.isNaN(D) && false)
         {
             System.out.println("using root 2 = " + (-qua/4 + R/2 - D/2));
             return (-qua/4 + R/2 - D/2);
@@ -367,7 +367,6 @@ public class fitymoment
 
 //        System.out.println("\ncubic p,q,r = " + p + ", " + q + ", " + r);
 //        System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
-        System.out.println(cud);
         if (cud < 0)
         {
             double myphi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));

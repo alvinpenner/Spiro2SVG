@@ -18,7 +18,7 @@ public class Beziererror
 {
     private static final double TOL = 1E-9;
     private static final double a_b = 180;          // spiro 'a - b'
-    private static final double c = 12; //3.371577; //3.5297135;      // spiro 'c'
+    private static final double c = 4; //3.371577; //3.5297135;      // spiro 'c'
     private static final double l1 = a_b + c;       // distance to start point (l1, 0)
     private static final double l2 = a_b - c;       // distance to end   point (l2/√2, l2/√2)
 
@@ -112,8 +112,8 @@ public class Beziererror
         double d1, d2;
 //        double startd1 = 0, startd2 = 0;
 //        double incr = 1;
-        double startd1 = 19, startd2 = 91;
-        double incr = .04;
+        double startd1 = 56.5, startd2 = 28;
+        double incr = .02;
 //        double startd1 = 56, startd2 = 28;
 //        double incr = .04;
         int steps = 100;
@@ -148,13 +148,13 @@ public class Beziererror
 //            scan_moment_y(startd2, startd1, incr, steps, e0, e3, e6, e1, e4, e7, e2, e5, true); // flip d1 and d2
 
         // scan <y>/<1> : no branching required
-        scan_moment_y(startd1, startd2, incr, steps, 0, e1 - a1*e0/a0, e2, e3 + a2*e0/a0, e4 + a3*e0/a0, e5, e6, e7, false);
+//        scan_moment_y(startd1, startd2, incr, steps, 0, e1 - a1*e0/a0, e2, e3 + a2*e0/a0, e4 + a3*e0/a0, e5, e6, e7, false);
 
         // scan <x> : this re-uses scan_moment_y() to scan <x> instead
 //        scan_moment_y(startd1, startd2, incr, steps, f0, f1, f2, f3, f4, f5, f6, f7, false);
 
         // scan <x>/<1> : no branching required
-//        scan_moment_y(startd1, startd2, incr, steps, 0, f1 - a1*f0/a0, f2, f3 + a2*f0/a0, f4 + a3*f0/a0, f5, f6, f7, false);
+        scan_moment_y(startd1, startd2, incr, steps, 0, f1 - a1*f0/a0, f2, f3 + a2*f0/a0, f4 + a3*f0/a0, f5, f6, f7, false);
     }
 
     private static void scan_C0(double startd1, double startd2, double incr, double steps)
