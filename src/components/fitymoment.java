@@ -89,7 +89,8 @@ public class fitymoment
            + a1*a3*b3 + a2*a2*b2 + 2*a2*a3*b1 - a3*a3*280*spiro_moment_y(),
              2*a0*a1*b6 + a0*a0*b7 + a0*a2*b4 + (a1*a2 + a0*a3)*b3
            + a2*a2*b1 - 2*a2*a3*280*spiro_moment_y(),
-             a0*a0*b6 + a0*a2*b3 - a2*a2*280*spiro_moment_y());
+             a0*a0*b6 + a0*a2*b3 - a2*a2*280*spiro_moment_y(),
+             true);
         d2 = (a0 + a1*d1)/(a2 + a3*d1);
         beziermomenty = b1*d1 + b2*d1*d1 + (b3 + b4*d1 + b5*d1*d1)*d2 + (b6 + b7*d1)*d2*d2;
         System.out.println("d1, d2 = " + d1 + ", " + d2);
@@ -120,7 +121,8 @@ public class fitymoment
            + a1*a3*b3 + a2*a2*b2 + 2*a2*a3*b1 - a3*a3*280*spiro_moment_x(),
              2*a0*a1*b6 + a0*a0*b7 + a0*a2*b4 + (a1*a2 + a0*a3)*b3
            + a2*a2*b1 - 2*a2*a3*280*spiro_moment_x(),
-             a0*a0*b6 + a0*a2*b3 - a2*a2*280*spiro_moment_x());
+             a0*a0*b6 + a0*a2*b3 - a2*a2*280*spiro_moment_x(),
+             true);
         d2 = (a0 + a1*d1)/(a2 + a3*d1);
         beziermomentx = b1*d1 + b2*d1*d1 + (b3 + b4*d1 + b5*d1*d1)*d2 + (b6 + b7*d1)*d2*d2;
         System.out.println("d1, d2 = " + d1 + ", " + d2);
@@ -147,7 +149,8 @@ public class fitymoment
            + a1*a2*a2*e4 + 2*a0*a2*a2*e5 + 2*a0*a1*a2*e7
            + a0*a0*a3*e7 + (a1*a2 - a0*a3)*(a3*e3 + 2*a1*e6 + a2*e4 + 2*a0*e7),
              a2*a2*a2*e1 + a0*a2*a2*e4 + a0*a0*a2*e7
-           + (a1*a2 - a0*a3)*(a2*e3 + 2*a0*e6));
+           + (a1*a2 - a0*a3)*(a2*e3 + 2*a0*e6),
+           true);
         d2 = (a0 + a1*d1)/(a2 + a3*d1);
         System.out.println("quartic_extremum_y c d1 d2 = ," + c + ", " + d1 + ", " + d2);
         System.out.println("area   = " + spiro_area() + ", " + bezier_area(d1, d2));
@@ -267,7 +270,8 @@ public class fitymoment
                          - u1*(b1*b5 + b2*b4) + u5*b1*b1 - 2*u2*b1*b2,
                            2*u3*b3*b4 + u4*b1*b3
                          - u1*(b1*b4 + b2*b3) - u2*b1*b1,
-                           u3*b3*b3 - u1*b1*b3);
+                           u3*b3*b3 - u1*b1*b3,
+                           true);
         d2 = (b1*d1 + b2*d1*d1)/(b3 + b4*d1 + b5*d1*d1);
         System.out.println("solve_quartic c,  d1,  d2 = " + c + ", " + d1 + ", " + d2 + ", " + bezier_area(d1, d2)/spiro_area());
         System.out.println("spiro       <1>, <x>, <y> = " + spiro_area() + ", " + spiro_moment_x() + ", " + spiro_moment_y());
@@ -315,7 +319,7 @@ public class fitymoment
         return 3*(2*d1*(l1 - l2*Math.cos(2*theta)) + 2*d2*(l2 - l1*Math.cos(2*theta)) - d1*d2*Math.sin(2*theta))/20;
     }
 
-    public static double solve_quartic(double lead, double qua, double qub, double quc, double qud)
+    public static double solve_quartic(double lead, double qua, double qub, double quc, double qud, boolean sgn)
     {
         double sol, R, D, E;
 
@@ -329,11 +333,11 @@ public class fitymoment
         D = Math.sqrt(3*qua*qua/4 - R*R - 2*qub + (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
         E = Math.sqrt(3*qua*qua/4 - R*R - 2*qub - (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
         System.out.println("cubic sol = " + sol + ", " + R + ", " + D + ", " + E);
-        System.out.print("roots = ," + c + ", " + (-qua/4 + R/2 + D/2));
+        System.out.print("roots = , " + (-qua/4 + R/2 + D/2));
         System.out.print(", " + (-qua/4 + R/2 - D/2));
         System.out.print(", " + (-qua/4 - R/2 + E/2));
         System.out.println(", " + (-qua/4 - R/2 - E/2));
-        if (!Double.isNaN(E) && false)
+        if (!Double.isNaN(E) && sgn)
         {
             System.out.println("using root 4 = " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
@@ -343,7 +347,7 @@ public class fitymoment
             System.out.println("using root 1 = " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
         }
-        if (!Double.isNaN(D) && false)
+        if (!Double.isNaN(D) && sgn)
         {
             System.out.println("using root 2 = " + (-qua/4 + R/2 - D/2));
             return (-qua/4 + R/2 - D/2);
@@ -370,7 +374,7 @@ public class fitymoment
         if (cud < 0)
         {
             double myphi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));
-//            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(phi/3 + 4*Math.PI/3) - p/3));
+//            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 4*Math.PI/3) - p/3));
             return 2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 2*Math.PI/3) - p/3;
         }
         else

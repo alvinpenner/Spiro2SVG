@@ -401,7 +401,7 @@ public class Beziererror
             return -h*(Math.sqrt(2) + 1)*(a_b*a_b*c*B + c*c*c*D)/12;
     }
 
-    private static double solve_cubic(double p, double q, double r)
+    public static double solve_cubic(double p, double q, double r)
     {
         // see Math CRC book, page 392
 
@@ -410,11 +410,13 @@ public class Beziererror
         double cud = cub*cub/4 + cua*cua*cua/27;
         double test;
 
-//        System.out.println("\ncubic p,q,r = " + p + ", " + q + ", " + r);
-//        System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
-        if (cud < 0)
+        //System.out.println("\ncubic p,q,r = " + p + ", " + q + ", " + r);
+        //System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
+        if (cud < TOL)
         {
-            double myphi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));
+            double myphi = Math.acos(-Math.signum(cub));                // coalesced roots
+            if (cud < 0)
+                myphi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));   // distinct roots
 //            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 4*Math.PI/3) - p/3));
             test = 2*Math.sqrt(-cua/3)*Math.cos(myphi/3) - p/3;
             if (test > -TOL && test < 1 + TOL) return test;
