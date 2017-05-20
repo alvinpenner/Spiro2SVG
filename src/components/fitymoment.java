@@ -63,7 +63,8 @@ public class fitymoment
 //        setup_quintic_x_y();
 //        setup_quartic_cofmx_cofmy();
 //        scan_spiro_moment_y();              // for testing only fix fix
-        scan_discriminant_vs_c();
+//        scan_discriminant_vs_c();
+        scan_d();
     }
 
     private static void setup_quartic_area_y()
@@ -342,7 +343,7 @@ public class fitymoment
             System.out.println("using root 4 = " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
         }
-        if (!Double.isNaN(D))
+        if (!Double.isNaN(D) && sgn)
         {
             System.out.println("using root 1 = " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
@@ -454,5 +455,37 @@ public class fitymoment
             //System.out.println("quartic      a,b,c,d =, " + (float)qua + ", " + (float)qub + ", " + (float)quc + ", " + (float)qud);
             solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
         }
+    }
+
+    private static void scan_d()
+    {
+        double d1 = 0.5519;
+        double d2 = 0.5520;
+        System.out.println("\nscan_d from " + d1 + " to " + d2);
+        for (int i = 0; i <= 20; i++)
+            scan_r2_vs_t(d1 + i*(d2 - d1)/20);
+    }
+
+    private static void scan_r2_vs_t(double d)
+    {
+        // calculate Bezier r**2 for t = (0,1) for a quarter circle
+        // as function of arm length d
+        // see Spiro2SVG Book 2, p.45
+
+        double r2;
+        double sum = 0;
+//        System.out.println("\nscan_r2_vs_t");
+        for (double t = 0; t < 1.001; t += 0.005)
+        {
+            r2 = (1 - t)*(1 - t)*(1 - t)*(1 - t)*(1 + 2*t)*(1 + 2*t)
+               + t*t*t*t*(3 - 2*t)*(3 - 2*t)
+               + 6*d*t*t*(1 - t)*(1 - t)*(1 - t)*(1 + 2*t)
+               + 6*d*t*t*t*(1 - t)*(1 - t)*(3 - 2*t)
+               + 9*d*d*t*t*t*t*(1 - t)*(1 - t)
+               + 9*d*d*t*t*(1 - t)*(1 - t)*(1 - t)*(1 - t);
+            sum += (1 - r2)*(1 - r2);
+//            System.out.println(t + ", " + r2);
+        }
+        System.out.printf("d sum = , %f, %.7f\n", d, Math.sqrt(sum/200));
     }
 }
