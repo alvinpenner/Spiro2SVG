@@ -197,12 +197,22 @@ public class fitCycloid
         return t - c*Math.sin(t);
     }
 
+    public static double C_dxdt(double t)
+    {
+        return 1 - c*Math.cos(t);
+    }
+
     public static double C_y(double t)
     {
         return 1 - c*Math.cos(t);
     }
 
-    private static double C_dydx(double t)
+    public static double C_dydt(double t)
+    {
+        return c*Math.sin(t);
+    }
+
+    public static double C_dydx(double t)
     {
         if (1 == c*Math.cos(t))
             return Double.POSITIVE_INFINITY;

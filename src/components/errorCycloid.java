@@ -19,8 +19,8 @@ import java.io.IOException;
 
 public class errorCycloid
 {
-    private static final boolean FIT_CURV = false;      // fit curvature at endpoints
-    private static final double c = 1.2;                // cycloid 'c'
+    private static final boolean FIT_CURV = true;         // fit curvature at endpoints
+    private static final double c = .5;                    // cycloid 'c'
 
     public static void main (String[] args)
     {
@@ -160,6 +160,7 @@ public class errorCycloid
         //setup_general_quartic_cofmx_cofmy(Math.acos(1/c), 0);
         //setup_general_quartic_cofmx_cofmy(Math.PI, Math.PI - 1);
         //setup_general_quartic_cofmx_cofmy(0, Math.PI, 1);
+        //variational_coeffs();
     }
 
     private static Point2D.Double[] setup_general_quartic_cofmx_cofmy(double t1, double t2, double sgn)
@@ -287,5 +288,40 @@ public class errorCycloid
         return t/2 - 3*c*Math.sin(t)/2
              + 3*c*c*(t + Math.sin(t)*Math.cos(t))/4
              - c*c*c*Math.sin(t)*(1 - Math.sin(t)*Math.sin(t)/3)/2;
+    }
+
+    private static void variational_coeffs()
+    {
+        // calculate cubic coeffs for d from a variational calc
+        // see Spiro2SVG Book2, page 46
+
+        double c0 = 324*(I(4, 8) + I(6, 6));
+        double c1 = 324*(I(4, 6) + 4*I(5, 7));
+        double c2 = -36*I(2, 4)
+                  +  18*(I(4, 6) + 4*I(5, 6) + 4*I(6, 6))
+                  +  18*(I(2, 8) + 4*I(3, 8) + 4*I(4, 8))
+                  +  18*(9*I(2, 8) - 12*I(2, 9) + 4*I(2, 10))
+                  +  18*(9*I(4, 6) - 12*I(4, 7) + 4*I(4, 8))
+                  +  36*(I(4, 4) + 8*I(4, 5) + 8*I(4, 6) - 32*I(4, 7) + 16*I(4, 8));
+        double c3 =  -6*(I(2, 2) + 4*I(2, 3) - 4*I(2, 4))
+                  +   6*(I(2, 6) + 8*I(3, 6) + 16*I(4, 6) - 16*I(6, 6))
+                  +   6*(9*I(2, 6) + 24*I(2, 7) - 80*I(2, 8) + 64*I(2, 9) - 16*I(2, 10));
+        System.out.println("\nvariational_coeffs = ," + c0 + ", " + c1 + ", " + c2 + ", " + c3);
+        System.out.println("cubic root = " + Beziererror.solve_cubic(c1/c0, c2/c0, c3/c0));
+        System.out.println("cubic root = " + Beziererror.solve_cubic(3996./1161., 1314./1161., -2138./1161.));
+    }
+
+    private static double I(int i, int j)
+    {
+        return factorial(i)*factorial(j)/factorial(i + j + 1);
+    }
+
+    private static double factorial(int N)
+    {
+        double fact = 1;
+        if (N < 1) return 0;
+        for (int i = 1; i <= N; i++)
+            fact *= i;
+        return fact;
     }
 }

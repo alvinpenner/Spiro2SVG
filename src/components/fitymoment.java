@@ -343,7 +343,7 @@ public class fitymoment
             System.out.println("using root 4 = " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
         }
-        if (!Double.isNaN(D) && sgn)
+        if (!Double.isNaN(D) && sgn && false)
         {
             System.out.println("using root 1 = " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
