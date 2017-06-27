@@ -14,30 +14,31 @@ import java.awt.geom.Point2D;
 public class t2_vs_t1
 {
     public static final double t1_start = 0; // Math.PI/3;        // Math.PI/3;
-    public static final double t1_end = Math.PI;
+    public static final double t1_end = Math.PI/2;    // Math.PI;
     public static final int N = 100;
     public static double[] Bezx;
     public static double[] Bezy;
+    //private static CycloidFxn fitted = new CycloidFxn(1);       // set c value
+    private static CircleFxn fitted = new CircleFxn(1);           // set c value
     private static double[] t2 = new double[N+1];
-    private static double[] t2dd1 = new double[N+1];        // partial wrt d1
-    private static double[] t2dd2 = new double[N+1];        // partial wrt d2
+    private static double[] t2dd1 = new double[N+1];            // partial wrt d1
+    private static double[] t2dd2 = new double[N+1];            // partial wrt d2
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
     public static void main (String[] args)
     {
-        double c = 1;
-
-        fitCycloid.set_c(c);
-        System.out.println("c t1_start t1_end      = ," + c + ", " + t1_start + ", " + t1_end);
+        System.out.println("c t1_start t1_end      = ," + fitted.getc() + ", " + t1_start + ", " + t1_end);
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.460221195, 1.260856660, true));   // cofm, c = 0.5
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.494071922, 1.228369703, true));   // curv, c = 0.5
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.544262981, 2.050759223, true));   // cofm, c = 1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.000000000, 2.309401076, true));     // curv, c = 1
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(-0.552, -0.552, true));                       // circle, c = 1
         //iterate_at_d1_d2(0.494071922, 1.228369703);         // curv c = 0.5 init
         //iterate_at_d1_d2(0.460221195, 1.260856660);           // cofm c = 0.5 init
-        iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
-        //iterate_at_d1_d2(0.5000, 2.30940);                   // curv, c = 1
+        //iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
+        //iterate_at_d1_d2(0.5000, 2.30940);                    // curv, c = 1
+        iterate_at_d1_d2(-0.5, -0.5);                           // circle, c = 1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.46858825099, 1.2567247398, true));   // cofm, c = 0.5 test test
     }
 
@@ -78,8 +79,8 @@ public class t2_vs_t1
             for (i = 0; i <= N; i++)
             {
                 t1 = t1_start + i*(t1_end - t1_start)/N;
-                h_gx[i] = fnh(Bezx, t2[i]) - fitCycloid.C_x(t1);
-                h_gy[i] = fnh(Bezy, t2[i]) - fitCycloid.C_y(t1);
+                h_gx[i] = fnh(Bezx, t2[i]) - fitted.getx(t1);
+                h_gy[i] = fnh(Bezy, t2[i]) - fitted.gety(t1);
                 dhx[i] = dfnh(Bezx, t2[i]);
                 dhy[i] = dfnh(Bezy, t2[i]);
                 ux[i] = 3*Math.cos(theta_start)*t2[i]*(1 - t2[i])*(1 - t2[i]);
@@ -181,14 +182,14 @@ public class t2_vs_t1
             for (int j = -1; j < 2; j++)
             {
                 tempd2 = d2 + j*del_d;
-                Bezx = new double[] {fitCycloid.C_x(t1_start),
-                                     fitCycloid.C_x(t1_start) + tempd1*Math.cos(theta_start),
-                                     fitCycloid.C_x(t1_end) - tempd2*Math.cos(theta_end),
-                                     fitCycloid.C_x(t1_end)};
-                Bezy = new double[] {fitCycloid.C_y(t1_start),
-                                     fitCycloid.C_y(t1_start) + tempd1*Math.sin(theta_start),
-                                     fitCycloid.C_y(t1_end) - tempd2*Math.sin(theta_end),
-                                     fitCycloid.C_y(t1_end)};
+                Bezx = new double[] {fitted.getx(t1_start),
+                                     fitted.getx(t1_start) + tempd1*Math.cos(theta_start),
+                                     fitted.getx(t1_end) - tempd2*Math.cos(theta_end),
+                                     fitted.getx(t1_end)};
+                Bezy = new double[] {fitted.gety(t1_start),
+                                     fitted.gety(t1_start) + tempd1*Math.sin(theta_start),
+                                     fitted.gety(t1_end) - tempd2*Math.sin(theta_end),
+                                     fitted.gety(t1_end)};
                 System.out.print(calc_error() + ", ");
             }
             System.out.println();
@@ -201,16 +202,16 @@ public class t2_vs_t1
         // at a given (d1, d2), and calculate the rms error
 
         double t1;
-        theta_start = Math.atan(fitCycloid.C_dydx(t1_start));
-        theta_end = Math.atan(fitCycloid.C_dydx(t1_end));
-        Bezx = new double[] {fitCycloid.C_x(t1_start),
-                             fitCycloid.C_x(t1_start) + d1*Math.cos(theta_start),
-                             fitCycloid.C_x(t1_end) - d2*Math.cos(theta_end),
-                             fitCycloid.C_x(t1_end)};
-        Bezy = new double[] {fitCycloid.C_y(t1_start),
-                             fitCycloid.C_y(t1_start) + d1*Math.sin(theta_start),
-                             fitCycloid.C_y(t1_end) - d2*Math.sin(theta_end),
-                             fitCycloid.C_y(t1_end)};
+        theta_start = Math.atan(fitted.getdydx(t1_start));
+        theta_end = Math.atan(fitted.getdydx(t1_end));
+        Bezx = new double[] {fitted.getx(t1_start),
+                             fitted.getx(t1_start) + d1*Math.cos(theta_start),
+                             fitted.getx(t1_end) - d2*Math.cos(theta_end),
+                             fitted.getx(t1_end)};
+        Bezy = new double[] {fitted.gety(t1_start),
+                             fitted.gety(t1_start) + d1*Math.sin(theta_start),
+                             fitted.gety(t1_end) - d2*Math.sin(theta_end),
+                             fitted.gety(t1_end)};
         if (t2[N] == 0)
             System.out.println("start at     d1 d2     = ," + d1 + ", " + d2);
         else
@@ -245,8 +246,8 @@ public class t2_vs_t1
                 {
                     double t1 = t1_start + i*(t1_end - t1_start)/N;
                     System.out.println(t1 + ", " + clst2.data[i] + ", " +
-                    Math.sqrt((fn(Bezx, clst2.data[i]) - fitCycloid.C_x(t1))*(fn(Bezx, clst2.data[i]) - fitCycloid.C_x(t1))
-                           +  (fn(Bezy, clst2.data[i]) - fitCycloid.C_y(t1))*(fn(Bezy, clst2.data[i]) - fitCycloid.C_y(t1))));
+                    Math.sqrt((fn(Bezx, clst2.data[i]) - fitted.getx(t1))*(fn(Bezx, clst2.data[i]) - fitted.getx(t1))
+                           +  (fn(Bezy, clst2.data[i]) - fitted.gety(t1))*(fn(Bezy, clst2.data[i]) - fitted.gety(t1))));
                 }
                 // generate quintic solution for t2 profile
                 //for (int i = 0; i <= N; i++)        // fix fix temporary usage of clst2.data[]
@@ -256,8 +257,8 @@ public class t2_vs_t1
                 {
                     double t1 = t1_start + i*(t1_end - t1_start)/N;
                     System.out.println(t1 + ", " + clst2.data[i] + ", " +
-                    Math.sqrt((fn(Bezx, clst2.data[i]) - fitCycloid.C_x(t1))*(fn(Bezx, clst2.data[i]) - fitCycloid.C_x(t1))
-                           +  (fn(Bezy, clst2.data[i]) - fitCycloid.C_y(t1))*(fn(Bezy, clst2.data[i]) - fitCycloid.C_y(t1))));
+                    Math.sqrt((fn(Bezx, clst2.data[i]) - fitted.getx(t1))*(fn(Bezx, clst2.data[i]) - fitted.getx(t1))
+                           +  (fn(Bezy, clst2.data[i]) - fitted.gety(t1))*(fn(Bezy, clst2.data[i]) - fitted.gety(t1))));
                 }
             }
             //System.out.println("............................................");
@@ -357,8 +358,8 @@ public class t2_vs_t1
         }
         for (int i = 0; i <= N; i++)
         {
-            trap_in[i] = (fn(Bezx, t2[i]) - fitCycloid.C_x(t1))*(fn(Bezx, t2[i]) - fitCycloid.C_x(t1))
-                       + (fn(Bezy, t2[i]) - fitCycloid.C_y(t1))*(fn(Bezy, t2[i]) - fitCycloid.C_y(t1));
+            trap_in[i] = (fn(Bezx, t2[i]) - fitted.getx(t1))*(fn(Bezx, t2[i]) - fitted.getx(t1))
+                       + (fn(Bezy, t2[i]) - fitted.gety(t1))*(fn(Bezy, t2[i]) - fitted.gety(t1));
             t1 += (t1_end - t1_start)/N;
         }
         return Math.sqrt(integrate(trap_in));
@@ -381,8 +382,8 @@ public class t2_vs_t1
         // t = initial estimate of t2, the cubic Bezier t-value
 
         double f, fprime, del_t;
-        double X = fitCycloid.C_x(t1);
-        double Y = fitCycloid.C_y(t1);
+        double X = fitted.getx(t1);
+        double Y = fitted.gety(t1);
         double t = 0.5;                             // initial estimate of t2
         int loop = 0;
 
@@ -403,8 +404,8 @@ public class t2_vs_t1
 
     private static double calc_t2dd1(double t1, double t2)
     {
-        double X = fitCycloid.C_x(t1);
-        double Y = fitCycloid.C_y(t1);
+        double X = fitted.getx(t1);
+        double Y = fitted.gety(t1);
         double rhs1 = Math.cos(theta_start)*dfn(Bezx, t2) + Math.sin(theta_start)*dfn(Bezy, t2);
         double rhs2 = Math.cos(theta_start)*(fn(Bezx, t2) - X) + Math.sin(theta_start)*(fn(Bezy, t2) - Y);
         double fprime = dfn(Bezx, t2)*dfn(Bezx, t2) + (fn(Bezx, t2) - X)*d2fn(Bezx, t2) + dfn(Bezy, t2)*dfn(Bezy, t2) + (fn(Bezy, t2) - Y)*d2fn(Bezy, t2);
@@ -415,8 +416,8 @@ public class t2_vs_t1
 
     private static double calc_t2dd2(double t1, double t2)
     {
-        double X = fitCycloid.C_x(t1);
-        double Y = fitCycloid.C_y(t1);
+        double X = fitted.getx(t1);
+        double Y = fitted.gety(t1);
         double rhs1 = Math.cos(theta_end)*dfn(Bezx, t2) + Math.sin(theta_end)*dfn(Bezy, t2);
         double rhs2 = Math.cos(theta_end)*(fn(Bezx, t2) - X) + Math.sin(theta_end)*(fn(Bezy, t2) - Y);
         double fprime = dfn(Bezx, t2)*dfn(Bezx, t2) + (fn(Bezx, t2) - X)*d2fn(Bezx, t2) + dfn(Bezy, t2)*dfn(Bezy, t2) + (fn(Bezy, t2) - Y)*d2fn(Bezy, t2);
