@@ -18,7 +18,7 @@ public class Beziererror
 {
     private static final double TOL = 1E-9;
     private static final double a_b = 180;          // spiro 'a - b'
-    private static final double c = 4; //3.371577; //3.5297135;      // spiro 'c'
+    private static final double c = -2; //3.371577; //3.5297135;      // spiro 'c'
     private static final double l1 = a_b + c;       // distance to start point (l1, 0)
     private static final double l2 = a_b - c;       // distance to end   point (l2/√2, l2/√2)
 
@@ -83,12 +83,12 @@ public class Beziererror
 //        check_neighbours(50, 39.5);
 //        d2 = (20*spiro_area()/3 - 2*start*(l1 - l2/Math.sqrt(2)))/(2*(l2 - l1/Math.sqrt(2)) - start/Math.sqrt(2)); // satisfy area constraint
 //        calc_one(start, d2);
-//        calc_one(4.761144971219153, 87.359877107);
+        calc_one(43.64, 50.72977);
 //        scan_moment_y(54, 0, 0.03, 100);
 //        scan_moment_y(-350, 0, 1, 1000);
 //        scan_area(50, 0, 0.1, 100);
 //        scan_moment_y(-350, 0, 1, 1000, e1, e2, e3, e4, e5, e6, e7, false);
-        calc_array();       // 2D array = calc_error(d1, d2) plus four 1D scans
+//        calc_array();       // 2D array = calc_error(d1, d2) plus four 1D scans
     }
 
     private static void calc_one(double d1, double d2)
@@ -98,7 +98,7 @@ public class Beziererror
 //        System.out.printf("c         ,d1        ,d2        ,spiro_area  ,spiro <x>     ,spiro <y>     ,bezier_area ,bezier <x>    ,bezier <y>    ,err\n");
 //        System.out.printf("%f ,%f ,%f ,%f ,%f ,%f ,%f ,%f ,%f ,%.7f\n", c, d1, d2, spiro_area(), spiro_moment("x"), spiro_moment("y"), bezier_area(d1, d2), bezier_moment_x(d1, d2), bezier_moment_y(d1, d2), calc_error(d1, d2));
         System.out.printf("c         ,d1        ,d2        ,err\n");
-        System.out.printf("%f ,%f ,%f ,%.7f\n", c, d1, d2, calc_error(d1, d2));
+        System.out.printf("%f ,%f ,%f ,%.8f\n", c, d1, d2, calc_error(d1, d2));
     }
 
     private static void calc_array()
@@ -310,7 +310,7 @@ public class Beziererror
 
         double t_spiro, x_spiro, y_spiro, r_spiro;
         double t_bez, x_bez, y_bez, r_bez;
-//        double theta_spiro, theta_bez;                            // should be the same
+        double theta_spiro, theta_bez;                            // should be the same
         double x0 = l1, y0 = 0;
         double x1 = l1, y1 = d1;
         double x2 = l2/Math.sqrt(2) + d2/Math.sqrt(2), y2 = l2/Math.sqrt(2) - d2/Math.sqrt(2);
@@ -318,15 +318,15 @@ public class Beziererror
         double tempa, tempb, tempc, tempd;
         double err = 0;
 
-//        System.out.printf("t_spiro,  x_spiro,  y_spiro,  r_spiro, theta_spiro,    t_bez,    x_bez,    y_bez,    r_bez,    theta_bez,    error\n");
+        System.out.printf("t_spiro,  x_spiro,  y_spiro,  r_spiro, theta_spiro,    t_bez,    x_bez,    y_bez,    r_bez,    theta_bez,    error\n");
         for (int i = 0; i <= 100; i++)
         {
             t_spiro = i/100.0;
             x_spiro = a_b*Math.cos(Math.PI*t_spiro/4) + c*Math.cos(-3*Math.PI*t_spiro/4);
             y_spiro = a_b*Math.sin(Math.PI*t_spiro/4) + c*Math.sin(-3*Math.PI*t_spiro/4);
             r_spiro = Math.sqrt(x_spiro*x_spiro + y_spiro*y_spiro);
-//            theta_spiro = Math.atan2(y_spiro, x_spiro);           // common to both spiro and bezier
-//            System.out.printf("%f, %f, %f, %f, %f, ", t_spiro, x_spiro, y_spiro, r_spiro, theta_spiro*180/Math.PI);
+            theta_spiro = Math.atan2(y_spiro, x_spiro);           // common to both spiro and bezier
+            System.out.printf("%f, %f, %f, %f, %f, ", t_spiro, x_spiro, y_spiro, r_spiro, theta_spiro*180/Math.PI);
             tempa = (-x0 + 3*x1 - 3*x2 + x3)*y_spiro - (-y0 + 3*y1 - 3*y2 + y3)*x_spiro;
             tempb = (3*x0 - 6*x1 + 3*x2)*y_spiro - (3*y0 - 6*y1 + 3*y2)*x_spiro;
             tempc = (-3*x0 + 3*x1)*y_spiro - (-3*y0 + 3*y1)*x_spiro;
@@ -337,8 +337,8 @@ public class Beziererror
             y_bez = y0*(1-t_bez)*(1-t_bez)*(1-t_bez) + 3*y1*t_bez*(1-t_bez)*(1-t_bez) + 3*y2*t_bez*t_bez*(1-t_bez) + y3*t_bez*t_bez*t_bez;
             r_bez = Math.sqrt(x_bez*x_bez + y_bez*y_bez);
             err += (r_bez - r_spiro)*(r_bez - r_spiro);
-//            theta_bez = Math.atan2(y_bez, x_bez);           // just a double check
-//            System.out.printf("%f, %f, %f, %f, %f, %.7f\n", t_bez, x_bez, y_bez, r_bez, theta_bez*180/Math.PI, r_bez/r_spiro - 1);
+            theta_bez = Math.atan2(y_bez, x_bez);           // just a double check
+            System.out.printf("%f, %f, %f, %f, %f, %.7f\n", t_bez, x_bez, y_bez, r_bez, theta_bez*180/Math.PI, r_bez/r_spiro - 1);
         }
         return Math.sqrt(err/100)/a_b;
     }

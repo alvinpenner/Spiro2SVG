@@ -22,7 +22,7 @@ public class fitymoment
 
     public static void main (String[] args)
     {
-        c = -3.5298;         // 3.5297135;
+        c = 8.71;         // 3.5297135;
         l1 = a_b + c;
         l2 = a_b - c;
 //        phi = Math.atan(l1*Math.sqrt(2)/l2 - 1);    // general transform that rotates with the object baseline
@@ -56,15 +56,19 @@ public class fitymoment
         e6 = -15*(l2 - l1*Math.cos(2*theta))*Math.cos(theta);
         e7 = 9*Math.sin(2*theta)*Math.cos(theta);
 
-        System.out.printf("a-b, c, phi, <x>, <y> = %f, %f, %f, %f, %f\n", a_b, c, phi*180/Math.PI, spiro_moment_x(), spiro_moment_y());
+        System.out.printf("a-b c phi <x> <y> =, %f, %f, %f, %f, %f\n", a_b, c, phi*180/Math.PI, spiro_moment_x(), spiro_moment_y());
 //        setup_quartic_area_y();
 //        setup_quartic_area_x();
-//        setup_quartic_extremum_y();
+        //setup_quartic_extremum_y_area();
+        scan_extremum_y_moment_at_x_moment();
+        //scan_extremum_cofmy_at_cofmx();
+        //scan_extremum_cofmx0_at_cofmx45();
+        //scan_2D_cofmx0_and_cofmx45();
 //        setup_quintic_x_y();
 //        setup_quartic_cofmx_cofmy();
 //        scan_spiro_moment_y();              // for testing only fix fix
 //        scan_discriminant_vs_c();
-        scan_d();
+//        scan_d(); // numerical minimization of an error function for a circular arc
     }
 
     private static void setup_quartic_area_y()
@@ -131,7 +135,7 @@ public class fitymoment
         System.out.println("<x>    = " + spiro_moment_x() + ", " + beziermomentx/280);
     }
 
-    private static void setup_quartic_extremum_y()
+    private static void setup_quartic_extremum_y_area()
     {
         // this will calculate extrema of the tilted <y> moment, holding area fixed
         // this should produce a closed oblong shape about the center where c = 0
@@ -155,6 +159,247 @@ public class fitymoment
         d2 = (a0 + a1*d1)/(a2 + a3*d1);
         System.out.println("quartic_extremum_y c d1 d2 = ," + c + ", " + d1 + ", " + d2);
         System.out.println("area   = " + spiro_area() + ", " + bezier_area(d1, d2));
+    }
+
+    private static void scan_extremum_y_moment_at_x_moment()
+    {
+        // this will scan for extrema of the tilted <y> moment, holding tilted <x> moment fixed
+        // both <x> and <y> are in the symmetric representation at 22.5º
+        // this should produce a closed oblong shape about the center where c = 0
+
+        final double A = Math.sqrt(2) - 1;
+        final double B = -3*Math.sqrt(2)/5 + 1;
+        final double C = -47*Math.sqrt(2)/7 + 1;
+        final double D = -Math.sqrt(2) - 1;
+        final double momxprime = (a_b*a_b*a_b*A + a_b*c*c*C)/12/Math.cos(theta);    // expressed at angle 22.5º
+        final double momyprime = -(Math.sqrt(2) + 1)*(a_b*a_b*c*B + c*c*c*D)/12/Math.cos(theta);
+        final double f0 = 280*momxprime;
+
+        double d1, d2;
+        double qua, qub, quc;                                   // qua*d2**2 + qub*d2 + quc = 0
+        double start = 35.5;                                       // d1 range
+        double incr = .01;
+        int steps = 100;
+        double err0 = 0, err1 = 0, err2;                        // previous values of <y>
+        double d2old = 0;
+        String strout = "";                                     // record extrema
+
+        System.out.println("scan_extremum_<y>_at_<x>()");
+        System.out.printf("\na-b, c, <x'>, <y'> = %f, %f, %f, %f\n", a_b, c, momxprime, momyprime);
+        System.out.println(" d1,        d2,        <y>");
+        for (d1 = start; d1 <= start + steps*incr; d1 += incr)
+        {
+            qua = f6 + f7*d1;
+            qub = f3 + f4*d1 + f5*d1*d1;
+            quc = -f0 + f1*d1 + f2*d1*d1;
+            d2 = (-qub + Math.sqrt(qub*qub - 4*qua*quc))/2/qua; // satisfy symmetric <x> constraint
+            err2 = (e1*d1 + e2*d1*d1 + d2*(e3 + e4*d1 + e5*d1*d1) + d2*d2*(e6 + e7*d1))/280.0; // <y> moment
+            System.out.printf("%f, %f, %.7f\n", d1, d2, err2);
+            if ( d1 > start + incr)
+            {
+                if (err2 > err1 && err0 > err1) strout += "\nlocal min at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+                if (err2 < err1 && err0 < err1) strout += "\nlocal max at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+            }
+            err0 = err1;
+            err1 = err2;
+            d2old = d2;
+        }
+        if (!strout.isEmpty())
+            System.out.println("\nList of extrema:" + strout);
+    }
+
+    private static void scan_extremum_cofmy_at_cofmx()
+    {
+        // this will scan for extrema of the tilted <y>/<1> cofm, holding tilted <x>/<1> cofm fixed
+        // both cofmx and cofmy are in the symmetric representation at 22.5º
+        // this should produce a closed oblong shape about the center where c = 0
+
+        final double A = Math.sqrt(2) - 1;
+        final double B = -3*Math.sqrt(2)/5 + 1;
+        final double C = -47*Math.sqrt(2)/7 + 1;
+        final double D = -Math.sqrt(2) - 1;
+        final double momxprime = (a_b*a_b*a_b*A + a_b*c*c*C)/12/Math.cos(theta);    // expressed at angle 22.5º
+        final double momyprime = -(Math.sqrt(2) + 1)*(a_b*a_b*c*B + c*c*c*D)/12/Math.cos(theta);
+        final double f0 = 280*momxprime;
+
+        double d1, d2, y;
+        double qua, qub, quc;                                   // qua*d2**2 + qub*d2 + quc = 0
+        double start = 0;                                       // d1 range
+        double incr = 1;
+        int steps = 100;
+        double err0 = 0, err1 = 0, err2;                        // previous values of <y>/<1>
+        double d2old = 0;
+        String strout = "";                                     // record extrema
+
+        System.out.println("scan_extremum_cofmy_at_cofmx()");
+        System.out.printf("\na-b, c, <x'>, <y'> = %f, %f, %f, %f\n", a_b, c, momxprime/spiro_area(), momyprime/spiro_area());
+        System.out.println(" d1,        d2,        <y>/<1>");
+        for (d1 = start; d1 <= start + steps*incr; d1 += incr)
+        {
+            qua = f6 + f7*d1;
+            qub = f3 + f4*d1 + f5*d1*d1 - (a2 + a3*d1)*f0/a0;
+            quc = f1*d1 + f2*d1*d1 + a1*d1*f0/a0;
+            d2 = (-qub + Math.sqrt(qub*qub - 4*qua*quc))/2/qua; // satisfy symmetric <x>/<1> constraint
+            y = (e1*d1 + e2*d1*d1 + d2*(e3 + e4*d1 + e5*d1*d1) + d2*d2*(e6 + e7*d1))/280.0; // <y> moment
+            err2 = 20*y/3/(-a1*d1 + a2*d2 + a3*d1*d2);          // divide <y> by <1>
+            System.out.printf("%f, %f, %.7f\n", d1, d2, err2);
+            //System.out.println(3*(-a1*d1 + a2*d2 + a3*d1*d2)/20 + ", " + spiro_area());
+            if ( d1 > start + incr)
+            {
+                if (err2 > err1 && err0 > err1) strout += "\nlocal min at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+                if (err2 < err1 && err0 < err1) strout += "\nlocal max at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+            }
+            err0 = err1;
+            err1 = err2;
+            d2old = d2;
+        }
+        if (!strout.isEmpty())
+            System.out.println("\nList of extrema:" + strout);
+    }
+
+    private static void scan_extremum_cofmx0_at_cofmx45()
+    {
+        // this will scan for extrema of the cofmx, <x>/<1>, oriented at 0º
+        // holding fixed the cofmx, <x>/<1>, oriented at 45º
+        // this should produce a closed oblong shape about the center where c = 0
+
+        final double A = Math.sqrt(2) - 1;
+        final double B = -3*Math.sqrt(2)/5 + 1;
+        final double C = -47*Math.sqrt(2)/7 + 1;
+        final double D = -Math.sqrt(2) - 1;
+        final double momxprime = (a_b*a_b*a_b*A + a_b*c*c*C)/12/Math.cos(theta);    // expressed at angle 22.5º
+        final double momyprime = -(Math.sqrt(2) + 1)*(a_b*a_b*c*B + c*c*c*D)/12/Math.cos(theta);
+
+        // express d1   = (u1*d2 + u2*d2*d2)/(u3 + u4*d2 + u5*d2*d2) - transformed to angle 0º
+        final double u0 = 280*(momxprime*Math.cos(theta) - momyprime*Math.sin(theta));    // same as momx
+        final double u1 = f3*Math.cos(theta) - e3*Math.sin(theta);
+        final double u2 = f6*Math.cos(theta) - e6*Math.sin(theta);
+        final double u3 = f1*Math.cos(theta) - e1*Math.sin(theta);
+        final double u4 = f4*Math.cos(theta) - e4*Math.sin(theta);
+        final double u5 = f7*Math.cos(theta) - e7*Math.sin(theta);
+
+        // express d2   = (b1*d1 + b2*d1*d1)/(b3 + b4*d1 + b5*d1*d1) - transformed to angle 45º
+        final double b0 = 280*(momxprime*Math.cos(theta) + momyprime*Math.sin(theta));
+        final double b1 = -(f1*Math.cos(theta) + e1*Math.sin(theta) + a1*b0/a0);
+        final double b2 = -(f2*Math.cos(theta) + e2*Math.sin(theta));
+        final double b3 = f3*Math.cos(theta) + e3*Math.sin(theta) - a2*b0/a0;
+        final double b4 = f4*Math.cos(theta) + e4*Math.sin(theta) - a3*b0/a0;
+        final double b5 = f5*Math.cos(theta) + e5*Math.sin(theta);
+
+        double d1, d2, x0;
+        double start = 69.5;                                     // d1 range
+        double incr = .01;
+        int steps = 100;
+        double err0 = 0, err1 = 0, err2;                        // previous values of <x@0>/<1>
+        double d2old = 0;
+        String strout = "";                                     // record extrema
+
+        System.out.println("scan_extremum_cofmx0_at_cofmx45()");
+        System.out.printf("\na-b, c, <x@45>, <x@0> = %f, %f, %.7f, %.7f\n", a_b, c, b0/280/spiro_area(), u0/280/spiro_area());
+        System.out.println(" d1,        d2,        <x@0>/<1>");
+        for (d1 = start; d1 <= start + steps*incr; d1 += incr)
+        {
+            d2 = (b1*d1 + b2*d1*d1)/(b3 + b4*d1 + b5*d1*d1);
+            x0 = (u1*d2 + u2*d2*d2 + d1*(u3 + u4*d2 + u5*d2*d2))/280.0; // <x> moment at 0º
+            err2 = 20*x0/3/(-a1*d1 + a2*d2 + a3*d1*d2);                 // divide <x@0> by <1>
+            System.out.printf("%f, %f, %.7f\n", d1, d2, err2);
+            if ( d1 > start + incr)
+            {
+                if (err2 > err1 && err0 > err1) strout += "\nlocal min at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+                if (err2 < err1 && err0 < err1) strout += "\nlocal max at, " + (d1 - incr) + ", " + d2old + ", " + err1;
+            }
+            err0 = err1;
+            err1 = err2;
+            d2old = d2;
+        }
+        if (!strout.isEmpty())
+            System.out.println("\nList of extrema:" + strout);
+    }
+
+    private static void scan_2D_cofmx0_and_cofmx45()
+    {
+        // this will scan both d1 and d2 for roots and/or local extrema
+        // of the cofmx, <x@0>/<1>, oriented at 0º
+        // and the cofmx, <x@45>/<1>, oriented at 45º
+        // this should produce a closed oblong shape about the center where c = 0
+
+        final java.text.DateFormat df = java.text.DateFormat.getInstance();
+        final boolean DEBUG_PRINT = true;
+        final double A = Math.sqrt(2) - 1;
+        final double B = -3*Math.sqrt(2)/5 + 1;
+        final double C = -47*Math.sqrt(2)/7 + 1;
+        final double D = -Math.sqrt(2) - 1;
+        final double momxprime = (a_b*a_b*a_b*A + a_b*c*c*C)/12/Math.cos(theta);    // expressed at angle 22.5º
+        final double momyprime = -(Math.sqrt(2) + 1)*(a_b*a_b*c*B + c*c*c*D)/12/Math.cos(theta);
+
+        // express d1   = (u1*d2 + u2*d2*d2)/(u3 + u4*d2 + u5*d2*d2) - transformed to angle 0º
+        final double u0 = 280*(momxprime*Math.cos(theta) - momyprime*Math.sin(theta));    // same as momx
+        final double u1 = f3*Math.cos(theta) - e3*Math.sin(theta);
+        final double u2 = f6*Math.cos(theta) - e6*Math.sin(theta);
+        final double u3 = f1*Math.cos(theta) - e1*Math.sin(theta);
+        final double u4 = f4*Math.cos(theta) - e4*Math.sin(theta);
+        final double u5 = f7*Math.cos(theta) - e7*Math.sin(theta);
+
+        // express d2   = (b1*d1 + b2*d1*d1)/(b3 + b4*d1 + b5*d1*d1) - transformed to angle 45º
+        final double b0 = 280*(momxprime*Math.cos(theta) + momyprime*Math.sin(theta));
+        final double b1 = f1*Math.cos(theta) + e1*Math.sin(theta);
+        final double b2 = f2*Math.cos(theta) + e2*Math.sin(theta);
+        final double b3 = f3*Math.cos(theta) + e3*Math.sin(theta);
+        final double b4 = f4*Math.cos(theta) + e4*Math.sin(theta);
+        final double b5 = f5*Math.cos(theta) + e5*Math.sin(theta);
+
+        double d1, d2;
+        double startd1 = 56.3;                                    // d1 range
+        double startd2 = 31.8;                                    // d2 range
+        double incr = .02;
+        int steps = 100;
+        double[][] x0 = new double[steps + 1][steps + 1];       // discrepancy in <x@0>/<1>
+        double[][] x45 = new double[steps + 1][steps + 1];      // discrepancy in <x@45>/<1>
+        double minx = 99999;
+        int mini = 0, minj = 0;
+
+        System.out.println("scan_2D_cofmx0_and_cofmx45()");
+        System.out.printf("\n" + df.format(new java.util.Date()) + " : a-b c <x@45> <x@0> =, %f, %f, %.7f, %.7f\n", a_b, c, b0/280/spiro_area(), u0/280/spiro_area());
+        System.out.println("extent = (, " + startd1 + ", " + (startd1 + steps*incr) + ", " + startd2 + ", " + (startd2 + steps*incr) + ",) step size = " + incr);
+        if (DEBUG_PRINT)
+        {
+            for (int j = 0; j <= steps; j++)
+                System.out.printf("  %.2f,", startd2 + j*incr);
+            System.out.printf("\n");
+        }
+        for (int i = 0; i <= steps; i++)
+        {
+            d1 = startd1 + i*incr;
+            //if (DEBUG_PRINT) System.out.printf("%.2f ", d1);
+            for (int j = 0; j <= steps; j++)
+            {
+                d2 = startd2 + j*incr;
+                x0[i][j] = (u1*d2 + u2*d2*d2 + d1*(u3 + u4*d2 + u5*d2*d2))/280.0;   // <x> moment at 0º
+                x0[i][j] = 20*x0[i][j]/3/(-a1*d1 + a2*d2 + a3*d1*d2);               // divide <x@0> by <1>
+                x0[i][j] -= u0/280/spiro_area();                                    // subtract spiro cofm
+                x45[i][j] = (b1*d1 + b2*d1*d1 + d2*(b3 + b4*d1 + b5*d1*d1))/280.0;  // <x> moment at 45º
+                x45[i][j] = 20*x45[i][j]/3/(-a1*d1 + a2*d2 + a3*d1*d2);             // divide <x@45> by <1>
+                x45[i][j] -= b0/280/spiro_area();                                   // subtract spiro cofm
+                if (Math.sqrt(x45[i][j]*x45[i][j] + x0[i][j]*x0[i][j]) < minx)
+                {
+                    minx = Math.sqrt(x45[i][j]*x45[i][j] + x0[i][j]*x0[i][j]);
+                    mini = i;
+                    minj = j;
+                }
+                //if (DEBUG_PRINT) System.out.printf(", %.2f ", x0[i][j]);
+                //if (DEBUG_PRINT) System.out.printf(", %.2f ", x45[i][j]);
+                if (DEBUG_PRINT) System.out.printf(" %.4f", Math.sqrt(x45[i][j]*x45[i][j] + x0[i][j]*x0[i][j]));
+            }
+            if (DEBUG_PRINT) System.out.printf("\n");
+        }
+        if (mini > 0 && minj > 0 && (mini < steps + 1) && (minj < steps + 1))
+        {
+            System.out.println("\nmin at " + mini + ", " + minj + " (" + (startd1 + mini*incr) + ", " + (startd2 + minj*incr) + ") = " + minx);
+            for (int i = mini - 1; i < mini + 2; i++)
+                System.out.printf(" %.8f, %.8f, %.8f\n", Math.sqrt(x45[i][minj-1]*x45[i][minj-1] + x0[i][minj-1]*x0[i][minj-1])
+                                                       , Math.sqrt(x45[i][minj]*x45[i][minj] + x0[i][minj]*x0[i][minj])
+                                                       , Math.sqrt(x45[i][minj+1]*x45[i][minj+1] + x0[i][minj+1]*x0[i][minj+1]));
+        }
     }
 
     private static void setup_quintic_x_y()
@@ -338,25 +583,25 @@ public class fitymoment
         System.out.print(", " + (-qua/4 + R/2 - D/2));
         System.out.print(", " + (-qua/4 - R/2 + E/2));
         System.out.println(", " + (-qua/4 - R/2 - E/2));
-        if (!Double.isNaN(E) && sgn && false)
+        if (!Double.isNaN(E) && sgn)
         {
             System.out.println("using root 4 = " + (-qua/4 - R/2 - E/2));
             return (-qua/4 - R/2 - E/2);
         }
-        if (!Double.isNaN(D) && sgn)
+        if (!Double.isNaN(D) && sgn && false)
         {
             System.out.println("using root 1 = " + (-qua/4 + R/2 + D/2));
             return (-qua/4 + R/2 + D/2);
-        }
-        if (!Double.isNaN(D) && sgn)
-        {
-            System.out.println("using root 2 = " + (-qua/4 + R/2 - D/2));
-            return (-qua/4 + R/2 - D/2);
         }
         if (!Double.isNaN(E))
         {
             System.out.println("using root 3 = " + (-qua/4 - R/2 + E/2));
             return (-qua/4 - R/2 + E/2);
+        }
+        if (!Double.isNaN(D) && sgn)
+        {
+            System.out.println("using root 2 = " + (-qua/4 + R/2 - D/2));
+            return (-qua/4 + R/2 - D/2);
         }
         System.out.println("general quartic : Bad solution = " + R + ", " + D + ", " + E);
         return Double.NaN;

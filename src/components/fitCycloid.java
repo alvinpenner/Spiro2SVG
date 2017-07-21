@@ -21,7 +21,7 @@ public class fitCycloid
 
     public static void main (String[] args)
     {
-        c = 1;
+        c = 0.7;
         double t1 = Math.acos(c);                           // zero curvature (c < 1)
         double t2 = Math.acos((2*c*c - 1)/c);               // max negative curvature (.5 < c < 1)
         //t1 = Math.acos(1/c);                                // vertical slope (c > 1)
@@ -31,10 +31,15 @@ public class fitCycloid
 //        System.out.printf("t c x y dydx dxdy d2ydx2 d2xdy2 =, %.12f, %f, %.10f, %.10f, %g, %g, %g, %g\n", t1, c, C_x(t1), C_y(t1), C_dydx(t1), C_dxdy(t1), C_d2ydx2(t1), C_d2xdy2(t1));
         System.out.printf("t c x y dydx dxdy d2ydx2 d2xdy2 =, %.12f, %f, %.10f, %.10f, %g, %g, %g, %g\n", t2, c, C_x(t2), C_y(t2), C_dydx(t2), C_dxdy(t2), C_d2ydx2(t2), C_d2xdy2(t2));
         System.out.printf("t c x y dydx dxdy d2ydx2 d2xdy2 =, %.12f, %f, %.10f, %.10f, %g, %g, %g, %g\n", Math.PI, c, C_x(Math.PI), C_y(Math.PI), C_dydx(Math.PI), C_dxdy(Math.PI), C_d2ydx2(Math.PI), C_d2xdy2(Math.PI));
-        gen_points(0, Math.PI, 200);
+        int N = 25;                                          // temporary code for Fig1
+        c = Math.sqrt(1 - 0.75*Math.cos(N*Math.PI/180)*Math.cos(N*Math.PI/180));
+        double t = Math.acos((2*c*c - 1)/c);
+        System.out.println(N + ", " + c + ", " + t + "\n"); // end of temporary code
+        //gen_points(Math.PI, t, 2*N);
+        gen_points(t, Math.PI, 200);
 //        fit_inflect_to_d2ydx2(t1, t2);
 //        fit_inflect_to_d2ydx2(t1, 0);
-        fit_d2ydx2_to_d2ydx2(t2, Math.PI);
+        //fit_d2ydx2_to_d2ydx2(t, Math.PI);      // should be t
 //        fit_d2ydx2_to_d2ydx2(Math.PI, t2);
 //        fit_vertical_C0_to_horizontal_C1(t1, Math.PI);
 //        fit_vertical_C0_to_horizontal_C1(t1, 0);
@@ -97,9 +102,10 @@ public class fitCycloid
                                          -(C_y(t2) - C_y(t1) - C_dydx(t2)*(C_x(t2) - C_x(t1)))*(C_dydx(t2) - C_dydx(t1))*(C_dydx(t2) - C_dydx(t1))
                                          -3*C_d2ydx2(t2)*(C_y(t2) - C_y(t1) - C_dydx(t1)*(C_x(t2) - C_x(t1)))
                                                         *(C_y(t2) - C_y(t1) - C_dydx(t1)*(C_x(t2) - C_x(t1)))/2,
-                                          false);
+                                          true);
         delx3 = (C_y(t2) - C_y(t1) - C_dydx(t1)*(C_x(t2) - C_x(t1)) - 3*C_d2ydx2(t1)*delx0*delx0/2)/(C_dydx(t2) - C_dydx(t1));
-        System.out.println("delx0/3 = ," + c + ", " + delx0 + ", " + delx0*Math.sqrt(1 + C_dydx(t1)*C_dydx(t1)) + ", " + delx3);
+        System.out.println("delx0/3 = ," + c + ", " + t1 + ", " + delx0 + ", " + delx0*Math.sqrt(1 + C_dydx(t1)*C_dydx(t1)) + ", " + delx3);
+        System.out.printf ("c t d1 d2 = , %.8f, %.8f, %.8f, %.8f\n", c, t1, delx0*Math.sqrt(1 + C_dydx(t1)*C_dydx(t1)), delx3);
         ptBez[0] = new Point2D.Double(C_x(t1), C_y(t1));
         ptBez[1] = new Point2D.Double(C_x(t1) + delx0, C_y(t1) + C_dydx(t1)*delx0);
         ptBez[2] = new Point2D.Double(C_x(t2) - delx3, C_y(t2) - C_dydx(t2)*delx3);

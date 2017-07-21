@@ -19,8 +19,10 @@ import java.io.IOException;
 
 public class errorCycloid
 {
-    private static final boolean FIT_CURV = true;         // fit curvature at endpoints
-    private static final double c = .5;                    // cycloid 'c'
+    private static final boolean FIT_CURV = false;           // fit curvature at endpoints
+//    private static final double c = .9;                    // cycloid 'c'
+    private static final int NFig2 = 89;                     // temporary code for Fig2, theta in degrees
+    private static final double c = Math.sqrt(1 - 0.75*Math.cos(NFig2*Math.PI/180)*Math.cos(NFig2*Math.PI/180)); // temporary code for Fig2
 
     public static void main (String[] args)
     {
@@ -112,6 +114,8 @@ public class errorCycloid
             out.write("cycloid : c = " + c + " (FIT_CURV = " + FIT_CURV + ")\r\n");
             out.write("t_cycloid, index,  x_cycloid,  y_cycloid,  r_cycloid, theta_cycloid,    t_bez,    x_bez,    y_bez,    r_bez,    theta_bez,    error\r\n");
             int index = 0;                                          // segment id
+            double maxcount = 0;    // counter for summing the error of the max curvature segment (index == 2)
+            double maxsum = 0;      // sum of the error of the max curvature segment (index == 2)
             for (int i = 0; i <= N; i++)
             {
                 t_cycloid = i*Math.PI/N;
@@ -147,8 +151,15 @@ public class errorCycloid
                 y_bez += centers[index].y;
                 err += (r_bez - r_cycloid)*(r_bez - r_cycloid);
                 out.write(t_bez + ", " +  x_bez + ", " + y_bez + ", " + r_bez + ", " + theta_bez*180/Math.PI + ", " + (r_bez - r_cycloid) + "\r\n");
+                if (index == 2)
+                {
+                    maxcount++;
+                    maxsum += (r_bez - r_cycloid)*(r_bez - r_cycloid);
+                }
             }
-            out.close(); 
+            out.close();
+            if (maxcount > 0)
+                System.out.println("error for index = 2 : " + maxcount + ", " + maxsum + ", " + Math.sqrt(maxsum/maxcount));
         } catch (IOException e) {System.err.println("Unable to save file: " + e);}
         System.out.println("c err = ," + c + ", " + Math.sqrt(err/N));
 
@@ -234,6 +245,7 @@ public class errorCycloid
                                       t1 > t2);
         d2 = (b1*d1 + b2*d1*d1)/(b3 + b4*d1 + b5*d1*d1);
         System.out.println("solve_quartic c,  d1,  d2 = " + c + ", " + d1 + ", " + d2);
+        System.out.printf ("c t d1 d2 = , %.8f, %.8f, %.8f, %.8f\n", c, t1, -d1, -d2);
         System.out.println("cycloid     <1>, <x>, <y> = " + 3*a0/20 + ", " + u0/280 + ", " + b0/280);
         System.out.println("Bezier      <1>, <x>, <y> = " + 3*(-a1*d1 + a2*d2 + a3*d1*d2)/20 + ", " +
                                                             (r3*d2 + r6*d2*d2 + (r1 + r4*d2 + r7*d2*d2)*d1)/280 + ", " +

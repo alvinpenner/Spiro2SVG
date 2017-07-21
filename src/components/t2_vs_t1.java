@@ -1,7 +1,7 @@
 
 package components;
 
-import java.awt.geom.Point2D;
+import java.io.*;
 
 // consider a parametric curve, g, either cycloid or trochoid, with parameter t1
 // fit a cubic Bezier to it, using parameter t2.
@@ -13,13 +13,13 @@ import java.awt.geom.Point2D;
 
 public class t2_vs_t1
 {
-    public static final double t1_start = 0; // Math.PI/3;        // Math.PI/3;
-    public static final double t1_end = Math.PI/2;    // Math.PI;
+    public static double t1_start = 0; //Math.PI/3;         // Math.PI/3;
+    public static final double t1_end = Math.PI/4; // 25*Math.PI/180; // Math.PI;
     public static final int N = 100;
     public static double[] Bezx;
     public static double[] Bezy;
-    //private static CycloidFxn fitted = new CycloidFxn(1);       // set c value
-    private static CircleFxn fitted = new CircleFxn(1);           // set c value
+    //private static CycloidFxn fitted;   // = new CycloidFxn(.5);       // set c value
+    private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);        // set c value
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -28,6 +28,12 @@ public class t2_vs_t1
 
     public static void main (String[] args)
     {
+        read_data(3, -8);                                       // initiallize the routine solve_at_d1_d2()
+        if (fitted == null)
+        {
+            System.out.println("class 'fitted' is not defined, abort");
+            return;
+        }
         System.out.println("c t1_start t1_end      = ," + fitted.getc() + ", " + t1_start + ", " + t1_end);
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.460221195, 1.260856660, true));   // cofm, c = 0.5
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.494071922, 1.228369703, true));   // curv, c = 0.5
@@ -38,8 +44,10 @@ public class t2_vs_t1
         //iterate_at_d1_d2(0.460221195, 1.260856660);           // cofm c = 0.5 init
         //iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
         //iterate_at_d1_d2(0.5000, 2.30940);                    // curv, c = 1
-        iterate_at_d1_d2(-0.5, -0.5);                           // circle, c = 1
+        //iterate_at_d1_d2(-fitted.getc()*t1_end/3, -fitted.getc()*t1_end/3); // circle, c = 4.5
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.46858825099, 1.2567247398, true));   // cofm, c = 0.5 test test
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(9.000000 ,87.986060, true));   // epiTrochoid c = 5
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(43.64 ,50.7297719, true));   // epiTrochoid c = -2
     }
 
     private static void iterate_at_d1_d2(double d1, double d2)
@@ -48,6 +56,7 @@ public class t2_vs_t1
         // see Spiro2SVG Book 3, pages 6-8
         // setup two elliptical equations for d1, d2
 
+        final int MAXLOOP = 200;
         double A0, B0, C0, D0, E0, F0;
         double A1, B1, C1, D1, E1, F1;
         double A2, C2, D2, E2, F2;
@@ -158,14 +167,17 @@ public class t2_vs_t1
                                           F0*E2*E2 + B0*F2*F2 - E0*E2*F2,
                                           true);
             d2 = -(A2*d1*d1 + D2*d1 + F2)/(C2*d1 + E2);
-            System.out.println("new           d1 d2    = ," + d1 + ", " + d2
-                             + ", " + (A0*d1*d1 + B0*d2*d2 + C0*d1*d2 + D0*d1 + E0*d2 + F0)
-                             + ", " + (A1*d1*d1 + B1*d2*d2 + C1*d1*d2 + D1*d1 + E1*d2 + F1));
-        } while ((loop < 10) && !((Math.abs(old_d1 - d1) < TOL) && (Math.abs(old_d2 - d2) < TOL)));
-        if (loop < 10)
-            System.out.println("\nconverged new d1 d2    = ," + d1 + ", " + d2);
+            //System.out.println("new           d1 d2    = ," + d1 + ", " + d2
+            //                 + ", " + (A0*d1*d1 + B0*d2*d2 + C0*d1*d2 + D0*d1 + E0*d2 + F0)
+            //                 + ", " + (A1*d1*d1 + B1*d2*d2 + C1*d1*d2 + D1*d1 + E1*d2 + F1));
+        } while ((loop < MAXLOOP) && !((Math.abs(old_d1 - d1) < TOL) && (Math.abs(old_d2 - d2) < TOL)));
+        if (loop < MAXLOOP)
+        {
+            System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + Math.abs(old_d1 - d1) + ", " + Math.abs(old_d2 - d2));
+            solve_at_d1_d2(d1, d2, true);                  // final run just for good measure
+        }
         else
-            System.out.println("\nNOT converged !");
+            System.out.println("\nNOT converged after " + loop + " loops!");
     }
 
     private static void grid_at_d1_d2(double d1, double d2)
@@ -196,14 +208,72 @@ public class t2_vs_t1
         }
     }
 
+    private static void read_data(int ln, double tempc)
+    {
+        // match field 1==ln from a data file, and initiallize 'solve_at_d1_d2()'
+        // match field 2 = c for an epiTrochoid
+
+        String str;
+        double d1 = 0;
+        double d2 = 0;
+
+        try
+        {
+            BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig5_hypocofmd1d2.csv"));
+            //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_Cycloidcofmd1d2.csv"));
+            //BufferedReader istr = new BufferedReader(new FileReader("C:\\Windows\\Temp\\test3rootscofmd1d2.csv"));
+            try
+            {
+                while (istr.ready())
+                {
+                    str = istr.readLine();
+                    //System.out.println(str);
+                    if (!str.isEmpty() && !str.startsWith("theta") && !str.startsWith("root"))
+                        if ((Integer.parseInt(str.split(",")[0].trim()) == ln)
+                        &&  (Double.parseDouble(str.split(",")[1]) == tempc))
+                        {
+                            d1 = Double.parseDouble(str.split(",")[3]);
+                            d2 = Double.parseDouble(str.split(",")[4]);
+                            break;
+                        }
+                }
+            }
+            catch (IOException e)
+            {
+                System.out.println("read error : " + e.getMessage());
+                return;
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("file not found : " + e.getMessage());
+            return;
+        }
+        if (d1 == 0 && d2 == 0)
+        {
+            System.out.println("file data match not found, abort");
+            return;
+        }
+        // extract the point of maximum curvature of a cycloid from a tangent angle
+        //double tempc = Math.sqrt(1 - .75*Math.cos(ln*Math.PI/180)*Math.cos(ln*Math.PI/180));
+        //fitted = new epiTrochoidFxn(tempc);                           // set c value
+        fitted = new epiTrochoidFxn(-1.5);       // override c value
+        //fitted = new CycloidFxn(tempc);                             // set c value
+        //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
+        System.out.println("file data at theta c t d1 d2   = ," + ln + ", " + tempc + ", " + t1_start + ", " + d1 + ", " + d2);
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(d1, d2, true));
+        iterate_at_d1_d2(9, 75);       // override default
+        //iterate_at_d1_d2(d1, d2);     // default
+    }
+
     private static boolean solve_at_d1_d2(double d1, double d2, boolean print)
     {
         // perform a single calculation of a complete t2[] profile
         // at a given (d1, d2), and calculate the rms error
 
         double t1;
-        theta_start = Math.atan(fitted.getdydx(t1_start));
-        theta_end = Math.atan(fitted.getdydx(t1_end));
+        theta_start = fitted.gettheta(t1_start);
+        theta_end = fitted.gettheta(t1_end);
         Bezx = new double[] {fitted.getx(t1_start),
                              fitted.getx(t1_start) + d1*Math.cos(theta_start),
                              fitted.getx(t1_end) - d2*Math.cos(theta_end),
@@ -213,11 +283,10 @@ public class t2_vs_t1
                              fitted.gety(t1_end) - d2*Math.sin(theta_end),
                              fitted.gety(t1_end)};
         if (t2[N] == 0)
-            System.out.println("start at     d1 d2     = ," + d1 + ", " + d2);
+            System.out.println("__start at theta c t d1 d2        = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
-            System.out.println("solve at new d1 d2 rms = ," + d1 + ", " + d2 + ", " + calc_error());
-        Point2D.Double[] ptBez = new Point2D.Double[] {new Point2D.Double(Bezx[0], Bezy[0]), new Point2D.Double(Bezx[1], Bezy[1]), new Point2D.Double(Bezx[2], Bezy[2]), new Point2D.Double(Bezx[3], Bezy[3])};
-        //fitCycloid.gen_Bezier(ptBez);
+            System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
+        //fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
         //System.out.println("theta = " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI);
         //System.out.println(Bezx[0] + "\t " + Bezy[0]);
         //System.out.println(Bezx[1] + "\t " + Bezy[1]);
@@ -228,13 +297,24 @@ public class t2_vs_t1
         for (int i = 0; i <= N; i++)
         {
             t1 = t1_start + i*(t1_end - t1_start)/N;
-            t2[i] = solve_quintic_for_t2(t1);
+            if (i == 0)
+                t2[i] = solve_quintic_for_t2(t1, 0);
+//            else if (i == 1)
+//                t2[i] = solve_quintic_for_t2(t1, .5);
+            else
+                t2[i] = solve_quintic_for_t2(t1, t2[i-1]);
             t2dd1[i] = calc_t2dd1(t1, t2[i]);
             t2dd2[i] = calc_t2dd2(t1, t2[i]);
             if (print) System.out.println(t1 + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i]);
-            if (t2[i] == Double.NaN) return false;
+            if ((t2[i] < -TOL) || (t2[i] == Double.NaN))
+            {
+                System.out.println("abort at " + i + " : " + t1 + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i]);
+                scan_quintic_near_t2(t1, t2[i]);
+                return false;
+            }
         }
-        System.out.println("new t2[] profile rms   = ," + d1 + ", " + d2 + ", " + calc_error());
+        //System.out.println("new t2[] profile rms   = ," + d1 + ", " + d2 + ", " + calc_error());
+        System.out.println("__new t2[] at theta c t d1 d2 rms = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + calc_error());
 
 /*        if (shoot_t2(clst2))    // generate profile of t2 versus t1 with boundary conditions
         {
@@ -348,6 +428,7 @@ public class t2_vs_t1
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
+        double a_b = 180;                   // scale factor to make rms error dimensionless
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
 
@@ -360,9 +441,10 @@ public class t2_vs_t1
         {
             trap_in[i] = (fn(Bezx, t2[i]) - fitted.getx(t1))*(fn(Bezx, t2[i]) - fitted.getx(t1))
                        + (fn(Bezy, t2[i]) - fitted.gety(t1))*(fn(Bezy, t2[i]) - fitted.gety(t1));
+            //System.out.println(i + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
-        return Math.sqrt(integrate(trap_in));
+        return Math.sqrt(integrate(trap_in))/a_b;
     }
 
     private static double integrate(double[] trap)
@@ -376,7 +458,7 @@ public class t2_vs_t1
         return ret/(trap.length - 1);
     }
 
-    private static double solve_quintic_for_t2(double t1)
+    private static double solve_quintic_for_t2(double t1, double t2_init)
     {
         // calculate t2 at a known, fixed value of t1 (Newton-Raphson)
         // t = initial estimate of t2, the cubic Bezier t-value
@@ -384,7 +466,9 @@ public class t2_vs_t1
         double f, fprime, del_t;
         double X = fitted.getx(t1);
         double Y = fitted.gety(t1);
-        double t = 0.5;                             // initial estimate of t2
+        //double t = 0.5;           // initial estimate of t2
+        double t = t2_init + 1.0/N + .01; // previous t2 value + linear increment as an initial estimate
+        //double t = (t1 - t1_start)/(t1_end - t1_start);   // initial estimate of t2
         int loop = 0;
 
         //System.out.println("\ninit  t1 t2 =, " + t1 + ", " + t);
@@ -400,6 +484,23 @@ public class t2_vs_t1
             //System.out.println("         t2 =, " + t + ", " + f + ", " + fprime);
         } while (Math.abs(del_t) > TOL);
         return t;
+    }
+
+    private static void scan_quintic_near_t2(double t1, double t2_bad)
+    {
+        // if solve_quintic_for_t2 fails, scan the area for other roots
+        double f, t;
+        double X = fitted.getx(t1);
+        double Y = fitted.gety(t1);
+
+        System.out.println("\nscanning at " + t1 + ", " + t2_bad);
+        for (int i = -20; i <= 200; i++)
+        {
+            t = -i*t2_bad/10;
+            f = (fn(Bezx, t) - X)*dfn(Bezx, t) + (fn(Bezy, t) - Y)*dfn(Bezy, t);
+            System.out.println(t + ", " + f);
+        }
+        System.out.println();
     }
 
     private static double calc_t2dd1(double t1, double t2)
