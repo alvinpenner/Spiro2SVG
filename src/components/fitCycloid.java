@@ -36,13 +36,14 @@ public class fitCycloid
         double t = Math.acos((2*c*c - 1)/c);
         System.out.println(N + ", " + c + ", " + t + "\n"); // end of temporary code
         //gen_points(Math.PI, t, 2*N);
-        gen_points(t, Math.PI, 200);
+        //gen_points(t, Math.PI, 200);
 //        fit_inflect_to_d2ydx2(t1, t2);
 //        fit_inflect_to_d2ydx2(t1, 0);
         //fit_d2ydx2_to_d2ydx2(t, Math.PI);      // should be t
 //        fit_d2ydx2_to_d2ydx2(Math.PI, t2);
 //        fit_vertical_C0_to_horizontal_C1(t1, Math.PI);
 //        fit_vertical_C0_to_horizontal_C1(t1, 0);
+        gen_delta_r();
     }
 
     public static void set_c (double m_c)
@@ -196,6 +197,35 @@ public class fitCycloid
         for (int i = 0; i <= N; i++)
             System.out.printf(" %f, %f", origin.x + size*C_x(t1 + i*(t2 - t1)/N), origin.y - size*C_y(t1 + i*(t2 - t1)/N));
         System.out.println();
+    }
+
+    private static void gen_delta_r()
+    {
+        // generate the difference between the radius at max curvature and the radius at pi
+        // versus the tangent angle between start and end point
+
+        double theta, myc, maxt, x, y, dydx, maxcurv, picurv, ycenter, ratpi, ratmax, delr, wrt_t6;
+        double start = 1;
+        double incr = 1;
+        int steps = 8;
+
+        System.out.println("theta    c         t         x         y         dy/dx     maxcurv   picurv    ycenter   ratpi     ratmax    delr      wrt_t6");
+        for (theta = start; theta <= start + steps*incr; theta += incr)
+        {
+            myc = Math.sqrt(1 - 3*Math.cos(theta*Math.PI/180)*Math.cos(theta*Math.PI/180)/4);
+            maxt = Math.acos((2*myc*myc - 1)/myc);
+            x = maxt - myc*Math.sin(maxt);
+            y = 1 - myc*Math.cos(maxt);
+            dydx = myc*Math.sin(maxt)/(1 - myc*Math.cos(maxt));
+            maxcurv = 1/Math.sqrt(27*(1 - myc*myc));
+            picurv = myc/(1 + myc)/(1 + myc);
+            ycenter = y - (Math.PI - x)/dydx;
+            ratpi = 1 + myc - ycenter;
+            ratmax = Math.sqrt((x - Math.PI)*(x - Math.PI) + (y - ycenter)*(y - ycenter));
+            delr = ratmax - ratpi;
+            wrt_t6 = delr/Math.pow(theta*Math.PI/180, 6);
+            System.out.printf("%g, %.8f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %g, %f\n", theta, myc, maxt, x, y, dydx, maxcurv, picurv, ycenter, ratpi, ratmax, delr, wrt_t6);
+        }
     }
 
     public static double C_x(double t)

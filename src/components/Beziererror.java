@@ -27,7 +27,7 @@ public class Beziererror
     private static final double a1 = -2*(l1 - l2*Math.cos(2*theta));
     private static final double a2 =  2*(l2 - l1*Math.cos(2*theta));
     private static final double a3 = -Math.sin(2*theta);
-    // coeff of amti-symmetric Bezier moment: <y>
+    // coeff of anti-symmetric Bezier moment: <y>
     private static final double e1 = (l1 - l2*Math.cos(2*theta))*(-50*l1 + 34*l2)*Math.sin(theta);
     private static final double e2 = 15*(l1 - l2*Math.cos(2*theta))*Math.cos(theta);
     private static final double e3 = (l2 - l1*Math.cos(2*theta))*(-34*l1 + 50*l2)*Math.sin(theta);

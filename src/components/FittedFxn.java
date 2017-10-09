@@ -7,14 +7,15 @@ package components;
 
 public abstract class FittedFxn
 {
-    private final double origin_x = -100;        // just for svg output
-    private final double origin_y = 400;         // just for svg output
-    private final double scale = 2;              // just for svg output
+    private final double origin_x = 80;            // just for svg output
+    private final double origin_y = 500;            // just for svg output
+    private final double scale = 200;               // just for svg output
 
     protected abstract double getc();
     protected abstract double getx(double t);
     protected abstract double gety(double t);
-    protected abstract double gettheta(double t);
+    protected abstract double gettheta(double t);   // angle of the velocity vector
+    protected abstract double getkappa(double t);   // curvature
 
     protected void gen_points(double t1, double t2, int N)
     {
@@ -33,6 +34,18 @@ public abstract class FittedFxn
                           origin_x + scale*pts[4], origin_y - scale*pts[5],
                           origin_x + scale*pts[6], origin_y - scale*pts[7]);
     }
+
+    protected void gen_Bezier2(double[][] ptx, double[][] pty)
+    {
+        System.out.printf("M %f, %f C %f, %f %f, %f %f, %f C %f, %f %f, %f %f, %f\n",
+                          origin_x + scale*ptx[0][0], origin_y - scale*pty[0][0],
+                          origin_x + scale*ptx[0][1], origin_y - scale*pty[0][1],
+                          origin_x + scale*ptx[0][2], origin_y - scale*pty[0][2],
+                          origin_x + scale*ptx[0][3], origin_y - scale*pty[0][3],
+                          origin_x + scale*ptx[1][1], origin_y - scale*pty[1][1],
+                          origin_x + scale*ptx[1][2], origin_y - scale*pty[1][2],
+                          origin_x + scale*ptx[1][3], origin_y - scale*pty[1][3]);
+    }
 }
 
 class CycloidFxn extends FittedFxn
@@ -42,6 +55,7 @@ class CycloidFxn extends FittedFxn
     public CycloidFxn(double m_c)
     {
         c = m_c;
+        //gen_points(0, Math.PI, 100);
     }
 
     protected double getc()
@@ -61,8 +75,19 @@ class CycloidFxn extends FittedFxn
 
     protected double gettheta(double t)
     {
-        // angle of the velocity vector
         return Math.atan2(c*Math.sin(t), 1 - c*Math.cos(t));
+    }
+
+    protected double getkappa(double t)
+    {
+        double xdot = 1 - c*Math.cos(t);
+        double ydot = c*Math.sin(t);
+        double x2dot = c*Math.sin(t);
+        double y2dot = c*Math.cos(t);
+        double v2 = xdot*xdot + ydot*ydot;
+        if (v2 > 0)
+            return (xdot*y2dot - ydot*x2dot)/Math.pow(v2, 1.5);
+        return Double.NaN;
     }
 }
 
@@ -100,7 +125,11 @@ class epiTrochoidFxn extends FittedFxn
 
     protected double gettheta(double t)
     {
-        // angle of the velocity vector
         return Math.atan2(Math.cos(t) + c/b*Math.cos(t*(a/b + 1)), -Math.sin(t) - c/b*Math.sin(t*(a/b + 1)));
+    }
+
+    protected double getkappa(double t)
+    {
+        return Double.NaN;      // fix fix under construction!
     }
 }
