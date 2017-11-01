@@ -75,6 +75,8 @@ class CycloidFxn extends FittedFxn
 
     protected double gettheta(double t)
     {
+        if (c == 1 && t == 0)
+            return Math.PI/2;
         return Math.atan2(c*Math.sin(t), 1 - c*Math.cos(t));
     }
 
@@ -87,7 +89,7 @@ class CycloidFxn extends FittedFxn
         double v2 = xdot*xdot + ydot*ydot;
         if (v2 > 0)
             return (xdot*y2dot - ydot*x2dot)/Math.pow(v2, 1.5);
-        return Double.NaN;
+        return Double.POSITIVE_INFINITY;
     }
 }
 
