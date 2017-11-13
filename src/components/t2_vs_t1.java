@@ -14,12 +14,12 @@ import java.io.*;
 public class t2_vs_t1
 {
     public static double t1_start = 0; //Math.PI/3;         // Math.PI/3;
-    public static final double t1_end = Math.PI; // 25*Math.PI/180; // Math.PI/4;
+    public static final double t1_end = Math.PI/4; // 25*Math.PI/180; // Math.PI/4;
     public static final int N = 100;
     public static double[] Bezx;
     public static double[] Bezy;
-    private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
-    //private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
+    //private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
+    private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -29,8 +29,8 @@ public class t2_vs_t1
     public static void main (String[] args)
     {
         //read_data(2, -3.54);                                       // initiallize the routine solve_at_d1_d2()
-        read_data(80, 0);
-        //fitted = new epiTrochoidFxn(-20);
+        //read_data(80, 0);
+        fitted = new epiTrochoidFxn(1);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -47,9 +47,13 @@ public class t2_vs_t1
         //iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
         //iterate_at_d1_d2(0.5000, 2.30940);                    // curv, c = 1
         //iterate_at_d1_d2(-fitted.getc()*t1_end/3, -fitted.getc()*t1_end/3); // circle, c = 4.5
+        //iterate_at_d1_d2(47, 47);
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(47.73733159182497, 47.737331591589715, false));
+        System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(49.18949608004587, 46.032318702281785, true));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.46858825099, 1.2567247398, true));   // cofm, c = 0.5 test test
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(9.000000 ,87.986060, true));   // epiTrochoid c = 5
-        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(43.64 ,50.7297719, true));   // epiTrochoid c = -2
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(10.325965305049323, 89.81941244540867, false));
+        //grid_search_at_d1_d2(50.28654971690186, 38.97605103554598);
     }
 
     private static void iterate_at_d1_d2(double d1, double d2)
@@ -191,10 +195,24 @@ public class t2_vs_t1
             System.out.println("\nNOT converged after " + loop + " loops!");
     }
 
+    private static void grid_search_at_d1_d2(double d1, double d2)
+    {
+        // calculate rms error in neighbouring d1, d2 region
+        double del = 0.0001;
+
+        for (int i = -1; i < 2; i++)
+            for (int j = -1; j < 2; j++)
+            {
+                System.out.println("grid =, " + i + ", " + j);
+                solve_at_d1_d2(d1 + i*del, d2 + j*del, false);
+            }
+    }
+
     private static void grid_at_d1_d2(double d1, double d2)
     {
         // calculate rms error in neighbouring d1, d2 region
-        double del_d = 0.000002;
+        // obsolete code, response to d1/d2 change is not optimized!
+        double del_d = 0.0001; // 0.000002;
         double tempd1, tempd2;
 
         System.out.println("\nd1\\d2, " + (d2 - del_d) + ", " + d2 + ", " + (d2 + del_d));
@@ -266,10 +284,10 @@ public class t2_vs_t1
             return;
         }
         // extract the point of maximum curvature of a cycloid from a tangent angle
-        tempc = Math.sqrt(1 - .75*Math.cos(ln*Math.PI/180)*Math.cos(ln*Math.PI/180)); // override for cycloid only
-        //fitted = new epiTrochoidFxn(tempc);                           // set c value
+        //tempc = Math.sqrt(1 - .75*Math.cos(ln*Math.PI/180)*Math.cos(ln*Math.PI/180)); // override for cycloid only
+        fitted = new epiTrochoidFxn(tempc);                           // set c value
         //fitted = new epiTrochoidFxn(-1.5);       // override c value
-        fitted = new CycloidFxn(tempc);                             // set c value
+        //fitted = new CycloidFxn(tempc);                             // set c value
         t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         System.out.println("file data at theta c t d1 d2   = ," + ln + ", " + tempc + ", " + t1_start + ", " + d1 + ", " + d2);
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(d1, d2, true));
@@ -298,7 +316,7 @@ public class t2_vs_t1
             System.out.println("__start at theta c t d1 d2        = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
-        fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
+        //fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
         //System.out.println("theta = " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI);
         //System.out.println(Bezx[0] + "\t " + Bezy[0]);
         //System.out.println(Bezx[1] + "\t " + Bezy[1]);
@@ -335,8 +353,8 @@ public class t2_vs_t1
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        //double a_b = 180;                   // scale factor to make rms error dimensionless
-        double a_b = 1;                     // Cycloid only
+        double a_b = 180;                   // scale factor to make rms error dimensionless
+        //double a_b = 1;                     // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
 

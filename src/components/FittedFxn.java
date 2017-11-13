@@ -7,7 +7,7 @@ package components;
 
 public abstract class FittedFxn
 {
-    private final double origin_x = 80;            // just for svg output
+    private final double origin_x = 80;             // just for svg output
     private final double origin_y = 500;            // just for svg output
     private final double scale = 200;               // just for svg output
 
@@ -132,6 +132,51 @@ class epiTrochoidFxn extends FittedFxn
 
     protected double getkappa(double t)
     {
-        return Double.NaN;      // fix fix under construction!
+        double xdot = -(a + b)*Math.sin(t) - c*(a/b + 1)*Math.sin(t*(a/b + 1));
+        double ydot =  (a + b)*Math.cos(t) + c*(a/b + 1)*Math.cos(t*(a/b + 1));
+        double x2dot = -(a + b)*Math.cos(t) - c*(a/b + 1)*(a/b + 1)*Math.cos(t*(a/b + 1));
+        double y2dot = -(a + b)*Math.sin(t) - c*(a/b + 1)*(a/b + 1)*Math.sin(t*(a/b + 1));
+        double v2 = xdot*xdot + ydot*ydot;
+        if (v2 > 0)
+            return (xdot*y2dot - ydot*x2dot)/Math.pow(v2, 1.5);
+        return Double.POSITIVE_INFINITY;
+    }
+}
+
+class CircleFxn extends FittedFxn
+{
+    private double c;
+
+    public CircleFxn(double m_c)
+    {
+        c = m_c;
+        //gen_points(0, Math.PI, 100);
+    }
+
+    protected double getc()
+    {
+        return c;
+    }
+
+    protected double getx(double t)
+    {
+        return c*Math.cos(t);
+    }
+
+    protected double gety(double t)
+    {
+        return c*Math.sin(t);
+    }
+
+    protected double gettheta(double t)
+    {
+        if (t == 0)
+            return Math.PI/2;
+        return Math.atan2(Math.cos(t), -Math.sin(t));
+    }
+
+    protected double getkappa(double t)
+    {
+        return 1.0/c;
     }
 }
