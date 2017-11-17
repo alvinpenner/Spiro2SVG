@@ -5,9 +5,9 @@ import java.io.*;
 
 // consider a parametric curve, g, either cycloid or trochoid, with parameter t1
 // fit a 5-point B-Spline (P0 - P4) to it, using parameter 0 < t2 < 2.
-// fit the curvature at the endpoints and keep P2 arbitrary (fix fix obsolete)
+// constrain only the slopes at the endpoints and keep P2 arbitrary
 // linearize the equations wrt (d1, d2, x2, y2) and solve a 4x4 system of equations
-// decompose the B-Spline into 2 Beziers, range (0,1) and (0,2).
+// decompose the B-Spline into 2 Beziers, range (0,1) and (1,2).
 // Bezier[2][4] = f[2](x0, x1, x2, x3, t2)
 // t2 must be chosen to minimize the distance to g(t1)
 // see Spiro2SVG Book2, Dec 2016, page 50
@@ -17,14 +17,14 @@ import java.io.*;
 public class BSpline5
 {
     public static double t1_start = 0;           // Math.PI/3;
-    public static final double t1_end = Math.PI/4; // Math.PI/4;
+    public static final double t1_end = Math.PI; // Math.PI/4;
     public static final int N = 100;
     public static double[] Splinex, Spliney;    // 5 point spline
     public static double[][] Bezx;              // 2 Beziers, 4 points each, x component
     public static double[][] Bezy;              // 2 Beziers, 4 points each, y component
     //private static CircleFxn fitted;
-    //private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
-    private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
+    private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
+    //private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -40,15 +40,16 @@ public class BSpline5
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
+        read_data(80, 0);
         //read_data(1, 16);
-        fitted = new epiTrochoidFxn(20);
+        //fitted = new epiTrochoidFxn(20);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
             return;
         }
         //System.out.println("BSpline phi c t1_start t1_end  = ," + phi + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end);
-        //System.out.println("solve_at_P2 = " + solve_at_P2(.8, 1.5, true));
+        //System.out.println("solve_at_P2 = " + solve_at_P2(0.31386454265174213, 0.9540058550171312, 0.6027873410531448, 1.3191161288438205, true));
         //for (int i = 0; i <= 200; i++)
         //    System.out.println(i + ", " + d2N43(i/100.0)[0] + ", " + d2N43(i/100.0)[1] + ", " + d2N43(i/100.0)[2] + ", " + d2N43(i/100.0)[3] + ", " + d2N43(i/100.0)[4]);
         //System.out.println("test mmult = " + mmult(Spliney, N43(1.7)));
@@ -57,7 +58,7 @@ public class BSpline5
         //iterate_at_P2(24, 24, 170, 70);
         //solve_at_P2(23.264222028254718, 23.346196277055345, 171.41612180194596, 67.26310370326495, false);
         //solve_at_P2(23.849235501959182, 23.849235502003424, 170.52525023872212, 70.63387137589591, false);
-        solve_at_P2(13.446383583334294, 46.94027410755444, 186.50444781919126, 40.09103934509587, true);
+        //solve_at_P2(13.446383583334294, 46.94027410755444, 186.50444781919126, 40.09103934509587, true);
         //iterate_at_P2(16.8, 28.5, 173.2, 60.9);
         //iterate_at_P2(16.48986402964012, 29.256356995461363, 174.1358694806713, 59.53986312008041);
         //grid_search_at_P2(16.48986402964012, 29.256356995461363, 174.1358694806713, 59.53986312008041);
@@ -417,7 +418,7 @@ public class BSpline5
 */
     private static void read_data(int theta, double tempc)
     {
-        // read Bezier (d1, d2) data from a file
+        // read cubic Bezier (d1, d2) data from a file
         // match field 1 = theta for a Cycloid / root number for an epiTrochoid
         // match field 2 = c for an epiTrochoid
         // convert to P2 for a 5 point B-Spline, and initiallize 'solve_at_P2()'
@@ -428,9 +429,10 @@ public class BSpline5
 
         try
         {
-            BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig5_hypocofmd1d2.csv"));
+            //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig5_hypocofmd1d2.csv"));
             //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig7_hypoODFd1d2.csv"));
             //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_Cycloidcofmd1d2.csv"));
+            BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_CycloidODFd1d2rms.csv"));
             //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_CircleODFd1d2rms.csv"));
             try
             {
@@ -473,15 +475,15 @@ public class BSpline5
         //    fitted = new CircleFxn(tempc);                      // set c value (radius)
         //    t1_start = Math.PI - theta*Math.PI/180;             // set arc angle
         //}
-        //if (firstline.startsWith("theta"))                    // cycloid, calculate c
-        //{
-        //    // calculate the point of maximum curvature of a cycloid from a tangent angle
-        //    tempc = Math.sqrt(1 - .75*Math.cos(theta*Math.PI/180)*Math.cos(theta*Math.PI/180)); // override for cycloid
-        //    fitted = new CycloidFxn(tempc);                             // set c value
-        //    t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
-        //}
-        if (firstline.startsWith("root"))
-            fitted = new epiTrochoidFxn(tempc);                           // set c value
+        if (firstline.startsWith("theta"))                    // cycloid, calculate c
+        {
+            // calculate the point of maximum curvature of a cycloid from a tangent angle
+            tempc = Math.sqrt(1 - .75*Math.cos(theta*Math.PI/180)*Math.cos(theta*Math.PI/180)); // override for cycloid
+            fitted = new CycloidFxn(tempc);                             // set c value
+            t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
+        }
+        //if (firstline.startsWith("root"))
+        //    fitted = new epiTrochoidFxn(tempc);                           // set c value
         //d1 = 2*9.5;        // fix fix test code
         //d2 = 2*52.9;
         System.out.println("file data at theta c t d1 d2   = ," + theta + ", , " + tempc + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + fitted.getkappa(t1_start) + ", " + fitted.getkappa(t1_end));
@@ -503,11 +505,11 @@ public class BSpline5
         //P2x = 0.67; // 1.2545; // 2.408125;
         //P2y = 1.39; // 1.5819; // 1.540;
         // convert from Bezier (d1, d2) to B-Spline (d1, d2)
-        //System.out.println("return code solve_at_P2 = " + solve_at_P2(d1/2, d2/2, P2x, P2y, true));
+        System.out.println("return code solve_at_P2 = " + solve_at_P2(d1/2, d2/2, P2x, P2y, true));
         //grid_search_at_P2(P2x, P2y);
         //iterate_at_P2(d1/2, d2/2, P2x, P2y);     // default
         //iterate_at_P2(9.5, 52.9, 192, 33.5);      // over-ride
-        iterate_at_P2(16.6, 26, 180, 50);      // over-ride
+        //iterate_at_P2(16.6, 26, 180, 50);      // over-ride
         //iterate_at_P2(10, 44, 190, 36);      // over-ride
     }
 
@@ -562,9 +564,9 @@ public class BSpline5
 */
     private static double solve_at_P2(double d1, double d2, double x2, double y2, boolean print)
     {
+        // 5-point cubic B-Spline curve
         // perform a single calculation of a complete t2[] profile
         // at a given P2, and calculate the rms error
-        // (calculate d1, d2 to satisfy the curvature at the endpoints) fix fix obsolete
 
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
@@ -601,7 +603,7 @@ public class BSpline5
             System.out.println("__start at theta c t d1 d2 = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + calc_error());
-        //fitted.gen_Bezier2(Bezx, Bezy);
+        fitted.gen_Bezier2(Bezx, Bezy);
         //System.out.println(Bezx[0][0] + "\t " + Bezy[0][0]);
         //System.out.println(Bezx[0][1] + "\t " + Bezy[0][1]);
         //System.out.println(Bezx[0][2] + "\t " + Bezy[0][2]);
@@ -650,8 +652,8 @@ public class BSpline5
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        double a_b = 180;         // scale factor to make rms error dimensionless
-        //double a_b = 1;             // Cycloid only
+        //double a_b = 180;         // scale factor to make rms error dimensionless
+        double a_b = 1;             // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
         int seg = 0;                // Bezier segment, before or after the splice
@@ -883,7 +885,7 @@ public class BSpline5
             return null;
     }
 
-    private static double multvv(double[] v1, double[] v2)
+    public static double multvv(double[] v1, double[] v2)
     {
         if (v1.length != v2.length) return Double.NaN;
         double retVal = 0;

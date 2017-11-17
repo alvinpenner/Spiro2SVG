@@ -22,7 +22,6 @@ public abstract class FittedFxn
         System.out.printf("M");
         for (int i = 0; i <= N; i++)
             System.out.printf(" %f, %f", origin_x + scale*getx(t1 + i*(t2 - t1)/N), origin_y - scale*gety(t1 + i*(t2 - t1)/N));
-            //System.out.printf("%f, %f, %f\n", getx(t1 + i*(t2 - t1)/N), gety(t1 + i*(t2 - t1)/N), getdydx(t1 + i*(t2 - t1)/N));
         System.out.println("\n");
     }
 
