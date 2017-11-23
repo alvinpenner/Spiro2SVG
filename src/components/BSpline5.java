@@ -94,7 +94,7 @@ public class BSpline5
     {
         // calculate a new estimate of (d1, d2, x2, y2) by setting dF = 0
         // include only first-order responses
-        // see Spiro2SVG Book 3, page 54
+        // see Spiro2SVG Book 3, page 54 (applied to 5-point cubic B-Spline)
         // setup 4-variable Newton-Raphson iteration
 
         final int MAXLOOP = 200;
@@ -504,7 +504,7 @@ public class BSpline5
         double P2y = (Bez[1] + Bez[2])/2;
         //P2x = 0.67; // 1.2545; // 2.408125;
         //P2y = 1.39; // 1.5819; // 1.540;
-        // convert from Bezier (d1, d2) to B-Spline (d1, d2)
+        // convert from cubic Bezier (d1, d2) to B-Spline (d1, d2)
         System.out.println("return code solve_at_P2 = " + solve_at_P2(d1/2, d2/2, P2x, P2y, true));
         //grid_search_at_P2(P2x, P2y);
         //iterate_at_P2(d1/2, d2/2, P2x, P2y);     // default
@@ -895,7 +895,7 @@ public class BSpline5
         return retVal;
     }
 
-    private static double[] multmv(double[][] m, double[] v)
+    public static double[] multmv(double[][] m, double[] v)
     {
         if (m[0].length != v.length) return null;
         double[] retVal = new double[m.length];
@@ -906,7 +906,7 @@ public class BSpline5
         return retVal;
     }
 
-    private static double[][] invertm(double[][] m)
+    public static double[][] invertm(double[][] m)
     {
         if (m.length != 4) return null;
         if (m[0].length != 4) return null;
