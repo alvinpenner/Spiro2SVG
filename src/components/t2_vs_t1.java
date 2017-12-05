@@ -14,12 +14,12 @@ import java.io.*;
 public class t2_vs_t1
 {
     public static double t1_start = 0; //Math.PI/3;         // Math.PI/3;
-    public static final double t1_end = Math.PI; // 25*Math.PI/180; // Math.PI/4;
+    public static final double t1_end = Math.PI/4; // 25*Math.PI/180; // Math.PI/4;
     public static final int N = 100;
     public static double[] Bezx;
     public static double[] Bezy;
-    private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
-    //private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
+    //private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
+    private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -29,13 +29,13 @@ public class t2_vs_t1
     public static void main (String[] args)
     {
         // extract the point of maximum curvature of a cycloid from a tangent angle phi
-        double phi = 80;
-        double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
-        t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
-        fitted = new CycloidFxn(tempc);
+        //double phi = 80;
+        //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
+        //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
+        //fitted = new CycloidFxn(tempc);
         //read_data(2, -3.54);                                       // initiallize the routine solve_at_d1_d2()
         //read_data(80, 0);
-        //fitted = new epiTrochoidFxn(1);
+        fitted = new epiTrochoidFxn(0);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -47,7 +47,7 @@ public class t2_vs_t1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.544262981, 2.050759223, true));   // cofm, c = 1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.000000000, 2.309401076, true));   // curv, c = 1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(-0.552, -0.552, true));             // circle, c = 1
-        System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.7640885237135162, 1.8275481762035848, true));
+        System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(47.73733159182497, 47.737331591589715, true));
         //iterate_at_d1_d2(0.494071922, 1.228369703);         // curv c = 0.5 init
         //iterate_at_d1_d2(0.460221195, 1.260856660);           // cofm c = 0.5 init
         //iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
@@ -319,10 +319,10 @@ public class t2_vs_t1
                              fitted.gety(t1_end) - d2*Math.sin(theta_end),
                              fitted.gety(t1_end)};
         if (t2[N] == 0)
-            System.out.println("__start at theta c t d1 d2        = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            System.out.println("__start cubic Bezier at theta c t d1 d2        = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
-        fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
+        //fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
         //System.out.println("theta = " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI);
         //System.out.println(Bezx[0] + "\t " + Bezy[0]);
         //System.out.println(Bezx[1] + "\t " + Bezy[1]);
@@ -359,8 +359,8 @@ public class t2_vs_t1
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        //double a_b = 180;                   // scale factor to make rms error dimensionless
-        double a_b = 1;                     // Cycloid only
+        double a_b = 180;                   // scale factor to make rms error dimensionless
+        //double a_b = 1;                     // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
 
@@ -373,13 +373,13 @@ public class t2_vs_t1
         {
             trap_in[i] = (fn(Bezx, t2[i]) - fitted.getx(t1))*(fn(Bezx, t2[i]) - fitted.getx(t1))
                        + (fn(Bezy, t2[i]) - fitted.gety(t1))*(fn(Bezy, t2[i]) - fitted.gety(t1));
-            //System.out.println(i + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
+            System.out.println(i + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
         return Math.sqrt(integrate(trap_in))/a_b;
     }
 
-    private static double integrate(double[] trap)
+    public static double integrate(double[] trap)
     {
         // trapezoidal rule integration of a fxn of t1 (N+1 points)
 

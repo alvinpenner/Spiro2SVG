@@ -17,14 +17,14 @@ import java.io.*;
 public class BSpline5
 {
     public static double t1_start = 0;           // Math.PI/3;
-    public static final double t1_end = Math.PI; // Math.PI/4;
+    public static final double t1_end = Math.PI/4; // Math.PI/4;
     public static final int N = 100;
     public static double[] Splinex, Spliney;    // 5 point spline
     public static double[][] Bezx;              // 2 Beziers, 4 points each, x component
     public static double[][] Bezy;              // 2 Beziers, 4 points each, y component
     //private static CircleFxn fitted;
-    private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
-    //private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
+    //private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
+    private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -40,9 +40,9 @@ public class BSpline5
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        read_data(80, 0);
+        //read_data(80, 0);
         //read_data(1, 16);
-        //fitted = new epiTrochoidFxn(20);
+        fitted = new epiTrochoidFxn(0);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -56,10 +56,10 @@ public class BSpline5
         //iterate_at_P2(23.8, 23.8, 170.5, 70.6);      // over-ride
         //iterate_at_P2(23, 23, 171, 67);
         //iterate_at_P2(24, 24, 170, 70);
-        //solve_at_P2(23.264222028254718, 23.346196277055345, 171.41612180194596, 67.26310370326495, false);
+        solve_at_P2(23.84923550198231, 23.84923550197984, 170.525250238704, 70.63387137593989, true);
         //solve_at_P2(23.849235501959182, 23.849235502003424, 170.52525023872212, 70.63387137589591, false);
-        //solve_at_P2(13.446383583334294, 46.94027410755444, 186.50444781919126, 40.09103934509587, true);
-        //iterate_at_P2(16.8, 28.5, 173.2, 60.9);
+        //solve_at_P2(9.075207733717743, 48.893417162666445, 191.71824092253422, 34.261684630473695, true);
+        //iterate_at_P2(11.76262078,	40.04159009,	188.4611239,	39.480436563);
         //iterate_at_P2(16.48986402964012, 29.256356995461363, 174.1358694806713, 59.53986312008041);
         //grid_search_at_P2(16.48986402964012, 29.256356995461363, 174.1358694806713, 59.53986312008041);
         //grid_search_at_P2(11.910842854678426, 31.805970097614907, 176.04591379009142, 53.312485124812454);
@@ -164,86 +164,86 @@ public class BSpline5
 
             for (i = 0; i <= N; i++)
                 trap_in[i] = f_gx[i]*(dfxdd1[i] + dfxdu[i]*t2dd1[i]) + f_gy[i]*(dfydd1[i] + dfydu[i]*t2dd1[i]);
-            dFdd[0] = integrate(trap_in);
+            dFdd[0] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = f_gx[i]*(dfxdd2[i] + dfxdu[i]*t2dd2[i]) + f_gy[i]*(dfydd2[i] + dfydu[i]*t2dd2[i]);
-            dFdd[1] = integrate(trap_in);
+            dFdd[1] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = f_gx[i]*(dfxdx2[i] + dfxdu[i]*t2dx2[i]) + f_gy[i]*(dfydx2[i] + dfydu[i]*t2dx2[i]);
-            dFdd[2] = integrate(trap_in);
+            dFdd[2] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = f_gx[i]*(dfxdy2[i] + dfxdu[i]*t2dy2[i]) + f_gy[i]*(dfydy2[i] + dfydu[i]*t2dy2[i]);
-            dFdd[3] = integrate(trap_in);
+            dFdd[3] = t2_vs_t1.integrate(trap_in);
 
             // calc d2Fdd[i]dd[j] (Jacobean matrix)
 
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd1[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd1[i]
                            + dfydd1[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd1[i];
-            Jac[0][0] = integrate(trap_in);
+            Jac[0][0] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd1[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd1[i]
                            + dfydd1[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd1[i];
-            Jac[0][1] = integrate(trap_in);
+            Jac[0][1] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd1[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd1[i]
                            + dfydd1[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd1[i];
-            Jac[0][2] = integrate(trap_in);
+            Jac[0][2] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd1[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd1[i]
                            + dfydd1[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd1[i];
-            Jac[0][3] = integrate(trap_in);
+            Jac[0][3] = t2_vs_t1.integrate(trap_in);
 
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd2[i]
                            + dfydd2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd2[i];
-            Jac[1][0] = integrate(trap_in);
+            Jac[1][0] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd2[i]
                            + dfydd2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd2[i];
-            Jac[1][1] = integrate(trap_in);
+            Jac[1][1] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd2[i]
                            + dfydd2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd2[i];
-            Jac[1][2] = integrate(trap_in);
+            Jac[1][2] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdd2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd2[i]
                            + dfydd2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd2[i];
-            Jac[1][3] = integrate(trap_in);
+            Jac[1][3] = t2_vs_t1.integrate(trap_in);
 
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdx2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dx2[i]
                            + dfydx2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dx2[i];
-            Jac[2][0] = integrate(trap_in);
+            Jac[2][0] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdx2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dx2[i]
                            + dfydx2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dx2[i];
-            Jac[2][1] = integrate(trap_in);
+            Jac[2][1] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdx2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dx2[i]
                            + dfydx2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dx2[i];
-            Jac[2][2] = integrate(trap_in);
+            Jac[2][2] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdx2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dx2[i]
                            + dfydx2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dx2[i];
-            Jac[2][3] = integrate(trap_in);
+            Jac[2][3] = t2_vs_t1.integrate(trap_in);
 
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdy2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dy2[i]
                            + dfydy2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dy2[i];
-            Jac[3][0] = integrate(trap_in);
+            Jac[3][0] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdy2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dy2[i]
                            + dfydy2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dy2[i];
-            Jac[3][1] = integrate(trap_in);
+            Jac[3][1] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdy2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dy2[i]
                            + dfydy2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dy2[i];
-            Jac[3][2] = integrate(trap_in);
+            Jac[3][2] = t2_vs_t1.integrate(trap_in);
             for (i = 0; i <= N; i++)
                 trap_in[i] = dfxdy2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dy2[i]
                            + dfydy2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dy2[i];
-            Jac[3][3] = integrate(trap_in);
+            Jac[3][3] = t2_vs_t1.integrate(trap_in);
 
             deld = multmv(invertm(Jac), dFdd);  // this is actually the negative of Δd
             d1 -= deld[0];
@@ -479,7 +479,7 @@ public class BSpline5
         {
             // calculate the point of maximum curvature of a cycloid from a tangent angle
             tempc = Math.sqrt(1 - .75*Math.cos(theta*Math.PI/180)*Math.cos(theta*Math.PI/180)); // override for cycloid
-            fitted = new CycloidFxn(tempc);                             // set c value
+            //fitted = new CycloidFxn(tempc);                             // set c value
             t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         }
         //if (firstline.startsWith("root"))
@@ -600,10 +600,10 @@ public class BSpline5
                                 Spliney[3],
                                 Spliney[4]}};
         if (t2[N] == 0)
-            System.out.println("__start at theta c t d1 d2 = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
+            System.out.println("__start B-Spline at theta c t d1 d2 = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + calc_error());
-        fitted.gen_Bezier2(Bezx, Bezy);
+        //fitted.gen_Bezier2(Bezx, Bezy);
         //System.out.println(Bezx[0][0] + "\t " + Bezy[0][0]);
         //System.out.println(Bezx[0][1] + "\t " + Bezy[0][1]);
         //System.out.println(Bezx[0][2] + "\t " + Bezy[0][2]);
@@ -652,8 +652,8 @@ public class BSpline5
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        //double a_b = 180;         // scale factor to make rms error dimensionless
-        double a_b = 1;             // Cycloid only
+        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 1;             // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
         int seg = 0;                // Bezier segment, before or after the splice
@@ -669,22 +669,22 @@ public class BSpline5
                 seg++;
             trap_in[i] = (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1))*(t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1))
                        + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1))*(t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1));
-            //System.out.println(i + ", " + seg + ", " + (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
+            System.out.println(i + ", " + seg + ", " + (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
-        return Math.sqrt(integrate(trap_in))/a_b;
+        return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
     }
 
-    private static double integrate(double[] trap)
-    {
-        // trapezoidal rule integration of a fxn of t1 (N+1 points)
+//    private static double integrate(double[] trap)
+//    {
+//        // trapezoidal rule integration of a fxn of t1 (N+1 points)
 
         //System.out.println("trap length = " + trap.length);
-        double ret = (trap[0] + trap[trap.length - 1])/2;
-        for (int i = 1; i < trap.length - 1; i++)
-            ret += trap[i];
-        return ret/(trap.length - 1);
-    }
+//        double ret = (trap[0] + trap[trap.length - 1])/2;
+//        for (int i = 1; i < trap.length - 1; i++)
+//            ret += trap[i];
+//        return ret/(trap.length - 1);
+//    }
 
     private static void solve_quintic_for_t2(int i, int seg)
     {

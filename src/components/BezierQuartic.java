@@ -1,6 +1,8 @@
 
 package components;
 
+import java.io.*;
+
 // consider a parametric curve, g, either cycloid or trochoid, with parameter t1
 // fit a 5-point quartic Bezier (P0 - P4) to it, using parameter 0 < t2 < 1.
 // constrain only the slopes at the endpoints and keep P2 arbitrary
@@ -36,14 +38,15 @@ public class BezierQuartic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(0.38);
+        fitted = new epiTrochoidFxn(0);
         //paste_data(80, 0.9886277018143461, 0.2624690492231421, 0.7640885237135162, 1.8275481762035848);
         //paste_data(90, 1.0, 0.0, 0.5206067154571633, 2.078215252156017);
         //paste_data(15,0,0, 0.3932606110125665, 0.39326061422301023);
         //paste_data(4, -8.5,0 , 59.675596395080426, 38.01733799504544);
+        //read_Quartic_Bezier_data(230);
         //iterate_at_P2(0.7276942218406734, 0.90662245019577, 1.395042238470987, 1.5834341362128341);
-        iterate_at_P2(32.21508988347767, 38.438780022418264, 172.43629468516687, 66.59464287484488);
-        //System.out.println("quartic Bezier solve_at_P2 = " + solve_at_P2(0.46818261581769616, 0.876214659892669, 1.490763762115988, 1.5140260392569929, true) + "\n");
+        //iterate_at_P2(32.21508988347767, 38.438780022418264, 172.43629468516687, 66.59464287484488);
+        System.out.println("quartic Bezier solve_at_P2 = " + solve_at_P2(35.564623789595046, 35.564623789653915, 170.63083487797272, 70.67760596545668, true) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -237,6 +240,75 @@ public class BezierQuartic
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ")");
     }
 
+    private static void read_Quartic_Bezier_data(int ln)
+    {
+        // read quartic Bezier data (c, d1, d2, x2, y2) data from a file
+        // read only one line (ln), and assume c is positive
+        // convert to negative c parameters, and initiallize 'iterate_at_P2()'
+
+        String str = "";
+        double c = 0, d1 = 0, d2 = 0, x2 = 0, y2 = 0, x2new = 0, y2new = 0;
+        int row = 0;
+
+        try
+        {
+            //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\BezierQuartic\\hypoQuarticBezd1d2rms.csv"));
+            BufferedReader istr = new BufferedReader(new FileReader("\\Windows\\Temp\\hypoQuarticBezd1d2rms.csv"));
+            try
+            {
+                while (istr.ready() && row < ln)
+                {
+                    str = istr.readLine();
+                    row++;
+                    //System.out.println(str);
+                }
+            }
+            catch (IOException e)
+            {
+                System.out.println("read error : " + e.getMessage());
+                return;
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("file not found : " + e.getMessage());
+            return;
+        }
+
+        System.out.println(str);
+        if (str.startsWith("__new"))
+        {
+            c = Double.parseDouble(str.split(",")[3]);
+            d1 = Double.parseDouble(str.split(",")[6]);
+            d2 = Double.parseDouble(str.split(",")[7]);
+            x2 = Double.parseDouble(str.split(",")[8]);
+            y2 = Double.parseDouble(str.split(",")[9]);
+        }
+        if (d1 == 0 && d2 == 0)
+        {
+            System.out.println("file data match not found, abort");
+            return;
+        }
+        if (c < 0)
+        {
+            System.out.println("c must be positive : " + c);
+            return;
+        }
+        System.out.println("file data at c d1 d2   = ," + c + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
+
+        // calculate P2 for a Quartic Bezier with a negative c
+
+        fitted = new epiTrochoidFxn(-c);
+        theta_start = fitted.gettheta(t1_start);                        // possibly redundant
+        theta_end = fitted.gettheta(t1_end);
+        x2new =  Math.cos(Math.PI/8)*x2 + Math.sin(Math.PI/8)*y2;       // transform to symmetric frame
+        y2new = -Math.sin(Math.PI/8)*x2 + Math.cos(Math.PI/8)*y2;
+        x2 =  Math.cos(Math.PI/8)*x2new + Math.sin(Math.PI/8)*y2new;    // reflect and back-transform
+        y2 =  Math.sin(Math.PI/8)*x2new - Math.cos(Math.PI/8)*y2new;
+        //System.out.println("return code solve_at_P2 = " + solve_at_P2(d1, d2, x2, y2, true));
+        iterate_at_P2(d2, d1, x2, y2);
+    }
+
     private static void paste_data(double phi, double tempc, double dummy, double d1, double d2)
     {
         // paste cubic Bezier (d1, d2) data from a file
@@ -309,12 +381,12 @@ public class BezierQuartic
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            System.out.println("__start at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
+            System.out.println("__start quartic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
             System.out.println("WARNING: negative arm length = " + d1 + ", " + d2);
-        //gen_BezierQuad(Bezx, Bezy);
+        //gen_BezierQuartic(Bezx, Bezy);
         //System.out.println(Bezx[0] + "\t " + Bezy[0]);
         //System.out.println(Bezx[1] + "\t " + Bezy[1]);
         //System.out.println(Bezx[2] + "\t " + Bezy[2]);
@@ -364,7 +436,7 @@ public class BezierQuartic
         {
             trap_in[i] = (fn(Bezx, t2[i]) - fitted.getx(t1))*(fn(Bezx, t2[i]) - fitted.getx(t1))
                        + (fn(Bezy, t2[i]) - fitted.gety(t1))*(fn(Bezy, t2[i]) - fitted.gety(t1));
-            //System.out.println(i + ", " + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
+            System.out.println(i + ", " + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
         return Math.sqrt(integrate(trap_in))/a_b;
@@ -516,7 +588,7 @@ public class BezierQuartic
                                   24*u};
     }
 
-    private static void gen_BezierQuad(double[] ptx, double[] pty)
+    private static void gen_BezierQuartic(double[] ptx, double[] pty)
     {
         double origin_x = 80;                           // just for svg output
         double origin_y = 500;                          // just for svg output
