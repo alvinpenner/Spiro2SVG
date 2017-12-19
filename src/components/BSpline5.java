@@ -42,7 +42,7 @@ public class BSpline5
         //fitted = new CycloidFxn(tempc);
         //read_data(80, 0);
         //read_data(1, 16);
-        fitted = new epiTrochoidFxn(0);
+        fitted = new epiTrochoidFxn(10);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -54,9 +54,9 @@ public class BSpline5
         //    System.out.println(i + ", " + d2N43(i/100.0)[0] + ", " + d2N43(i/100.0)[1] + ", " + d2N43(i/100.0)[2] + ", " + d2N43(i/100.0)[3] + ", " + d2N43(i/100.0)[4]);
         //System.out.println("test mmult = " + mmult(Spliney, N43(1.7)));
         //iterate_at_P2(23.8, 23.8, 170.5, 70.6);      // over-ride
-        //iterate_at_P2(23, 23, 171, 67);
-        //iterate_at_P2(24, 24, 170, 70);
-        solve_at_P2(23.84923550198231, 23.84923550197984, 170.525250238704, 70.63387137593989, true);
+        //iterate_at_P2(24.22678064101724, 22.380907417705966, 170.36291768871823, 69.58798311751265);
+        iterate_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478);
+        //solve_at_P2(23.84923550198231, 23.84923550197984, 170.525250238704, 70.63387137593989, true);
         //solve_at_P2(23.849235501959182, 23.849235502003424, 170.52525023872212, 70.63387137589591, false);
         //solve_at_P2(9.075207733717743, 48.893417162666445, 191.71824092253422, 34.261684630473695, true);
         //iterate_at_P2(11.76262078,	40.04159009,	188.4611239,	39.480436563);
@@ -73,17 +73,23 @@ public class BSpline5
                                        {4.1, 5.3, 7.0,  6.8, -3.2}};
         //System.out.println(multvv(v1, v2));
         double[] ret = multmv(m, v2);
-        System.out.println(ret[0] + ", " + ret[1] + ", " + ret[2]);
-        m = new double[][] {{1.7, 7.2, 9.7, 12.8},
-                            {2.1, 4.2, 5.7,  5.1},
-                            {4.1, 5.3, 7.0,  6.8},
-                            {8.1, 7.3, 9.0,  2.8}};
-        System.out.println("detm   = " + (float) detm(m, 2, 1));
-        double[][] minv = invertm(m);
+        //System.out.println(ret[0] + ", " + ret[1] + ", " + ret[2]);
+        m = new double[][] {{1.1, 2.3, 3.1, 5.7, -10.2},
+                            {2.1, 4.2, 5.7, 5.1,  17.3},
+                            {4.1, 5.3, 7.0, 6.8,   6.1},
+                            {8.1, 7.3, 9.0, 2.8,   4.3},
+                            {-2.1, 17, -9.2, 2.2, -1.7}};
+        //System.out.println("cofactor = " + cofactor(m, 2, 1));
+        //m = new double[][] {{1.1, 2.3, 3.1, 5.7},
+        //                    {2.1, 4.2, 5.7, 5.1},
+        //                    {4.1, 5.3, 7.0, 6.8},
+        //                    {8.1, 7.3, 9.0, 2.8}};
+        System.out.println("detm     = " + detm(m));
+        double[][] minv = invertm2(m);
         System.out.println("invert = " + minv.toString());
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < minv.length; i++)
         {
-            for (int j = 0; j < 4; j++)
+            for (int j = 0; j < minv.length; j++)
                 System.out.print((float)minv[i][j] + ", ");
             System.out.println();
         }
@@ -250,8 +256,8 @@ public class BSpline5
             d2 -= deld[1];
             x2 -= deld[2];
             y2 -= deld[3];
-            //System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3]);
-            //System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
+            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3]);
+            System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
@@ -669,22 +675,11 @@ public class BSpline5
                 seg++;
             trap_in[i] = (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1))*(t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1))
                        + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1))*(t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1));
-            System.out.println(i + ", " + seg + ", " + (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
+            //System.out.println(i + ", " + seg + ", " + (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
         return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
     }
-
-//    private static double integrate(double[] trap)
-//    {
-//        // trapezoidal rule integration of a fxn of t1 (N+1 points)
-
-        //System.out.println("trap length = " + trap.length);
-//        double ret = (trap[0] + trap[trap.length - 1])/2;
-//        for (int i = 1; i < trap.length - 1; i++)
-//            ret += trap[i];
-//        return ret/(trap.length - 1);
-//    }
 
     private static void solve_quintic_for_t2(int i, int seg)
     {
@@ -908,59 +903,62 @@ public class BSpline5
 
     public static double[][] invertm(double[][] m)
     {
-        if (m.length != 4) return null;
-        if (m[0].length != 4) return null;
-        double[][] retVal = new double[4][4];
-        double det = 0;
-        int sgn = 1;
+        if (m.length != m[0].length) return null;
+        double det = detm(m);
+        double[][] retVal = new double[m.length][m.length];
+        double[][] sub;
+        int sgni = -1, sgnj;
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < m.length; i++)
         {
-            det += sgn*m[0][i]*detm(m, 0, i);
-            sgn *= -1;
-        }
-
-        sgn = 1;
-        for (int i = 0; i < 4; i++)
-            for (int j = 0; j < 4; j++)
+            sgni *= -1;
+            sgnj = -1;
+            for (int j = 0; j < m.length; j++)
             {
-                retVal[i][j] = sgn*detm(m, j, i)/det;
-                if (j < 3) sgn *= -1;
+                sgnj *= -1;
+                sub = new double[m.length - 1][m.length - 1];
+                for (int ii = 0; ii < m.length; ii++)
+                    for (int jj = 0; jj < m.length; jj++)
+                        if (ii < i && jj < j)
+                            sub[ii][jj] = m[ii][jj];
+                        else if (ii < i && jj > j)
+                            sub[ii][jj - 1] = m[ii][jj];
+                        else if (ii > i && jj < j)
+                            sub[ii - 1][jj] = m[ii][jj];
+                        else if (ii > i && jj > j)
+                            sub[ii - 1][jj - 1] = m[ii][jj];
+                retVal[j][i] = sgni*sgnj*detm(sub)/det;
             }
-        //System.out.println("det4 = " + det);
-        //for (int i = 0; i < 4; i++)
-        //    System.out.println(retVal[i][0] + ", " + retVal[i][1] + ", " + retVal[i][2] + ", " + retVal[i][3]);
+        }
+        //System.out.println("invertm");
+        //for (int i = 0; i < retVal.length; i++)
+        //{
+        //    for (int j = 0; j < retVal.length; j++)
+        //        System.out.print(retVal[i][j] + ", ");
+        //    System.out.println();
+        //}
         return retVal;
     }
 
-    private static double detm(double[][] m, int row, int col)
+    public static double detm(double[][] m)
     {
-        if (row < 0 || row > 3) return Double.NaN;
-        if (col < 0 || col > 3) return Double.NaN;
-        if (m.length != 4) return Double.NaN;
-        if (m[0].length != 4) return Double.NaN;
-        int[] arri = new int[3];
-        int[] arrj = new int[3];
-        int index = -1;
+        if (m.length != m[0].length) return Double.NaN;
+        if (m.length == 1) return m[0][0];
 
-        for (int i = 0; i < 4; i++)
-            if (i != row)
-            {
-                index++;
-                arri[index] = i;
-            }
-        index = -1;
-        for (int i = 0; i < 4; i++)
-            if (i != col)
-            {
-                index++;
-                arrj[index] = i;
-            }
-        return m[arri[0]][arrj[0]]*m[arri[1]][arrj[1]]*m[arri[2]][arrj[2]]
-             + m[arri[0]][arrj[1]]*m[arri[1]][arrj[2]]*m[arri[2]][arrj[0]]
-             + m[arri[0]][arrj[2]]*m[arri[1]][arrj[0]]*m[arri[2]][arrj[1]]
-             - m[arri[0]][arrj[2]]*m[arri[1]][arrj[1]]*m[arri[2]][arrj[0]]
-             - m[arri[0]][arrj[0]]*m[arri[1]][arrj[2]]*m[arri[2]][arrj[1]]
-             - m[arri[0]][arrj[1]]*m[arri[1]][arrj[0]]*m[arri[2]][arrj[2]];
+        int sgn = -1;
+        double det = 0;
+        for (int k = 0; k < m.length; k++)
+        {
+            double[][] sub = new double[m.length - 1][m.length - 1];
+            sgn *= -1;
+            for (int i = 1; i < m.length; i++)
+                for (int j = 0; j < m.length; j++)
+                    if (j < k)
+                        sub[i-1][j] = m[i][j];
+                    else if (j > k)
+                        sub[i-1][j-1] = m[i][j];
+            det += sgn*m[0][k]*detm(sub);
+        }
+        return det;
     }
 }
