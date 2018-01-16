@@ -17,13 +17,13 @@ package components;
 public class Beta2Spline
 {
     public static double t1_start = 0;
-    public static final double t1_end = Math.PI; // Math.PI/4;
+    public static final double t1_end = Math.PI/4; // Math.PI/4;
     public static final int N = 100;
     public static double[][] Bezx;              // 2 Beziers, 4 points each, x component
     public static double[][] Bezy;              // 2 Beziers, 4 points each, y component
     //private static CircleFxn fitted;
-    private static CycloidFxn fitted;
-    //private static epiTrochoidFxn fitted;
+    //private static CycloidFxn fitted;
+    private static epiTrochoidFxn fitted;
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -37,16 +37,17 @@ public class Beta2Spline
     public static void main (String[] args)
     {
         // extract the point of maximum curvature of a cycloid from a tangent angle phi
-        double phi = 10;
-        double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
-        t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
-        fitted = new CycloidFxn(tempc);
-        //fitted = new epiTrochoidFxn(-1.5);
-        System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(0.13053297673525735, 0.12762284294843027, 2.757478122989594, 1.5111139789774846, true) + "\n");
+        //double phi = 10;
+        //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
+        //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
+        //fitted = new CycloidFxn(tempc);
+        fitted = new epiTrochoidFxn(2);
+        //System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(0.13053297673525735, 0.12762284294843027, 2.757478122989594, 1.5111139789774846, true) + "\n");
         //System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
         //System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(15, 20, 170, 59, true) + "\n");
         //System.out.println("Beta2-Spline convert_at_P2 = " + convert_at_P2(23.264222028261724, 23.34619627704507, 171.41612180193727, 67.26310370327987, true) + "\n");
-        //System.out.println("Beta2-Spline iterate_at_P2 = " + iterate_at_P2( 22.8770976550121,24.818420825802733, 165.94185238942046, 69.55892810479992, 23.390620200745754) + "\n");
+        //System.out.println("Beta2-Spline solve_at_P2 = " + solve_at_P2(36.41640950635916, 44.67463664376333, 168.29745255599937, 63.87317691079396, 5, true) + "\n");
+        System.out.println("Beta2-Spline iterate_at_P2 = " + iterate_at_P2(32.12641805734275, 20.042413166191313, 162.2470382226158, 76.85895209396972, 20.649245527281142) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -135,6 +136,7 @@ public class Beta2Spline
                 d2fydudy2[i] = calc_d2fydudy2(seg, t2[i] - seg);
                 d2fxdudd[i] = calc_d2fxdudd(seg, t2[i] - seg);
                 d2fydudd[i] = calc_d2fydudd(seg, t2[i] - seg);
+                //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i] + ", " + t2dx2[i] + ", " + t2dy2[i] + ", " + t2dd[i] + ", " + f_gx[i] + ", " + f_gy[i] + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + dfxdd1[i] + ", " + dfydd1[i] + ", " + dfxdd2[i] + ", " + dfydd2[i] + ", " + dfxdx2[i] + ", " + dfydx2[i] + ", " + dfxdy2[i] + ", " + dfydy2[i] + ", " + dfxdd[i] + ", " + dfydd[i] + ", " + d2fxdudd1[i] + ", " + d2fydudd1[i] + ", " + d2fxdudd2[i] + ", " + d2fydudd2[i] + ", " + d2fxdudx2[i] + ", " + d2fydudx2[i] + ", " + d2fxdudy2[i] + ", " + d2fydudy2[i] + ", " + d2fxdudd[i] + ", " + d2fydudd[i]);
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2, d)
@@ -278,6 +280,7 @@ public class Beta2Spline
 
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + dFdd[4] + ", " + BSpline5.detm(Jac));
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ", " + deld[4]);
+            BSpline5.dump_Jac(Jac);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
@@ -307,7 +310,6 @@ public class Beta2Spline
     private static double convert_at_P2(double d1, double d2, double x2, double y2, boolean print)
     {
         // convert a 5-point B-Spline to a pair of spliced cubic Beziers
-        //y2 += 0.01;
         System.out.println("convert_at_P2: B-Spline theta c t d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
@@ -330,6 +332,7 @@ public class Beta2Spline
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
 
+        //d = 26;
         Bezx = new double[][] {{fitted.getx(t1_start),
                                 fitted.getx(t1_start) + d1*Math.cos(theta_start),
                                 x2,
@@ -382,7 +385,10 @@ public class Beta2Spline
                 solve_quintic_for_t2(i, seg);   // re-calculate
             }
             if (seg == 1 && t2[i] < 1)
+            {
+                System.out.println("seg reverted back to zero at i = " + i + ", " + t2[i] + ", " + d);
                 return Double.NaN;
+            }
             if ((i == 0 && Math.abs(t2[i]) > TOL)
             ||  (i == N && Math.abs(2 - t2[i]) > TOL)
             ||  (i == N && seg != 1)
@@ -411,8 +417,8 @@ public class Beta2Spline
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        //double a_b = 180;         // scale factor to make rms error dimensionless
-        double a_b = 1;             // Cycloid only
+        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 1;             // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
         int seg = 0;                // Bezier segment, before or after the splice
@@ -700,7 +706,7 @@ public class Beta2Spline
                               3*u*(2 - 3*u),
                               3*u*u};
     }
-
+/*
     private static double[] d2N33(double u)
     {
         if (u < -TOL)
@@ -712,4 +718,5 @@ public class Beta2Spline
                               6*(1 - 3*u),
                               6*u};
     }
+*/
 }

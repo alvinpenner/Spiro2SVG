@@ -42,7 +42,7 @@ public class BSpline5
         //fitted = new CycloidFxn(tempc);
         //read_data(80, 0);
         //read_data(1, 16);
-        fitted = new epiTrochoidFxn(10);
+        fitted = new epiTrochoidFxn(2);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -55,7 +55,7 @@ public class BSpline5
         //System.out.println("test mmult = " + mmult(Spliney, N43(1.7)));
         //iterate_at_P2(23.8, 23.8, 170.5, 70.6);      // over-ride
         //iterate_at_P2(24.22678064101724, 22.380907417705966, 170.36291768871823, 69.58798311751265);
-        iterate_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478);
+        iterate_at_P2(31.80597009761532, 11.910842854679, 162.18087919481738, 86.7856396874945);
         //solve_at_P2(23.84923550198231, 23.84923550197984, 170.525250238704, 70.63387137593989, true);
         //solve_at_P2(23.849235501959182, 23.849235502003424, 170.52525023872212, 70.63387137589591, false);
         //solve_at_P2(9.075207733717743, 48.893417162666445, 191.71824092253422, 34.261684630473695, true);
@@ -256,8 +256,9 @@ public class BSpline5
             d2 -= deld[1];
             x2 -= deld[2];
             y2 -= deld[3];
-            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3]);
+            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + detm(Jac));
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
+            dump_Jac(Jac);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
@@ -275,6 +276,23 @@ public class BSpline5
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ")");
+    }
+
+    public static void dump_Jac(double[][] J)
+    {
+            System.out.print("a = np.array([");
+            for (int i = 0; i < J.length; i++)
+            {
+                if (i > 0) System.out.print(", ");
+                System.out.print("[");
+                for (int j = 0; j < J.length; j++)
+                {
+                    if (j > 0) System.out.print(", ");
+                    System.out.print(J[i][j]);
+                }
+                System.out.print("]");
+            }
+            System.out.println("])");
     }
 /*
     private static void iterate_at_P2(double x2, double y2) // obsolete, used only if constraining the curvature
@@ -606,7 +624,7 @@ public class BSpline5
                                 Spliney[3],
                                 Spliney[4]}};
         if (t2[N] == 0)
-            System.out.println("__start B-Spline at theta c t d1 d2 = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
+            System.out.println("__start B-Spline5 at theta c t d1 d2 = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + calc_error());
         //fitted.gen_Bezier2(Bezx, Bezy);

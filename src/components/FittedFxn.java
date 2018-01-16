@@ -45,6 +45,21 @@ public abstract class FittedFxn
                           origin_x + scale*ptx[1][2], origin_y - scale*pty[1][2],
                           origin_x + scale*ptx[1][3], origin_y - scale*pty[1][3]);
     }
+
+    protected void gen_Bezier3(double[][] ptx, double[][] pty)
+    {
+        System.out.printf("M %f, %f C %f, %f %f, %f %f, %f C %f, %f %f, %f %f, %f C %f, %f %f, %f %f, %f\n",
+                          origin_x + scale*ptx[0][0], origin_y - scale*pty[0][0],
+                          origin_x + scale*ptx[0][1], origin_y - scale*pty[0][1],
+                          origin_x + scale*ptx[0][2], origin_y - scale*pty[0][2],
+                          origin_x + scale*ptx[0][3], origin_y - scale*pty[0][3],
+                          origin_x + scale*ptx[1][1], origin_y - scale*pty[1][1],
+                          origin_x + scale*ptx[1][2], origin_y - scale*pty[1][2],
+                          origin_x + scale*ptx[1][3], origin_y - scale*pty[1][3],
+                          origin_x + scale*ptx[2][1], origin_y - scale*pty[2][1],
+                          origin_x + scale*ptx[2][2], origin_y - scale*pty[2][2],
+                          origin_x + scale*ptx[2][3], origin_y - scale*pty[2][3]);
+    }
 }
 
 class CycloidFxn extends FittedFxn
