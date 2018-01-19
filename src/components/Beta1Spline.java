@@ -39,11 +39,11 @@ public class Beta1Spline
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(0.);
+        fitted = new epiTrochoidFxn(6.);
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(0.2312506832837322, 1.038337102428308, 0.44276261524334826, 1.2095054494479158, true) + "\n");
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(11.244692865076667, 50.78732161191724, 190.0813110769242, 36.1022521075289, true) + "\n");
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
-        System.out.println("Beta1-Spline iterate_at_P2 = " + iterate_at_P2(23.8492343556879, 23.84923435060768, 166.29841937330107, 68.88306071372422, 0.9999999997870891) + "\n");
+        System.out.println("Beta1-Spline iterate_at_P2 = " + iterate_at_P2(21.279413612159846, 25.074477573714997, 165.04154157639795, 69.67203578220132, 0.679576437755429) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");

@@ -322,7 +322,7 @@ public class t2_vs_t1
             System.out.println("__start cubic Bezier at theta c t d1 d2        = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
-        //fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
+        fitted.gen_Bezier(new double[] {Bezx[0], Bezy[0], Bezx[1], Bezy[1], Bezx[2], Bezy[2], Bezx[3], Bezy[3]});
         //System.out.println("theta = " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI);
         //System.out.println(Bezx[0] + "\t " + Bezy[0]);
         //System.out.println(Bezx[1] + "\t " + Bezy[1]);

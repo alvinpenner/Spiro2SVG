@@ -280,19 +280,20 @@ public class BSpline5
 
     public static void dump_Jac(double[][] J)
     {
-            System.out.print("a = np.array([");
-            for (int i = 0; i < J.length; i++)
+        // see 'python_eigenvalues.txt' to calculate eigenvalues using numpy
+        System.out.print("a = np.array([");
+        for (int i = 0; i < J.length; i++)
+        {
+            if (i > 0) System.out.print(", ");
+            System.out.print("[");
+            for (int j = 0; j < J.length; j++)
             {
-                if (i > 0) System.out.print(", ");
-                System.out.print("[");
-                for (int j = 0; j < J.length; j++)
-                {
-                    if (j > 0) System.out.print(", ");
-                    System.out.print(J[i][j]);
-                }
-                System.out.print("]");
+                if (j > 0) System.out.print(", ");
+                System.out.print(J[i][j]);
             }
-            System.out.println("])");
+            System.out.print("]");
+        }
+        System.out.println("])");
     }
 /*
     private static void iterate_at_P2(double x2, double y2) // obsolete, used only if constraining the curvature
