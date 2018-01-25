@@ -808,37 +808,7 @@ public class BSpline5
         //System.out.println("calc_t2dx2 = " + t1 + ", " + t2 + ", " + rhs1 + ", " + rhs2 + ", " + fprime + ", " + ((-3*t2*(1 - t2)*(1 - t2)*rhs1 - 3*(1 - t2)*(1 - 3*t2)*rhs2)/fprime));
         return -numer/denom;
     }
-/*
-    private static double calc_d1(double x2, double y2) // obsolete, used only if constraining the curvature
-    {
-        return Math.sqrt(((y2 - fitted.gety(t1_start))*Math.cos(theta_start) - (x2 - fitted.getx(t1_start))*Math.sin(theta_start))/3/fitted.getkappa(t1_start));
-    }
 
-    private static double calc_d2(double x2, double y2) // obsolete, used only if constraining the curvature
-    {
-        return Math.sqrt(((y2 - fitted.gety(t1_end))*Math.cos(theta_end) - (x2 - fitted.getx(t1_end))*Math.sin(theta_end))/3/fitted.getkappa(t1_end));
-    }
-
-    private static double calc_d1dx2(double x2, double y2) // obsolete, used only if constraining the curvature
-    {
-        return -Math.sin(theta_start)/calc_d1(x2, y2)/6/fitted.getkappa(t1_start);
-    }
-
-    private static double calc_d1dy2(double x2, double y2) // obsolete, used only if constraining the curvature
-    {
-        return Math.cos(theta_start)/calc_d1(x2, y2)/6/fitted.getkappa(t1_start);
-    }
-
-    private static double calc_d2dx2(double x2, double y2) // obsolete, used only if constraining the curvature
-    {
-        return -Math.sin(theta_end)/calc_d2(x2, y2)/6/fitted.getkappa(t1_end);
-    }
-
-    private static double calc_d2dy2(double x2, double y2) // obsolete, used only if constraining the curvature
-    {
-        return Math.cos(theta_end)/calc_d2(x2, y2)/6/fitted.getkappa(t1_end);
-    }
-*/
     private static double[] N43(double u)
     {
         if (u < -TOL)

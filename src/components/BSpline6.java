@@ -66,7 +66,7 @@ public class BSpline6
         double[][] Jac = new double[6][6];
         double[] dFdd = new double[6];
         double[] trap_in = new double[N+1];
-        double[] deld;                                      // (-Δd1, -Δd2, -Δx2, -Δy2,, -Δx3, -Δy3)
+        double[] deld;                                      // (-Δd1, -Δd2, -Δx2, -Δy2, -Δx3, -Δy3)
         int loop = 0;
         int i, j, k, seg;                                  // Bezier segment, before or after the splice
         double t1;
