@@ -9,7 +9,7 @@ public abstract class FittedFxn
 {
     private final double origin_x = 80;             // just for svg output
     private final double origin_y = 500;            // just for svg output
-    private final double scale = 200;               // just for svg output
+    private final double scale = 2; // 200;               // just for svg output
 
     protected abstract double getc();
     protected abstract double getx(double t);

@@ -40,12 +40,13 @@ public class Beta1Spline
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(2.51);
+        fitted = new epiTrochoidFxn(0.7515);
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(0.2312506832837322, 1.038337102428308, 0.44276261524334826, 1.2095054494479158, true) + "\n");
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(11.244692865076667, 50.78732161191724, 190.0813110769242, 36.1022521075289, true) + "\n");
-        //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(23.84923550198235, 23.849235501979994, 166.29841931014067, 68.88306067946131, 1.0, true) + "\n");
+        //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(25, 30, 166, 68, 1.5, true) + "\n");
+        //System.out.println("Beta1-Spline iterate_at_P2 = " + iterate_at_P2(25, 30, 166, 68, 1.5) + "\n");
         System.out.println("Beta1-Spline iterate_at_P2 = "
-                          + iterate_at_P2(33.84788922878475, 11.77475452115009, 157.32319765999338, 85.15517263348254, 0.8269064394365414) + "\n");
+                          + iterate_at_P2(11.801332611955562, 35.13933876161856, 177.18620315008468, 34.60075926369415, 3.1534714082499278) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -65,7 +66,9 @@ public class Beta1Spline
         double[] f_gx = new double[N+3];                    // [N+1][N+2] is fxn before and after splice
         double[] f_gy = new double[N+3];
         double[] dfxdu = new double[N+3];
+        double[] d2fxdudu = new double[N+3];
         double[] dfydu = new double[N+3];
+        double[] d2fydudu = new double[N+3];
         double[][] dfxdd = new double[5][N+3];
         double[][] dfydd = new double[5][N+3];
         double[][] d2fxdudd = new double[5][N+3];
@@ -98,7 +101,9 @@ public class Beta1Spline
                 f_gx[i] = t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1);
                 f_gy[i] = t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1);
                 dfxdu[i] = t2_vs_t1.dfn(Bezx[seg], t2[i] - seg);
+                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx[seg], t2[i] - seg);
                 dfydu[i] = t2_vs_t1.dfn(Bezy[seg], t2[i] - seg);
+                d2fydudu[i] = t2_vs_t1.d2fn(Bezy[seg], t2[i] - seg);
                 dfxdd[0][i] = calc_dfxdd1(seg, t2[i] - seg);
                 dfydd[0][i] = calc_dfydd1(seg, t2[i] - seg);
                 dfxdd[1][i] = calc_dfxdd2(seg, t2[i] - seg);
@@ -151,7 +156,9 @@ public class Beta1Spline
                 //f_gy[i] = t2_vs_t1.fn(Bezy[seg], 1 - seg) - spliced*fitted.gety(t1) - (1 - spliced)*fitted.gety(t1 + (t1_end - t1_start)/N);
 //
                 dfxdu[i] = t2_vs_t1.dfn(Bezx[seg], 1 - seg);
+                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx[seg], 1 - seg);
                 dfydu[i] = t2_vs_t1.dfn(Bezy[seg], 1 - seg);
+                d2fydudu[i] = t2_vs_t1.d2fn(Bezy[seg], 1 - seg);
                 dfxdd[0][i] = calc_dfxdd1(seg, 1 - seg);
                 dfydd[0][i] = calc_dfydd1(seg, 1 - seg);
                 dfxdd[1][i] = calc_dfxdd2(seg, 1 - seg);
@@ -208,8 +215,14 @@ public class Beta1Spline
                 for (j = 0; j < 5; j++)
                 {
                     for (k = 0; k <= N + 2; k++)
-                        trap_in[k] = dfxdd[i][k]*dfxdd[j][k] + (dfxdd[j][k]*dfxdu[k] + f_gx[k]*d2fxdudd[j][k])*t2dd[i][k] + f_gx[k]*d2fxdddd[i][j][k]
-                                   + dfydd[i][k]*dfydd[j][k] + (dfydd[j][k]*dfydu[k] + f_gy[k]*d2fydudd[j][k])*t2dd[i][k] + f_gy[k]*d2fydddd[i][j][k];
+                    {
+                        trap_in[k] = (dfxdd[i][k] + dfxdu[k]*t2dd[i][k])*(dfxdd[j][k] + dfxdu[k]*t2dd[j][k])
+                                   + f_gx[k]*(d2fxdddd[i][j][k] + d2fxdudd[i][k]*t2dd[j][k] + d2fxdudd[j][k]*t2dd[i][k] + d2fxdudu[k]*t2dd[i][k]*t2dd[j][k])
+                                   + (dfydd[i][k] + dfydu[k]*t2dd[i][k])*(dfydd[j][k] + dfydu[k]*t2dd[j][k])
+                                   + f_gy[k]*(d2fydddd[i][j][k] + d2fydudd[i][k]*t2dd[j][k] + d2fydudd[j][k]*t2dd[i][k] + d2fydudu[k]*t2dd[i][k]*t2dd[j][k]);
+                        //if (i == 2 && j == 4 && k <= N && true)           // fix fix use only for response calculations of F
+                        //    System.out.println(k + ", " + ", " + t2[k] + ", " + trap_in[k]);
+                    }
                     Jac[i][j] = integrate(trap_in);
                 }
 
@@ -288,6 +301,16 @@ public class Beta1Spline
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
 
+        //d1 += 0.005;
+        //x2 += 0.005;                          // temporary code for calculating response functions
+        //beta1 += 0.0005;
+        //System.out.println("Beta1 Spline u(t)");
+        //System.out.println("d1, " + d1);
+        //System.out.println("d2, " + d2);
+        //System.out.println("x2, " + x2);
+        //System.out.println("y2, " + y2);
+        //System.out.println("beta1, " + beta1);
+
         Bezx = new double[][] {{fitted.getx(t1_start),
                                 fitted.getx(t1_start) + d1*Math.cos(theta_start),
                                 x2,
@@ -351,6 +374,11 @@ public class Beta1Spline
                     System.out.println("Abort: Bad splicei = " + splicei);
                     return Double.NaN;
                 }
+                if (splicei > N - 3)
+                {
+                    System.out.println("Abort: Bad splicei = " + splicei);
+                    return Double.NaN;
+                }
             }
             if (seg == 1 && t2[i] < 1)
                 return Double.NaN;
@@ -384,6 +412,8 @@ public class Beta1Spline
         }
         //spliced = betterd;
         System.out.println("end   splice at " + fitted.getc() + ", " + splicei + ", " + spliced); // test code
+        //print_fx_fy(d1, d2, x2, y2);          // calculate fx and fy response functions
+        //print_f_g_squared(d1, d2, x2, y2);    // calculate response of F error function
         for (int i = N + 1; i <= N + 2; i++)    // [N+1][N+2] is data before and after splice
         {
             seg = i - N - 1;
@@ -396,6 +426,83 @@ public class Beta1Spline
         double retVal = calc_error();
         System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + beta1 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) (splicei + spliced));
         return retVal;
+    }
+
+    private static void print_f_g_squared(double d1, double d2, double x2, double y2)
+    {
+        // numerically calculate the function (f - g)**2
+        // this will be the full response function, including variations in t2[i]
+        // this was done for the purpose of independently confirming the Jac matrix
+        int seg = 0;
+        double rx, ry, t1;
+
+        System.out.println("Beta1 Spline (f - g)**2");
+        System.out.println("d1, " + d1);
+        System.out.println("d2, " + d2);
+        System.out.println("x2, " + x2);
+        System.out.println("y2, " + y2);
+        System.out.println("beta1, " + beta1);
+
+        for (int i = 0; i <= N; i++)
+        {
+            if (seg == 0 && t2[i] > 1)
+                seg++;
+            t1 = t1_start + i*(t1_end - t1_start)/N;
+            rx = t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1);
+            ry = t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1);
+            System.out.println(i + ", " + seg + ", " + t2[i] + ", " + 0.5*(rx*rx + ry*ry));
+        }
+        System.out.println();
+    }
+
+    private static void print_fx_fy(double d1, double d2, double x2, double y2)
+    {
+        // numerically calculate the response functions dfxddj, dfyddj and second derivatives
+        // holding u(t) fixed (i.e. t2[i] fixed)
+        // this was done for the purpose of independently confirming the functions calc_d2fxddjdbeta1 and calc_d2fxdbeta1dbeta1
+        int seg = 0;
+        //y2 += 0.005;
+        //beta1 += 0.0005;
+
+        System.out.println("Beta1 Spline fx fy");
+        System.out.println("d1, " + d1);
+        System.out.println("d2, " + d2);
+        System.out.println("x2, " + x2);
+        System.out.println("y2, " + y2);
+        System.out.println("beta1, " + beta1);
+
+        Bezx = new double[][] {{fitted.getx(t1_start),
+                                fitted.getx(t1_start) + d1*Math.cos(theta_start),
+                                x2,
+                                x2},
+                               {x2,
+                                x2,
+                                fitted.getx(t1_end) - d2*Math.cos(theta_end),
+                                fitted.getx(t1_end)}};
+        Bezy = new double[][] {{fitted.gety(t1_start),
+                                fitted.gety(t1_start) + d1*Math.sin(theta_start),
+                                y2,
+                                y2},
+                               {y2,
+                                y2,
+                                fitted.gety(t1_end) - d2*Math.sin(theta_end),
+                                fitted.gety(t1_end)}};
+
+        double delx = (beta1*beta1*(Bezx[0][3] - Bezx[0][1]) + Bezx[1][2] - Bezx[1][0])/2/(beta1 + 1);
+        double dely = (beta1*beta1*(Bezy[0][3] - Bezy[0][1]) + Bezy[1][2] - Bezy[1][0])/2/(beta1 + 1);
+        Bezx[0][2] -= delx/beta1;
+        Bezx[1][1] += delx;
+        Bezy[0][2] -= dely/beta1;
+        Bezy[1][1] += dely;
+
+        for (int i = 0; i <= N; i++)
+        {
+            if (seg == 0 && t2[i] > 1)
+                seg++;
+            //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + t2_vs_t1.fn(Bezx[seg], t2[i] - seg) + ", " + t2_vs_t1.fn(Bezy[seg], t2[i] - seg));
+            System.out.println(i + ", " + seg + ", " + t2[i] + ", " + calc_d2fxdbeta1dbeta1(seg, t2[i] - seg) + ", " + calc_d2fydbeta1dbeta1(seg, t2[i] - seg));
+        }
+        System.out.println();
     }
 
     private static void print_data_at_splice()
