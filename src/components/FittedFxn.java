@@ -121,7 +121,7 @@ class epiTrochoidFxn extends FittedFxn
     public epiTrochoidFxn(double m_c)
     {
         c = m_c;
-        //gen_points(0, Math.PI/4, 100);
+        gen_points(0, Math.PI/4, 150);
     }
 
     protected double getc()
