@@ -26,10 +26,8 @@ public class BSpline5
     //private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
     private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
     private static double[] t2 = new double[N+1];
-    private static double[] t2dd1 = new double[N+1];            // partial wrt d1
-    private static double[] t2dd2 = new double[N+1];            // partial wrt d2
-    private static double[] t2dx2 = new double[N+1];            // partial wrt x2
-    private static double[] t2dy2 = new double[N+1];            // partial wrt y2
+    private static double[][] t2dd = new double[4][N+1];        // partial wrt (d1, d2, x2, y2)
+    private static double Jacdet = Double.NaN;
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
@@ -42,28 +40,21 @@ public class BSpline5
         //fitted = new CycloidFxn(tempc);
         //read_data(80, 0);
         //read_data(1, 16);
-        fitted = new epiTrochoidFxn(0);
+        //fitted = new epiTrochoidFxn(10);            // keep this, 25 iterations to converge at c = 10
+        //iterate_at_P2(19, 26, 175.2, 62);           // keep this, 25 iterations to converge at c = 10
+        fitted = new epiTrochoidFxn(0.5);
+        iterate_at_P2(32.47033778422504, 12.282971321605894, 162.32355203112036, 88.13795481241429);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
             return;
         }
         //System.out.println("BSpline phi c t1_start t1_end  = ," + phi + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end);
-        //System.out.println("solve_at_P2 = " + solve_at_P2(0.31386454265174213, 0.9540058550171312, 0.6027873410531448, 1.3191161288438205, true));
-        //for (int i = 0; i <= 200; i++)
-        //    System.out.println(i + ", " + d2N43(i/100.0)[0] + ", " + d2N43(i/100.0)[1] + ", " + d2N43(i/100.0)[2] + ", " + d2N43(i/100.0)[3] + ", " + d2N43(i/100.0)[4]);
-        //System.out.println("test mmult = " + mmult(Spliney, N43(1.7)));
-        //iterate_at_P2(23.8, 23.8, 170.5, 70.6);      // over-ride
-        //iterate_at_P2(24.22678064101724, 22.380907417705966, 170.36291768871823, 69.58798311751265);
+        //System.out.println("solve_at_P2 = " + solve_at_P2(19, 26, 175.2, 62, true));
         //iterate_at_P2(31.80597009761532, 11.910842854679, 162.18087919481738, 86.7856396874945);
         //solve_at_P2(23.84923550198231, 23.84923550197984, 170.525250238704, 70.63387137593989, true);
-        iterate_at_P2(23.85, 23.85, 170.5, 70.6);
         //solve_at_P2(9.075207733717743, 48.893417162666445, 191.71824092253422, 34.261684630473695, true);
-        //iterate_at_P2(11.76262078,	40.04159009,	188.4611239,	39.480436563);
-        //iterate_at_P2(16.48986402964012, 29.256356995461363, 174.1358694806713, 59.53986312008041);
         //grid_search_at_P2(16.48986402964012, 29.256356995461363, 174.1358694806713, 59.53986312008041);
-        //grid_search_at_P2(11.910842854678426, 31.805970097614907, 176.04591379009142, 53.312485124812454);
-        //grid_search_at_P2(22.409568284600443, 24.958498905556183, 170.9372209126511, 69.15941611852413);
 
 /*        // exercise matrix functions, to be deleted
         double[] v1 = new double[] {1.1, 3.2, 5.7, 6.8, 9.3};
@@ -103,33 +94,21 @@ public class BSpline5
         // see Spiro2SVG Book 3, page 54 (applied to 5-point cubic B-Spline)
         // setup 4-variable Newton-Raphson iteration
 
-        final int MAXLOOP = 200;
+        final int MAXLOOP = 2000;
         double[] f_gx = new double[N+1];
         double[] f_gy = new double[N+1];
         double[] dfxdu = new double[N+1];
+        double[] d2fxdudu = new double[N+1];
         double[] dfydu = new double[N+1];
-        double[] dfxdd1 = new double[N+1];
-        double[] dfydd1 = new double[N+1];
-        double[] dfxdd2 = new double[N+1];
-        double[] dfydd2 = new double[N+1];
-        double[] dfxdx2 = new double[N+1];
-        double[] dfydx2 = new double[N+1];
-        double[] dfxdy2 = new double[N+1];
-        double[] dfydy2 = new double[N+1];
-        double[] d2fxdudd1 = new double[N+1];
-        double[] d2fydudd1 = new double[N+1];
-        double[] d2fxdudd2 = new double[N+1];
-        double[] d2fydudd2 = new double[N+1];
-        double[] d2fxdudx2 = new double[N+1];
-        double[] d2fydudx2 = new double[N+1];
-        double[] d2fxdudy2 = new double[N+1];
-        double[] d2fydudy2 = new double[N+1];
+        double[] d2fydudu = new double[N+1];
+        double[][] dfxdd = new double[4][N+1];
+        double[][] dfydd = new double[4][N+1];
 
         double[][] Jac = new double[4][4];
         double[] dFdd = new double[4];
         double[] trap_in = new double[N+1];
         double[] deld;                                              // (-Δd1, -Δd2, -Δx2, -Δy2)
-        int i, loop = 0;
+        int i, j, k, loop = 0;
         double t1;
 
         do
@@ -147,116 +126,57 @@ public class BSpline5
                 f_gx[i] = multvv(Splinex, N43(t2[i])) - fitted.getx(t1);
                 f_gy[i] = multvv(Spliney, N43(t2[i])) - fitted.gety(t1);
                 dfxdu[i] = multvv(Splinex, dN43(t2[i]));
+                d2fxdudu[i] = multvv(Splinex, d2N43(t2[i]));
                 dfydu[i] = multvv(Spliney, dN43(t2[i]));
-                dfxdd1[i] = Math.cos(theta_start)*N43(t2[i])[1];
-                dfydd1[i] = Math.sin(theta_start)*N43(t2[i])[1];
-                dfxdd2[i] = -Math.cos(theta_end)*N43(t2[i])[3];
-                dfydd2[i] = -Math.sin(theta_end)*N43(t2[i])[3];
-                dfxdx2[i] = N43(t2[i])[2];
-                dfydx2[i] = 0;
-                dfxdy2[i] = 0;
-                dfydy2[i] = N43(t2[i])[2];
-                d2fxdudd1[i] = Math.cos(theta_start)*dN43(t2[i])[1];
-                d2fydudd1[i] = Math.sin(theta_start)*dN43(t2[i])[1];
-                d2fxdudd2[i] = -Math.cos(theta_end)*dN43(t2[i])[3];
-                d2fydudd2[i] = -Math.sin(theta_end)*dN43(t2[i])[3];
-                d2fxdudx2[i] = dN43(t2[i])[2];
-                d2fydudx2[i] = 0;
-                d2fxdudy2[i] = 0;
-                d2fydudy2[i] = dN43(t2[i])[2];
+                d2fydudu[i] = multvv(Spliney, d2N43(t2[i]));
+                dfxdd[0][i] = Math.cos(theta_start)*N43(t2[i])[1];
+                dfydd[0][i] = Math.sin(theta_start)*N43(t2[i])[1];
+                dfxdd[1][i] = -Math.cos(theta_end)*N43(t2[i])[3];
+                dfydd[1][i] = -Math.sin(theta_end)*N43(t2[i])[3];
+                dfxdd[2][i] = N43(t2[i])[2];
+                dfydd[2][i] = 0;
+                dfxdd[3][i] = 0;
+                dfydd[3][i] = N43(t2[i])[2];
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2)
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd1[i] + dfxdu[i]*t2dd1[i]) + f_gy[i]*(dfydd1[i] + dfydu[i]*t2dd1[i]);
-            dFdd[0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd2[i] + dfxdu[i]*t2dd2[i]) + f_gy[i]*(dfydd2[i] + dfydu[i]*t2dd2[i]);
-            dFdd[1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdx2[i] + dfxdu[i]*t2dx2[i]) + f_gy[i]*(dfydx2[i] + dfydu[i]*t2dx2[i]);
-            dFdd[2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdy2[i] + dfxdu[i]*t2dy2[i]) + f_gy[i]*(dfydy2[i] + dfydu[i]*t2dy2[i]);
-            dFdd[3] = t2_vs_t1.integrate(trap_in);
+            for (i = 0; i < 4; i++)
+            {
+                for (k = 0; k <= N; k++)
+                    trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
+                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                dFdd[i] = t2_vs_t1.integrate(trap_in);
+            }
 
             // calc d2Fdd[i]dd[j] (Jacobean matrix)
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd1[i]
-                           + dfydd1[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd1[i];
-            Jac[0][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd1[i];
-            Jac[0][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd1[i];
-            Jac[0][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd1[i];
-            Jac[0][3] = t2_vs_t1.integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd2[i]
-                           + dfydd2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd2[i];
-            Jac[1][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd2[i];
-            Jac[1][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd2[i];
-            Jac[1][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd2[i];
-            Jac[1][3] = t2_vs_t1.integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dx2[i];
-            Jac[2][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dx2[i];
-            Jac[2][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dx2[i];
-            Jac[2][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dx2[i];
-            Jac[2][3] = t2_vs_t1.integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dy2[i];
-            Jac[3][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dy2[i];
-            Jac[3][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dy2[i];
-            Jac[3][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dy2[i];
-            Jac[3][3] = t2_vs_t1.integrate(trap_in);
+            for (i = 0; i < 4; i++)
+                for (j = 0; j < 4; j++)
+                {
+                    //System.out.println(i + ", "+ j);
+                    for (k = 0; k <= N; k++)
+                    {
+                        //    System.out.println(k + ", " + ", " + t2[k] + ", " + trap_in[k] + ", " + d2udddd[i][j][k] + ", " + f_gx[k] + ", " + dfxdu[k] + ", " + f_gy[k] + ", " + dfydu[k]);
+                        trap_in[k] = dfxdd[i][k]*dfxdd[j][k]                // new code
+                                   + dfydd[i][k]*dfydd[j][k]
+                                   - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k];
+                        //trap_in[k] = dfxdd[i][k]*dfxdd[j][k] + (dfxdd[j][k]*dfxdu[k] + f_gx[k]*d2fxdudd[j][k])*t2dd[i][k]   // old code
+                        //           + dfydd[i][k]*dfydd[j][k] + (dfydd[j][k]*dfydu[k] + f_gy[k]*d2fydudd[j][k])*t2dd[i][k];
+                        //System.out.println(k + ", " + trap_in[k]);
+                        //System.out.println(k + ", " + (dfxdd[i][k]*dfxdd[j][k] + dfydd[i][k]*dfydd[j][k]));
+                        //System.out.println(k + ", " + ((dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k]));
+                    }
+                    Jac[i][j] = t2_vs_t1.integrate(trap_in);
+                }
 
             deld = multmv(invertm(Jac), dFdd);  // this is actually the negative of Δd
             d1 -= deld[0];
             d2 -= deld[1];
             x2 -= deld[2];
             y2 -= deld[3];
-            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + detm(Jac));
+            Jacdet = detm(Jac);
+            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
             dump_Jac(Jac);
 
@@ -265,7 +185,7 @@ public class BSpline5
             //System.out.println("\npreliminary recalc of t2[i]\n t1, t2");
             for (i = 0; i <= N; i++)
             {
-                t2[i] -= t2dd1[i]*deld[0] + t2dd2[i]*deld[1] + t2dx2[i]*deld[2] + t2dy2[i]*deld[3];   // first-order response
+                t2[i] -= t2dd[0][i]*deld[0] + t2dd[1][i]*deld[1] + t2dd[2][i]*deld[2] + t2dd[3][i]*deld[3];   // first-order response
                 //System.out.println((t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
             }
         } while ((loop < MAXLOOP) && !((Math.abs(deld[0]) < TOL) && (Math.abs(deld[1]) < TOL) && (Math.abs(deld[2]) < TOL) && (Math.abs(deld[3]) < TOL)));
@@ -595,8 +515,6 @@ public class BSpline5
 
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
-        //double d1 = calc_d1(x2, y2);      // obsolete, do not use
-        //double d2 = calc_d2(x2, y2);      // obsolete, do not use
 
         Splinex = new double[] {fitted.getx(t1_start),
                                 fitted.getx(t1_start) + d1*Math.cos(theta_start),
@@ -659,16 +577,15 @@ public class BSpline5
                 scan_quintic_near_t2(i, seg, t2[i]);
                 return Double.NaN;
             }
-            t2dd1[i] = calc_t2dxy(i, t2[i], "d1");
-            t2dd2[i] = calc_t2dxy(i, t2[i], "d2");
-            t2dx2[i] = calc_t2dxy(i, t2[i], "x2");
-            t2dy2[i] = calc_t2dxy(i, t2[i], "y2");
+            t2dd[0][i] = calc_t2dxy(i, t2[i], "d1");
+            t2dd[1][i] = calc_t2dxy(i, t2[i], "d2");
+            t2dd[2][i] = calc_t2dxy(i, t2[i], "x2");
+            t2dd[3][i] = calc_t2dxy(i, t2[i], "y2");
             if (print)
-                System.out.println(seg + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i] + ", " + t2dx2[i] + ", " + t2dy2[i]);
+                System.out.println(seg + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i]);
         }
-        //System.out.println("new t2[] profile rms   = ," + d1 + ", " + d2 + ", " + calc_error());
         double retVal = calc_error();
-        System.out.println("__new t2[] at theta c t d1 d2 rms = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + (float) t1_start + ", " + (float) t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + retVal);
+        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet);
         return retVal;
     }
 

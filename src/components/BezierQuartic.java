@@ -24,10 +24,8 @@ public class BezierQuartic
     //private static CycloidFxn fitted;
     private static epiTrochoidFxn fitted;
     private static double[] t2 = new double[N+1];
-    private static double[] t2dd1 = new double[N+1];            // partial wrt d1
-    private static double[] t2dd2 = new double[N+1];            // partial wrt d2
-    private static double[] t2dx2 = new double[N+1];            // partial wrt x2
-    private static double[] t2dy2 = new double[N+1];            // partial wrt y2
+    private static double[][] t2dd = new double[4][N+1];    // partial wrt (d1, d2, x2, y2, x3, y3)
+    private static double Jacdet = Double.NaN;
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
@@ -38,15 +36,12 @@ public class BezierQuartic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(0);
+        fitted = new epiTrochoidFxn(1.);
         //paste_data(80, 0.9886277018143461, 0.2624690492231421, 0.7640885237135162, 1.8275481762035848);
-        //paste_data(90, 1.0, 0.0, 0.5206067154571633, 2.078215252156017);
-        //paste_data(15,0,0, 0.3932606110125665, 0.39326061422301023);
-        //paste_data(4, -8.5,0 , 59.675596395080426, 38.01733799504544);
         //read_Quartic_Bezier_data(230);
-        //iterate_at_P2(0.7276942218406734, 0.90662245019577, 1.395042238470987, 1.5834341362128341);
-        //iterate_at_P2(32.21508988347767, 38.438780022418264, 172.43629468516687, 66.59464287484488);
-        System.out.println("quartic Bezier solve_at_P2 = " + solve_at_P2(35.564623789595046, 35.564623789653915, 170.63083487797272, 70.67760596545668, true) + "\n");
+        iterate_at_P2(39.648693602305784, 31.6022212608864, 168.36194580690702, 75.16131857037074);
+        //System.out.println("quartic Bezier solve_at_P2 = " + solve_at_P2(35.564623789595046, 35.564623789653915, 170.63083487797272, 70.67760596545668, true) + "\n");
+        //iterate_at_P2(30, 36, 173, 60);         // test code at c = 10
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -57,6 +52,11 @@ public class BezierQuartic
         //System.out.println("solve_at_P2 = " + solve_at_P2(1.5*0.382, 1.5*0.914, 0.726, 1.393, true) + "\n");
         //grid_search_at_P2(.571, 1.369, 0.724, 1.394);
         //System.out.println(fitted.getClass().getCanonicalName());
+        //scan_septic_simple(43);
+        //System.out.printf("M");
+        //for (int i = 0; i <= N; i++)
+        //    System.out.printf(" %f, %f", 80 + 2*BSpline5.multvv(Bezx, N44(t2[i])), 500 - 2*BSpline5.multvv(Bezy, N44(t2[i])));
+        //System.out.println("\n");
     }
 
     private static void iterate_at_P2(double d1, double d2, double x2, double y2)
@@ -66,33 +66,21 @@ public class BezierQuartic
         // see Spiro2SVG Book 3, page 54 (applied to quartic Bezier)
         // setup 4-variable Newton-Raphson iteration
 
-        final int MAXLOOP = 200;
+        final int MAXLOOP = 4000;
         double[] f_gx = new double[N+1];
         double[] f_gy = new double[N+1];
         double[] dfxdu = new double[N+1];
+        double[] d2fxdudu = new double[N+1];
         double[] dfydu = new double[N+1];
-        double[] dfxdd1 = new double[N+1];
-        double[] dfydd1 = new double[N+1];
-        double[] dfxdd2 = new double[N+1];
-        double[] dfydd2 = new double[N+1];
-        double[] dfxdx2 = new double[N+1];
-        double[] dfydx2 = new double[N+1];
-        double[] dfxdy2 = new double[N+1];
-        double[] dfydy2 = new double[N+1];
-        double[] d2fxdudd1 = new double[N+1];
-        double[] d2fydudd1 = new double[N+1];
-        double[] d2fxdudd2 = new double[N+1];
-        double[] d2fydudd2 = new double[N+1];
-        double[] d2fxdudx2 = new double[N+1];
-        double[] d2fydudx2 = new double[N+1];
-        double[] d2fxdudy2 = new double[N+1];
-        double[] d2fydudy2 = new double[N+1];
+        double[] d2fydudu = new double[N+1];
+        double[][] dfxdd = new double[4][N+1];
+        double[][] dfydd = new double[4][N+1];
 
         double[][] Jac = new double[4][4];
         double[] dFdd = new double[4];
         double[] trap_in = new double[N+1];
         double[] deld;                                              // (-Δd1, -Δd2, -Δx2, -Δy2)
-        int i, loop = 0;
+        int i, j, k, loop = 0;
         double t1;
 
         do
@@ -110,124 +98,61 @@ public class BezierQuartic
                 f_gx[i] = BSpline5.multvv(Bezx, N44(t2[i])) - fitted.getx(t1);
                 f_gy[i] = BSpline5.multvv(Bezy, N44(t2[i])) - fitted.gety(t1);
                 dfxdu[i] = BSpline5.multvv(Bezx, dN44(t2[i]));
+                d2fxdudu[i] = BSpline5.multvv(Bezx, d2N44(t2[i]));
                 dfydu[i] = BSpline5.multvv(Bezy, dN44(t2[i]));
-                dfxdd1[i] = Math.cos(theta_start)*N44(t2[i])[1];
-                dfydd1[i] = Math.sin(theta_start)*N44(t2[i])[1];
-                dfxdd2[i] = -Math.cos(theta_end)*N44(t2[i])[3];
-                dfydd2[i] = -Math.sin(theta_end)*N44(t2[i])[3];
-                dfxdx2[i] = N44(t2[i])[2];
-                dfydx2[i] = 0;
-                dfxdy2[i] = 0;
-                dfydy2[i] = N44(t2[i])[2];
-                d2fxdudd1[i] = Math.cos(theta_start)*dN44(t2[i])[1];
-                d2fydudd1[i] = Math.sin(theta_start)*dN44(t2[i])[1];
-                d2fxdudd2[i] = -Math.cos(theta_end)*dN44(t2[i])[3];
-                d2fydudd2[i] = -Math.sin(theta_end)*dN44(t2[i])[3];
-                d2fxdudx2[i] = dN44(t2[i])[2];
-                d2fydudx2[i] = 0;
-                d2fxdudy2[i] = 0;
-                d2fydudy2[i] = dN44(t2[i])[2];
+                d2fydudu[i] = BSpline5.multvv(Bezy, d2N44(t2[i]));
+                dfxdd[0][i] = Math.cos(theta_start)*N44(t2[i])[1];
+                dfydd[0][i] = Math.sin(theta_start)*N44(t2[i])[1];
+                dfxdd[1][i] = -Math.cos(theta_end)*N44(t2[i])[3];
+                dfydd[1][i] = -Math.sin(theta_end)*N44(t2[i])[3];
+                dfxdd[2][i] = N44(t2[i])[2];
+                dfydd[2][i] = 0;
+                dfxdd[3][i] = 0;
+                dfydd[3][i] = N44(t2[i])[2];
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2)
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd1[i] + dfxdu[i]*t2dd1[i]) + f_gy[i]*(dfydd1[i] + dfydu[i]*t2dd1[i]);
-            dFdd[0] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd2[i] + dfxdu[i]*t2dd2[i]) + f_gy[i]*(dfydd2[i] + dfydu[i]*t2dd2[i]);
-            dFdd[1] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdx2[i] + dfxdu[i]*t2dx2[i]) + f_gy[i]*(dfydx2[i] + dfydu[i]*t2dx2[i]);
-            dFdd[2] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdy2[i] + dfxdu[i]*t2dy2[i]) + f_gy[i]*(dfydy2[i] + dfydu[i]*t2dy2[i]);
-            dFdd[3] = integrate(trap_in);
+            for (i = 0; i < 4; i++)
+            {
+                for (k = 0; k <= N; k++)
+                    trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
+                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                dFdd[i] = t2_vs_t1.integrate(trap_in);
+            }
 
             // calc d2Fdd[i]dd[j] (Jacobean matrix)
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd1[i]
-                           + dfydd1[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd1[i];
-            Jac[0][0] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd1[i];
-            Jac[0][1] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd1[i];
-            Jac[0][2] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd1[i];
-            Jac[0][3] = integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd2[i]
-                           + dfydd2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd2[i];
-            Jac[1][0] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd2[i];
-            Jac[1][1] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd2[i];
-            Jac[1][2] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd2[i];
-            Jac[1][3] = integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dx2[i];
-            Jac[2][0] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dx2[i];
-            Jac[2][1] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dx2[i];
-            Jac[2][2] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dx2[i];
-            Jac[2][3] = integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dy2[i];
-            Jac[3][0] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dy2[i];
-            Jac[3][1] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dy2[i];
-            Jac[3][2] = integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dy2[i];
-            Jac[3][3] = integrate(trap_in);
+            for (i = 0; i < 4; i++)
+                for (j = 0; j < 4; j++)
+                {
+                    //System.out.println(i + ", "+ j);
+                    for (k = 0; k <= N; k++)
+                    {
+                        trap_in[k] = dfxdd[i][k]*dfxdd[j][k] + dfydd[i][k]*dfydd[j][k]
+                                   - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k];
+                        //System.out.println(k + ", " + trap_in[k]);
+                    }
+                    Jac[i][j] = t2_vs_t1.integrate(trap_in);
+                }
 
             deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
             d1 -= deld[0];
             d2 -= deld[1];
             x2 -= deld[2];
             y2 -= deld[3];
-            //System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3]);
-            //System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
+
+            Jacdet = BSpline5.detm(Jac);
+            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + Jacdet);
+            System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
+            BSpline5.dump_Jac(Jac);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
             //System.out.println("\npreliminary recalc of t2[i]\n t1, t2");
             for (i = 0; i <= N; i++)            // disabled due to crashes
             {
-                //t2[i] -= t2dd1[i]*deld[0] + t2dd2[i]*deld[1] + t2dx2[i]*deld[2] + t2dy2[i]*deld[3];   // first-order response
+                t2[i] -= t2dd[0][i]*deld[0] + t2dd[1][i]*deld[1] + t2dd[2][i]*deld[2] + t2dd[3][i]*deld[3];   // first-order response
                 // System.out.println("incrementing t2 array : " + i + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
             }
         } while ((loop < MAXLOOP) && !((Math.abs(deld[0]) < TOL) && (Math.abs(deld[1]) < TOL) && (Math.abs(deld[2]) < TOL) && (Math.abs(deld[3]) < TOL)));
@@ -393,7 +318,7 @@ public class BezierQuartic
         //System.out.println(Bezx[3] + "\t " + Bezy[3]);
         //System.out.println(Bezx[4] + "\t " + Bezy[4]);
 
-        if (print) System.out.println("\n   , t1, t2, t2dd1, t2dd2, t2dx2, t2dy2");
+        if (print) System.out.println("\n           , t1, t2, t2dd1, t2dd2, t2dx2, t2dy2");
         for (int i = 0; i <= N; i++)
         {
             solve_septic_for_t2(i);
@@ -402,18 +327,21 @@ public class BezierQuartic
             ||  (t2[i] < -TOL) || Double.isNaN(t2[i]))
             {
                 System.out.println("t2[i] abort at " + i + " : " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
-                //scan_septic_near_t2(i, t2[i]);
+                //for (int ii = 0; ii <= i; ii++)
+                //    System.out.println(ii + ", " + t2[ii]);
+                //scan_septic_simple(i - 1);
+                //scan_septic_simple(i);
                 return Double.NaN;
             }
-            t2dd1[i] = calc_t2dxy(i, t2[i], "d1");
-            t2dd2[i] = calc_t2dxy(i, t2[i], "d2");
-            t2dx2[i] = calc_t2dxy(i, t2[i], "x2");
-            t2dy2[i] = calc_t2dxy(i, t2[i], "y2");
+            t2dd[0][i] = calc_t2dxy(i, t2[i], "d1");
+            t2dd[1][i] = calc_t2dxy(i, t2[i], "d2");
+            t2dd[2][i] = calc_t2dxy(i, t2[i], "x2");
+            t2dd[3][i] = calc_t2dxy(i, t2[i], "y2");
             if (print)
-                System.out.println("quartic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i] + ", " + t2dx2[i] + ", " + t2dy2[i]);
+                System.out.println("quartic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i]);
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] at th c t d1 d2 rms = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + (float) t1_start + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + retVal);
+        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet);
         return retVal;
     }
 
@@ -436,21 +364,10 @@ public class BezierQuartic
         {
             trap_in[i] = (fn(Bezx, t2[i]) - fitted.getx(t1))*(fn(Bezx, t2[i]) - fitted.getx(t1))
                        + (fn(Bezy, t2[i]) - fitted.gety(t1))*(fn(Bezy, t2[i]) - fitted.gety(t1));
-            System.out.println(i + ", " + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
+            //System.out.println(i + ", " + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
-        return Math.sqrt(integrate(trap_in))/a_b;
-    }
-
-    private static double integrate(double[] trap)
-    {
-        // trapezoidal rule integration of a fxn of t1 (N+1 points)
-
-        //System.out.println("trap length = " + trap.length);
-        double ret = (trap[0] + trap[trap.length - 1])/2;
-        for (int i = 1; i < trap.length - 1; i++)
-            ret += trap[i];
-        return ret/(trap.length - 1);
+        return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
     }
 
     private static void solve_septic_for_t2(int i)
@@ -498,7 +415,7 @@ public class BezierQuartic
         {
             f = (fn(Bezx, t) - X)*dfn(Bezx, t) + (fn(Bezy, t) - Y)*dfn(Bezy, t);
             fprime = dfn(Bezx, t)*dfn(Bezx, t) + (fn(Bezx, t) - X)*d2fn(Bezx, t) + dfn(Bezy, t)*dfn(Bezy, t) + (fn(Bezy, t) - Y)*d2fn(Bezy, t);
-            if (loop > 100)
+            if (loop > 200)
             {
                 System.out.println("\ntoo many loops t1 t2 =, " + t1 + ", " + t + ", " + f + ", " + fprime + ", " + f2prime + ", " + del_t);
                 t2[i] = Double.NaN;
@@ -513,6 +430,24 @@ public class BezierQuartic
             //System.out.println("         t2 =, " + t + ", " + f + ", " + fprime);
         } while (Math.abs(del_t) > TOL);
         t2[i] = t;
+    }
+
+    private static void scan_septic_simple(int index)
+    {
+        // if solve_septic_for_t2 fails, scan the area for other roots
+        double t1 = t1_start + index*(t1_end - t1_start)/N;
+        double f, t;
+        double X = fitted.getx(t1);
+        double Y = fitted.gety(t1);
+
+        System.out.println("\nscanning at " + index + ", " + t1);
+        for (int i = 0; i <= 100; i++)
+        {
+            t = i/100.0;
+            f = (fn(Bezx, t) - X)*dfn(Bezx, t) + (fn(Bezy, t) - Y)*dfn(Bezy, t);
+            System.out.println(t + ", " + f);
+        }
+        System.out.println();
     }
 
     private static double calc_t2dxy(int i, double t2, String type)

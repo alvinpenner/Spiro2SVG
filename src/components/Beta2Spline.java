@@ -25,11 +25,7 @@ public class Beta2Spline
     //private static CycloidFxn fitted;
     private static epiTrochoidFxn fitted;
     private static double[] t2 = new double[N+1];
-    private static double[] t2dd1 = new double[N+1];            // partial wrt d1
-    private static double[] t2dd2 = new double[N+1];            // partial wrt d2
-    private static double[] t2dx2 = new double[N+1];            // partial wrt x2
-    private static double[] t2dy2 = new double[N+1];            // partial wrt y2
-    private static double[] t2dd = new double[N+1];             // partial wrt symmetric d
+    private static double[][] t2dd = new double[5][N+1];        // partial wrt (d1, d2, x2, y2, d)
     private static double psi;
     private static double Jacdet = Double.NaN;
     public static double theta_start, theta_end;
@@ -43,13 +39,10 @@ public class Beta2Spline
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
         fitted = new epiTrochoidFxn(0.0);
-        //System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(0.13053297673525735, 0.12762284294843027, 2.757478122989594, 1.5111139789774846, true) + "\n");
-        //System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
-        //System.out.println("Beta2-Spline solve_at_P2 = " + convert_at_P2(15, 20, 170, 59, true) + "\n");
-        //System.out.println("Beta2-Spline convert_at_P2 = " + convert_at_P2(23.264222028261724, 23.34619627704507, 171.41612180193727, 67.26310370327987, true) + "\n");
-        //System.out.println("Beta2-Spline solve_at_P2 = " + solve_at_P2(36.41640950635916, 44.67463664376333, 168.29745255599937, 63.87317691079396, 5, true) + "\n");
+        //System.out.println("Beta2-Spline convert_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
+        //System.out.println("Beta2-Spline solve_at_P2 = " + solve_at_P2(22.742672063451316, 21.951281542489866, 166.71089691010013, 67.4862883523671, 24.830428922781234, true) + "\n");
         System.out.println("Beta2-Spline iterate_at_P2 = "
-                          + iterate_at_P2(28.20411402079497, 28.20411402075984, 166.2999540489851, 68.88369638914288, 18.57626046466486) + "\n");
+                          + iterate_at_P2(18.767825828964003, 18.76782582892743, 166.29676657566654, 68.88237609446028, 28.074383011128273) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -65,48 +58,26 @@ public class Beta2Spline
         // setup 5-variable Newton-Raphson iteration
 
         final double gain = 1;                          // fudge factor to reduce gain
-        final int MAXLOOP = 500;
+        final int MAXLOOP = 4000;
         double[] f_gx = new double[N+1];
         double[] f_gy = new double[N+1];
         double[] dfxdu = new double[N+1];
+        double[] d2fxdudu = new double[N+1];
         double[] dfydu = new double[N+1];
-        double[] dfxdd1 = new double[N+1];
-        double[] dfydd1 = new double[N+1];
-        double[] dfxdd2 = new double[N+1];
-        double[] dfydd2 = new double[N+1];
-        double[] dfxdx2 = new double[N+1];
-        double[] dfydx2 = new double[N+1];
-        double[] dfxdy2 = new double[N+1];
-        double[] dfydy2 = new double[N+1];
-        double[] dfxdd = new double[N+1];
-        double[] dfydd = new double[N+1];
-        double[] d2fxdudd1 = new double[N+1];
-        double[] d2fydudd1 = new double[N+1];
-        double[] d2fxdudd2 = new double[N+1];
-        double[] d2fydudd2 = new double[N+1];
-        double[] d2fxdudx2 = new double[N+1];
-        double[] d2fydudx2 = new double[N+1];
-        double[] d2fxdudy2 = new double[N+1];
-        double[] d2fydudy2 = new double[N+1];
-        double[] d2fxdudd = new double[N+1];
-        double[] d2fydudd = new double[N+1];
-        double[] d2fxdd1dd1 = new double[N+1];          // non-linear effects
-        double[] d2fxdd1dd2 = new double[N+1];
-        double[] d2fxdd2dd2 = new double[N+1];
-        double[] d2fxdd1dd = new double[N+1];
-        double[] d2fxdd2dd = new double[N+1];
-        double[] d2fydd1dd1 = new double[N+1];
-        double[] d2fydd1dd2 = new double[N+1];
-        double[] d2fydd2dd2 = new double[N+1];
-        double[] d2fydd1dd = new double[N+1];
-        double[] d2fydd2dd = new double[N+1];
+        double[] d2fydudu = new double[N+1];
+        double[][] dfxdd = new double[5][N+1];
+        double[][] dfydd = new double[5][N+1];
+        double[][] d2fxdudd = new double[5][N+1];
+        double[][] d2fydudd = new double[5][N+1];
+        double[][][] d2fxdddd = new double[5][5][N+1];
+        double[][][] d2fydddd = new double[5][5][N+1];
 
         double[][] Jac = new double[5][5];
         double[] dFdd = new double[5];
         double[] trap_in = new double[N+1];
         double[] deld;                                  // (-Δd1, -Δd2, -Δx2, -Δy2, -Δd)
         int loop = 0;
-        int i, seg;                                     // Bezier segment, before or after the splice
+        int i, j, k, seg;                               // Bezier segment, before or after the splice
         double t1;
 
         do
@@ -127,167 +98,81 @@ public class Beta2Spline
                 f_gx[i] = t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1);
                 f_gy[i] = t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1);
                 dfxdu[i] = t2_vs_t1.dfn(Bezx[seg], t2[i] - seg);
+                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx[seg], t2[i] - seg);
                 dfydu[i] = t2_vs_t1.dfn(Bezy[seg], t2[i] - seg);
-                dfxdd1[i] = calc_dfxdd1(seg, t2[i] - seg);
-                dfydd1[i] = calc_dfydd1(seg, t2[i] - seg);
-                dfxdd2[i] = calc_dfxdd2(seg, t2[i] - seg);
-                dfydd2[i] = calc_dfydd2(seg, t2[i] - seg);
-                dfxdx2[i] = calc_dfxdx2(seg, t2[i] - seg);
-                dfydx2[i] = 0;
-                dfxdy2[i] = 0;
-                dfydy2[i] = calc_dfydy2(seg, t2[i] - seg);
-                dfxdd[i] = calc_dfxdd(seg, t2[i] - seg);
-                dfydd[i] = calc_dfydd(seg, t2[i] - seg);
-                d2fxdudd1[i] = calc_d2fxdudd1(seg, t2[i] - seg);
-                d2fydudd1[i] = calc_d2fydudd1(seg, t2[i] - seg);
-                d2fxdudd2[i] = calc_d2fxdudd2(seg, t2[i] - seg);
-                d2fydudd2[i] = calc_d2fydudd2(seg, t2[i] - seg);
-                d2fxdudx2[i] = calc_d2fxdudx2(seg, t2[i] - seg);
-                d2fydudx2[i] = 0;
-                d2fxdudy2[i] = 0;
-                d2fydudy2[i] = calc_d2fydudy2(seg, t2[i] - seg);
-                d2fxdudd[i] = calc_d2fxdudd(seg, t2[i] - seg);
-                d2fydudd[i] = calc_d2fydudd(seg, t2[i] - seg);
-                d2fxdd1dd1[i] = calc_d2fxdd1dd1(seg, t2[i] - seg);  // non-linear effects
-                d2fxdd1dd2[i] = calc_d2fxdd1dd2(seg, t2[i] - seg);
-                d2fxdd2dd2[i] = calc_d2fxdd2dd2(seg, t2[i] - seg);
-                d2fxdd1dd[i] = calc_d2fxdd1dd(seg, t2[i] - seg);
-                d2fxdd2dd[i] = calc_d2fxdd2dd(seg, t2[i] - seg);
-                d2fydd1dd1[i] = calc_d2fydd1dd1(seg, t2[i] - seg);
-                d2fydd1dd2[i] = calc_d2fydd1dd2(seg, t2[i] - seg);
-                d2fydd2dd2[i] = calc_d2fydd2dd2(seg, t2[i] - seg);
-                d2fydd1dd[i] = calc_d2fydd1dd(seg, t2[i] - seg);
-                d2fydd2dd[i] = calc_d2fydd2dd(seg, t2[i] - seg);
+                d2fydudu[i] = t2_vs_t1.d2fn(Bezy[seg], t2[i] - seg);
+                dfxdd[0][i] = calc_dfxdd1(seg, t2[i] - seg);
+                dfydd[0][i] = calc_dfydd1(seg, t2[i] - seg);
+                dfxdd[1][i] = calc_dfxdd2(seg, t2[i] - seg);
+                dfydd[1][i] = calc_dfydd2(seg, t2[i] - seg);
+                dfxdd[2][i] = calc_dfxdx2(seg, t2[i] - seg);
+                dfydd[2][i] = 0;
+                dfxdd[3][i] = 0;
+                dfydd[3][i] = calc_dfydy2(seg, t2[i] - seg);
+                dfxdd[4][i] = calc_dfxdd(seg, t2[i] - seg);
+                dfydd[4][i] = calc_dfydd(seg, t2[i] - seg);
+
+                d2fxdudd[0][i] = calc_d2fxdudd1(seg, t2[i] - seg);
+                d2fydudd[0][i] = calc_d2fydudd1(seg, t2[i] - seg);
+                d2fxdudd[1][i] = calc_d2fxdudd2(seg, t2[i] - seg);
+                d2fydudd[1][i] = calc_d2fydudd2(seg, t2[i] - seg);
+                d2fxdudd[2][i] = calc_d2fxdudx2(seg, t2[i] - seg);
+                d2fydudd[2][i] = 0;
+                d2fxdudd[3][i] = 0;
+                d2fydudd[3][i] = calc_d2fydudy2(seg, t2[i] - seg);
+                d2fxdudd[4][i] = calc_d2fxdudd(seg, t2[i] - seg);
+                d2fydudd[4][i] = calc_d2fydudd(seg, t2[i] - seg);
+
+                d2fxdddd[0][0][i] = calc_d2fxdd1dd1(seg, t2[i] - seg);  // non-linear effects
+                d2fxdddd[0][1][i] = calc_d2fxdd1dd2(seg, t2[i] - seg);
+                d2fxdddd[1][1][i] = calc_d2fxdd2dd2(seg, t2[i] - seg);
+                d2fxdddd[0][4][i] = calc_d2fxdd1dd(seg, t2[i] - seg);
+                d2fxdddd[1][4][i] = calc_d2fxdd2dd(seg, t2[i] - seg);
+                d2fxdddd[1][0][i] = d2fxdddd[0][1][i];
+                d2fxdddd[4][0][i] = d2fxdddd[0][4][i];
+                d2fxdddd[4][1][i] = d2fxdddd[1][4][i];
+                d2fydddd[0][0][i] = calc_d2fydd1dd1(seg, t2[i] - seg);
+                d2fydddd[0][1][i] = calc_d2fydd1dd2(seg, t2[i] - seg);
+                d2fydddd[1][1][i] = calc_d2fydd2dd2(seg, t2[i] - seg);
+                d2fydddd[0][4][i] = calc_d2fydd1dd(seg, t2[i] - seg);
+                d2fydddd[1][4][i] = calc_d2fydd2dd(seg, t2[i] - seg);
+                d2fydddd[1][0][i] = d2fydddd[0][1][i];
+                d2fydddd[4][0][i] = d2fydddd[0][4][i];
+                d2fydddd[4][1][i] = d2fydddd[1][4][i];
                 //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i] + ", " + t2dx2[i] + ", " + t2dy2[i] + ", " + t2dd[i] + ", " + f_gx[i] + ", " + f_gy[i] + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + dfxdd1[i] + ", " + dfydd1[i] + ", " + dfxdd2[i] + ", " + dfydd2[i] + ", " + dfxdx2[i] + ", " + dfydx2[i] + ", " + dfxdy2[i] + ", " + dfydy2[i] + ", " + dfxdd[i] + ", " + dfydd[i] + ", " + d2fxdudd1[i] + ", " + d2fydudd1[i] + ", " + d2fxdudd2[i] + ", " + d2fydudd2[i] + ", " + d2fxdudx2[i] + ", " + d2fydudx2[i] + ", " + d2fxdudy2[i] + ", " + d2fydudy2[i] + ", " + d2fxdudd[i] + ", " + d2fydudd[i]);
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2, d)
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd1[i] + dfxdu[i]*t2dd1[i]) + f_gy[i]*(dfydd1[i] + dfydu[i]*t2dd1[i]);
-            dFdd[0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd2[i] + dfxdu[i]*t2dd2[i]) + f_gy[i]*(dfydd2[i] + dfydu[i]*t2dd2[i]);
-            dFdd[1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdx2[i] + dfxdu[i]*t2dx2[i]) + f_gy[i]*(dfydx2[i] + dfydu[i]*t2dx2[i]);
-            dFdd[2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdy2[i] + dfxdu[i]*t2dy2[i]) + f_gy[i]*(dfydy2[i] + dfydu[i]*t2dy2[i]);
-            dFdd[3] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = f_gx[i]*(dfxdd[i] + dfxdu[i]*t2dd[i]) + f_gy[i]*(dfydd[i] + dfydu[i]*t2dd[i]);
-            dFdd[4] = t2_vs_t1.integrate(trap_in);
+            for (i = 0; i < 5; i++)
+            {
+                for (k = 0; k <= N; k++)
+                    //trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
+                    trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                dFdd[i] = t2_vs_t1.integrate(trap_in);
+            }
 
             // calc d2Fdd[i]dd[j] (Jacobean matrix)
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd1[i] + f_gx[i]*d2fxdd1dd1[i]
-                           + dfydd1[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd1[i] + f_gy[i]*d2fydd1dd1[i];
-            Jac[0][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd1[i] + f_gx[i]*d2fxdd1dd2[i]
-                           + dfydd1[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd1[i] + f_gy[i]*d2fydd1dd2[i];
-            Jac[0][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd1[i];
-            Jac[0][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd1[i]
-                           + dfydd1[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd1[i];
-            Jac[0][3] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd1[i]*dfxdd[i] + (dfxdd[i]*dfxdu[i] + f_gx[i]*d2fxdudd[i])*t2dd1[i] + f_gx[i]*d2fxdd1dd[i]
-                           + dfydd1[i]*dfydd[i] + (dfydd[i]*dfydu[i] + f_gy[i]*d2fydudd[i])*t2dd1[i] + f_gy[i]*d2fydd1dd[i];
-            Jac[0][4] = t2_vs_t1.integrate(trap_in);
+            for (i = 0; i < 5; i++)
+                for (j = 0; j < 5; j++)
+                {
+                    //System.out.println(i + ", "+ j);
+                    for (k = 0; k <= N; k++)
+                    {
+                        //    System.out.println(k + ", " + ", " + t2[k] + ", " + trap_in[k] + ", " + d2udddd[i][j][k] + ", " + f_gx[k] + ", " + dfxdu[k] + ", " + f_gy[k] + ", " + dfydu[k]);
+                        trap_in[k] = dfxdd[i][k]*dfxdd[j][k]                // new code
+                                   + f_gx[k]*d2fxdddd[i][j][k]
+                                   + dfydd[i][k]*dfydd[j][k]
+                                   + f_gy[k]*d2fydddd[i][j][k]
+                                   - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k];
+                        //System.out.println(k + ", " + trap_in[k]);
+                    }
+                    Jac[i][j] = t2_vs_t1.integrate(trap_in);
+                }
 
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd2[i] + f_gx[i]*d2fxdd1dd2[i]
-                           + dfydd2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd2[i] + f_gy[i]*d2fydd1dd2[i];
-            Jac[1][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd2[i] + f_gx[i]*d2fxdd2dd2[i]
-                           + dfydd2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd2[i] + f_gy[i]*d2fydd2dd2[i];
-            Jac[1][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd2[i];
-            Jac[1][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd2[i]
-                           + dfydd2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd2[i];
-            Jac[1][3] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd2[i]*dfxdd[i] + (dfxdd[i]*dfxdu[i] + f_gx[i]*d2fxdudd[i])*t2dd2[i] + f_gx[i]*d2fxdd2dd[i]
-                           + dfydd2[i]*dfydd[i] + (dfydd[i]*dfydu[i] + f_gy[i]*d2fydudd[i])*t2dd2[i] + f_gy[i]*d2fydd2dd[i];
-            Jac[1][4] = t2_vs_t1.integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dx2[i];
-            Jac[2][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dx2[i];
-            Jac[2][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dx2[i];
-            Jac[2][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dx2[i]
-                           + dfydx2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dx2[i];
-            Jac[2][3] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdx2[i]*dfxdd[i] + (dfxdd[i]*dfxdu[i] + f_gx[i]*d2fxdudd[i])*t2dx2[i]
-                           + dfydx2[i]*dfydd[i] + (dfydd[i]*dfydu[i] + f_gy[i]*d2fydudd[i])*t2dx2[i];
-            Jac[2][4] = t2_vs_t1.integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dy2[i];
-            Jac[3][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dy2[i];
-            Jac[3][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dy2[i];
-            Jac[3][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dy2[i]
-                           + dfydy2[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dy2[i];
-            Jac[3][3] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdy2[i]*dfxdd[i] + (dfxdd[i]*dfxdu[i] + f_gx[i]*d2fxdudd[i])*t2dy2[i]
-                           + dfydy2[i]*dfydd[i] + (dfydd[i]*dfydu[i] + f_gy[i]*d2fydudd[i])*t2dy2[i];
-            Jac[3][4] = t2_vs_t1.integrate(trap_in);
-
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd[i]*dfxdd1[i] + (dfxdd1[i]*dfxdu[i] + f_gx[i]*d2fxdudd1[i])*t2dd[i] + f_gx[i]*d2fxdd1dd[i]
-                           + dfydd[i]*dfydd1[i] + (dfydd1[i]*dfydu[i] + f_gy[i]*d2fydudd1[i])*t2dd[i] + f_gy[i]*d2fydd1dd[i];
-            Jac[4][0] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd[i]*dfxdd2[i] + (dfxdd2[i]*dfxdu[i] + f_gx[i]*d2fxdudd2[i])*t2dd[i] + f_gx[i]*d2fxdd2dd[i]
-                           + dfydd[i]*dfydd2[i] + (dfydd2[i]*dfydu[i] + f_gy[i]*d2fydudd2[i])*t2dd[i] + f_gy[i]*d2fydd2dd[i];
-            Jac[4][1] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd[i]*dfxdx2[i] + (dfxdx2[i]*dfxdu[i] + f_gx[i]*d2fxdudx2[i])*t2dd[i]
-                           + dfydd[i]*dfydx2[i] + (dfydx2[i]*dfydu[i] + f_gy[i]*d2fydudx2[i])*t2dd[i];
-            Jac[4][2] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd[i]*dfxdy2[i] + (dfxdy2[i]*dfxdu[i] + f_gx[i]*d2fxdudy2[i])*t2dd[i]
-                           + dfydd[i]*dfydy2[i] + (dfydy2[i]*dfydu[i] + f_gy[i]*d2fydudy2[i])*t2dd[i];
-            Jac[4][3] = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i <= N; i++)
-                trap_in[i] = dfxdd[i]*dfxdd[i] + (dfxdd[i]*dfxdu[i] + f_gx[i]*d2fxdudd[i])*t2dd[i]
-                           + dfydd[i]*dfydd[i] + (dfydd[i]*dfydu[i] + f_gy[i]*d2fydudd[i])*t2dd[i];
-            Jac[4][4] = t2_vs_t1.integrate(trap_in);
-
-            deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
-            d1 -= deld[0]/gain;            // fix fix blatant fudge factor in gain
+            deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);    // this is actually the negative of Δd
+            d1 -= deld[0]/gain;                                     // fix fix blatant fudge factor in gain
             d2 -= deld[1]/gain;
             x2 -= deld[2]/gain;
             y2 -= deld[3]/gain;
@@ -303,16 +188,13 @@ public class Beta2Spline
             Jacdet = BSpline5.detm(Jac);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + dFdd[4] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ", " + deld[4]);
-            //BSpline5.dump_Jac(Jac);
+            BSpline5.dump_Jac(Jac);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
-            //System.out.println("\npreliminary recalc of t2[i]\n t1, t2");
             for (i = 0; i <= N; i++)
-            {
-                t2[i] -= t2dd1[i]*deld[0] + t2dd2[i]*deld[1] + t2dx2[i]*deld[2] + t2dy2[i]*deld[3] + t2dd[i]*deld[4];   // first-order response
-                //System.out.println((t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
-            }
+                for (j = 0; j < 5; j++)
+                    t2[i] -= t2dd[j][i]*deld[j];                        // first-order response
         } while ((loop < MAXLOOP) && !((Math.abs(deld[0]) < TOL) && (Math.abs(deld[1]) < TOL) && (Math.abs(deld[2]) < TOL) && (Math.abs(deld[3]) < TOL) && (Math.abs(deld[4]) < TOL)));
         if (loop < MAXLOOP)
         {
@@ -355,7 +237,6 @@ public class Beta2Spline
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
 
-        //d = 26;
         Bezx = new double[][] {{fitted.getx(t1_start),
                                 fitted.getx(t1_start) + d1*Math.cos(theta_start),
                                 x2,
@@ -377,7 +258,6 @@ public class Beta2Spline
         psi = Math.atan2(Bezy[1][2] - Bezy[0][1], Bezx[1][2] - Bezx[0][1]);
         //System.out.println("del d = " + (Bezx[1][2] - Bezx[0][1]) + ", " + (Bezy[1][2] - Bezy[0][1]));
         //System.out.println("psi = " + psi);
-        //psi = 2.130661423849241;              // fix fix test code only
         Bezx[0][2] -= d*Math.cos(psi);
         Bezx[1][1] += d*Math.cos(psi);
         Bezy[0][2] -= d*Math.sin(psi);
@@ -401,11 +281,14 @@ public class Beta2Spline
         int seg = 0;                // Bezier segment, before or after the splice
         for (int i = 0; i <= N; i++)
         {
-            solve_quintic_for_t2(i, seg);
+            if (i == 0)
+                t2[i] = solve_quintic_for_t2(i, 0, seg);
+            else
+                t2[i] = solve_quintic_for_t2(i, t2[i-1], seg);
             if (seg == 0 && t2[i] > 1)
             {
                 seg++;
-                solve_quintic_for_t2(i, seg);   // re-calculate
+                t2[i] = solve_quintic_for_t2(i, 1, seg);   // re-calculate (initiallize at the splice)
             }
             if (seg == 1 && t2[i] < 1)
             {
@@ -421,17 +304,20 @@ public class Beta2Spline
                 //scan_quintic_near_t2(i, seg, t2[i]);
                 return Double.NaN;
             }
-            t2dd1[i] = calc_t2dxy(i, seg, t2[i] - seg, "d1");
-            t2dd2[i] = calc_t2dxy(i, seg, t2[i] - seg, "d2");
-            t2dx2[i] = calc_t2dxy(i, seg, t2[i] - seg, "x2");
-            t2dy2[i] = calc_t2dxy(i, seg, t2[i] - seg, "y2");
-            t2dd[i] = calc_t2dxy(i, seg, t2[i] - seg, "d");
+            t2dd[0][i] = calc_t2dxy(i, seg, t2[i] - seg, "d1");
+            t2dd[1][i] = calc_t2dxy(i, seg, t2[i] - seg, "d2");
+            t2dd[2][i] = calc_t2dxy(i, seg, t2[i] - seg, "x2");
+            t2dd[3][i] = calc_t2dxy(i, seg, t2[i] - seg, "y2");
+            t2dd[4][i] = calc_t2dxy(i, seg, t2[i] - seg, "d");
             if (print)
-                System.out.println(seg + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i] + ", " + t2dx2[i] + ", " + t2dy2[i] + ", " + t2dd[i]);
+            {
+                double t1 = t1_start + i*(t1_end - t1_start)/N;
+                double f = (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1))*t2_vs_t1.dfn(Bezx[seg], t2[i] - seg) + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1))*t2_vs_t1.dfn(Bezy[seg], t2[i] - seg);
+                System.out.println(seg + ", " + t1 + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i] + ", " + t2dd[4][i] + ", " + f);
+            }
         }
-        //System.out.println("new t2[] profile rms   = ," + d1 + ", " + d2 + ", " + calc_error());
         double retVal = calc_error();
-        System.out.println("__new t2[] @  theta c t d1 d2 rms = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + d + ", " + (float) retVal + ", " + (float) Jacdet);
+        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + d + ", " + (float) retVal + ", " + (float) Jacdet);
         return retVal;
     }
 
@@ -463,22 +349,20 @@ public class Beta2Spline
         return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
     }
 
-    private static void solve_quintic_for_t2(int i, int seg)
+    private static double solve_quintic_for_t2(double d, double t, int seg)
     {
         // calculate t2 at a known, fixed value of t1 (Newton-Raphson)
         // t = initial estimate of t2, the cubic Bezier t-value
 
-        double t1 = t1_start + i*(t1_end - t1_start)/N;
+        double t1 = t1_start + d*(t1_end - t1_start)/N;
         double f, fprime, f2prime, del_t;
         double X = fitted.getx(t1);
         double Y = fitted.gety(t1);
-        double t;
         int loop = 0;
+        int success = 0;
 
         // initial estimate using quadratic approximation
 
-        if (i == 0) t = 0;
-        else t = t2[i-1];
         t -= seg;               // compensate for Bezier segment offset
         f = (t2_vs_t1.fn(Bezx[seg], t) - X)*t2_vs_t1.dfn(Bezx[seg], t) + (t2_vs_t1.fn(Bezy[seg], t) - Y)*t2_vs_t1.dfn(Bezy[seg], t);
         fprime = t2_vs_t1.dfn(Bezx[seg], t)*t2_vs_t1.dfn(Bezx[seg], t) + (t2_vs_t1.fn(Bezx[seg], t) - X)*t2_vs_t1.d2fn(Bezx[seg], t) + t2_vs_t1.dfn(Bezy[seg], t)*t2_vs_t1.dfn(Bezy[seg], t) + (t2_vs_t1.fn(Bezy[seg], t) - Y)*t2_vs_t1.d2fn(Bezy[seg], t);
@@ -497,8 +381,7 @@ public class Beta2Spline
                 if (del_t < 0 || del_t > 2)
                 {
                     System.out.println("\nBad init  t1 t2 =, " + t1 + ", " + t + ", " + f + ", " + fprime + ", " + f2prime + ", " + del_t);
-                    t2[i] = Double.NaN;
-                    return;
+                    return Double.NaN;
                 }
             }
         }
@@ -512,8 +395,8 @@ public class Beta2Spline
             fprime = t2_vs_t1.dfn(Bezx[seg], t)*t2_vs_t1.dfn(Bezx[seg], t) + (t2_vs_t1.fn(Bezx[seg], t) - X)*t2_vs_t1.d2fn(Bezx[seg], t) + t2_vs_t1.dfn(Bezy[seg], t)*t2_vs_t1.dfn(Bezy[seg], t) + (t2_vs_t1.fn(Bezy[seg], t) - Y)*t2_vs_t1.d2fn(Bezy[seg], t);
             if (loop > 100)
             {
-                t2[i] = Double.NaN;
-                return;
+                System.out.println("\ntoo many loops  t1 t2 =, " + t1 + ", " + t + ", " + f + ", " + fprime + ", " + del_t);
+                return Double.NaN;
             }
             if (f == 0 && fprime == 0)
                 del_t = 0;
@@ -521,9 +404,11 @@ public class Beta2Spline
                 del_t = -f/fprime;
             t += del_t;
             loop++;
+            if (Math.abs(del_t) < TOL) success++;
             //System.out.println("         t2 =, " + t + ", " + f + ", " + fprime);
-        } while (Math.abs(del_t) > TOL);
-        t2[i] = t + seg;               // compensate for Bezier segment offset
+        } while (success < 2);
+//        } while (Math.abs(del_t) > TOL);
+        return t + seg;                     // compensate for Bezier segment offset
     }
 
     private static double calc_t2dxy(int i, int seg, double t2, String type)
