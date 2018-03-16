@@ -14,12 +14,12 @@ import java.io.*;
 public class t2_vs_t1
 {
     public static double t1_start = 0;
-    public static final double t1_end = Math.PI;    // Math.PI/4;
+    public static final double t1_end = Math.PI/4;    // Math.PI/4;
     public static final int N = 100;
     public static double[] Bezx;
     public static double[] Bezy;
-    private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
-    //private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
+    //private static CycloidFxn fitted;       // = new CycloidFxn(.5);           // set c value
+    private static epiTrochoidFxn fitted; // = new epiTrochoidFxn(-2);       // set c value
     private static double[] t2 = new double[N+1];
     private static double[] t2dd1 = new double[N+1];            // partial wrt d1
     private static double[] t2dd2 = new double[N+1];            // partial wrt d2
@@ -29,22 +29,22 @@ public class t2_vs_t1
     public static void main (String[] args)
     {
         // extract the point of maximum curvature of a cycloid from a tangent angle phi
-        double phi = 80;
-        double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
-        t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
-        fitted = new CycloidFxn(tempc);
+        //double phi = 80;
+        //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
+        //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
+        //fitted = new CycloidFxn(tempc);
         //read_data(2, -3.54);                                       // initiallize the routine solve_at_d1_d2()
         //read_data(80, 0);
-        //fitted = new epiTrochoidFxn(0);
+        fitted = new epiTrochoidFxn(5);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
             return;
         }
         //System.out.println("c t1_start t1_end      = ," + fitted.getc() + ", " + t1_start + ", " + t1_end);
-        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.460221195, 1.260856660, true));   // cofm, c = 0.5
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(20, 40, true));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.494071922, 1.228369703, true));   // curv, c = 0.5
-        System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.7640885237135162, 1.8275481762035848, true));
+        //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.7640885237135162, 1.8275481762035848, true));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.000000000, 2.309401076, true));   // curv, c = 1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(-0.552, -0.552, true));             // circle, c = 1
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(47.73733159182497, 47.737331591589715, true));
@@ -53,7 +53,7 @@ public class t2_vs_t1
         //iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
         //iterate_at_d1_d2(0.5000, 2.30940);                    // curv, c = 1
         //iterate_at_d1_d2(-fitted.getc()*t1_end/3, -fitted.getc()*t1_end/3); // circle, c = 4.5
-        //iterate_at_d1_d2(47, 47);
+        iterate_at_d1_d2(20, 40);
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(47.73733159182497, 47.737331591589715, false));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(49.18949608004587, 46.032318702281785, true));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.46858825099, 1.2567247398, true));   // cofm, c = 0.5 test test
@@ -359,8 +359,8 @@ public class t2_vs_t1
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        //double a_b = 180;                   // scale factor to make rms error dimensionless
-        double a_b = 1;                     // Cycloid only
+        double a_b = 180;                   // scale factor to make rms error dimensionless
+        //double a_b = 1;                     // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
 
