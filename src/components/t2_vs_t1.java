@@ -35,7 +35,7 @@ public class t2_vs_t1
         //fitted = new CycloidFxn(tempc);
         //read_data(2, -3.54);                                       // initiallize the routine solve_at_d1_d2()
         //read_data(80, 0);
-        fitted = new epiTrochoidFxn(5);
+        fitted = new epiTrochoidFxn(4);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -53,7 +53,7 @@ public class t2_vs_t1
         //iterate_at_d1_d2(0.54426, 2.05076);                   // cofm, c = 1
         //iterate_at_d1_d2(0.5000, 2.30940);                    // curv, c = 1
         //iterate_at_d1_d2(-fitted.getc()*t1_end/3, -fitted.getc()*t1_end/3); // circle, c = 4.5
-        iterate_at_d1_d2(20, 40);
+        iterate_at_d1_d2(58.94, 29.62);
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(47.73733159182497, 47.737331591589715, false));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(49.18949608004587, 46.032318702281785, true));
         //System.out.println("solve_at_d1_d2 = " + solve_at_d1_d2(0.46858825099, 1.2567247398, true));   // cofm, c = 0.5 test test
@@ -68,7 +68,7 @@ public class t2_vs_t1
         // see Spiro2SVG Book 3, pages 6-8
         // setup two elliptical equations for d1, d2
 
-        final int MAXLOOP = 200;
+        final int MAXLOOP = 1000;
         double A0, B0, C0, D0, E0, F0;
         double A1, B1, C1, D1, E1, F1;
         double A2, C2, D2, E2, F2;

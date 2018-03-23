@@ -35,8 +35,8 @@ public class BezierCubic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(8.562);
-        iterate_at_P2(35.83861708653552, 63.64118607600091);
+        fitted = new epiTrochoidFxn(2.);
+        iterate_at_P2(7.906849190572331, 78.80706091870755);
         //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(20, 40, true) + "\n");
         if (fitted == null)
         {

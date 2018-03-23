@@ -22,7 +22,7 @@ public class fitymoment
 
     public static void main (String[] args)
     {
-        c = 8.71;         // 3.5297135;
+        c = 5;         // 3.5297135;
         l1 = a_b + c;
         l2 = a_b - c;
 //        phi = Math.atan(l1*Math.sqrt(2)/l2 - 1);    // general transform that rotates with the object baseline
@@ -60,12 +60,12 @@ public class fitymoment
 //        setup_quartic_area_y();
 //        setup_quartic_area_x();
         //setup_quartic_extremum_y_area();
-        scan_extremum_y_moment_at_x_moment();
+//        scan_extremum_y_moment_at_x_moment();
         //scan_extremum_cofmy_at_cofmx();
         //scan_extremum_cofmx0_at_cofmx45();
         //scan_2D_cofmx0_and_cofmx45();
 //        setup_quintic_x_y();
-//        setup_quartic_cofmx_cofmy();
+        setup_quartic_cofmx_cofmy();
 //        scan_spiro_moment_y();              // for testing only fix fix
 //        scan_discriminant_vs_c();
 //        scan_d(); // numerical minimization of an error function for a circular arc
