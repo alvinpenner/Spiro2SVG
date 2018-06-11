@@ -28,6 +28,7 @@ public class BSpline5
     private static double[] t2 = new double[N+1];
     private static double[][] t2dd = new double[4][N+1];        // partial wrt (d1, d2, x2, y2)
     private static double Jacdet = Double.NaN;
+    private static double[] eig = new double[] {0,0,0,0};
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
@@ -42,8 +43,8 @@ public class BSpline5
         //read_data(1, 16);
         //fitted = new epiTrochoidFxn(10);            // keep this, 25 iterations to converge at c = 10
         //iterate_at_P2(19, 26, 175.2, 62);           // keep this, 25 iterations to converge at c = 10
-        fitted = new epiTrochoidFxn(0.5);
-        iterate_at_P2(32.47033778422504, 12.282971321605894, 162.32355203112036, 88.13795481241429);
+        fitted = new epiTrochoidFxn(10);
+        iterate_at_P2(19.983314292966476, 26.4276333695844, 175.47633731103548, 59.0566819528455);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -176,6 +177,22 @@ public class BSpline5
             x2 -= deld[2];
             y2 -= deld[3];
             Jacdet = detm(Jac);
+            // calculate four eigenvalues
+            double qua = -Jac[0][0] - Jac[1][1] - Jac[2][2] - Jac[3][3];
+            double qub =  Jac[0][0]*Jac[1][1] + Jac[0][0]*Jac[2][2] + Jac[0][0]*Jac[3][3] + Jac[1][1]*Jac[2][2] + Jac[1][1]*Jac[3][3] + Jac[2][2]*Jac[3][3]
+                       -  Jac[0][1]*Jac[0][1] - Jac[0][2]*Jac[0][2] - Jac[0][3]*Jac[0][3] - Jac[1][2]*Jac[1][2] - Jac[1][3]*Jac[1][3] - Jac[2][3]*Jac[2][3];
+            double quc = -Jac[0][0]*Jac[1][1]*Jac[2][2] - Jac[0][0]*Jac[1][1]*Jac[3][3] - Jac[0][0]*Jac[2][2]*Jac[3][3] - Jac[1][1]*Jac[2][2]*Jac[3][3]
+                       +  Jac[0][1]*Jac[0][1]*(Jac[2][2] + Jac[3][3]) + Jac[0][2]*Jac[0][2]*(Jac[1][1] + Jac[3][3]) + Jac[0][3]*Jac[0][3]*(Jac[1][1] + Jac[2][2])
+                       +  Jac[1][2]*Jac[1][2]*(Jac[0][0] + Jac[3][3]) + Jac[1][3]*Jac[1][3]*(Jac[0][0] + Jac[2][2]) + Jac[2][3]*Jac[2][3]*(Jac[0][0] + Jac[1][1])
+                       - 2*Jac[0][1]*Jac[1][2]*Jac[0][2] - 2*Jac[0][2]*Jac[2][3]*Jac[0][3] - 2*Jac[0][1]*Jac[1][3]*Jac[0][3] - 2*Jac[1][2]*Jac[2][3]*Jac[1][3];
+            double qud = Jac[0][0]*Jac[1][1]*Jac[2][2]*Jac[3][3]
+                       + Jac[0][1]*Jac[0][1]*Jac[2][3]*Jac[2][3] + Jac[0][2]*Jac[0][2]*Jac[1][3]*Jac[1][3] + Jac[0][3]*Jac[0][3]*Jac[1][2]*Jac[1][2]
+                       - Jac[0][1]*Jac[0][1]*Jac[2][2]*Jac[3][3] - Jac[0][2]*Jac[0][2]*Jac[1][1]*Jac[3][3] - Jac[0][3]*Jac[0][3]*Jac[1][1]*Jac[2][2]
+                       - Jac[1][2]*Jac[1][2]*Jac[0][0]*Jac[3][3] - Jac[1][3]*Jac[1][3]*Jac[0][0]*Jac[2][2] - Jac[2][3]*Jac[2][3]*Jac[0][0]*Jac[1][1]
+                       + 2*Jac[0][0]*Jac[1][2]*Jac[2][3]*Jac[1][3] + 2*Jac[1][1]*Jac[0][2]*Jac[2][3]*Jac[0][3] + 2*Jac[2][2]*Jac[0][1]*Jac[1][3]*Jac[0][3] + 2*Jac[3][3]*Jac[0][1]*Jac[1][2]*Jac[0][2]
+                       - 2*Jac[0][1]*Jac[1][2]*Jac[2][3]*Jac[0][3] - 2*Jac[0][1]*Jac[0][2]*Jac[2][3]*Jac[1][3] - 2*Jac[0][2]*Jac[0][3]*Jac[1][3]*Jac[1][2];
+            eig = fitymoment.solve_quartic_all(1, qua, qub, quc, qud);
+            //System.out.println("eigenvalue = " + eig[0] + ", " + eig[1] + ", " + eig[2] + ", " + eig[3]);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
             dump_Jac(Jac);
@@ -585,7 +602,7 @@ public class BSpline5
                 System.out.println(seg + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i]);
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet);
+        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) eig[1] + ", " + (float) eig[3] + ", " + (float) eig[2] + ", " + (float) eig[0]);
         return retVal;
     }
 

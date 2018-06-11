@@ -607,6 +607,21 @@ public class fitymoment
         return Double.NaN;
     }
 
+    public static double[] solve_quartic_all(double lead, double qua, double qub, double quc, double qud)
+    {
+        double sol, R, D, E;
+
+        qua /= lead;
+        qub /= lead;
+        quc /= lead;
+        qud /= lead;
+        sol = solve_cubic(-qub, qua*quc - 4*qud, -qua*qua*qud + 4*qub*qud - quc*quc);
+        R = Math.sqrt(qua*qua/4 - qub + sol);
+        D = Math.sqrt(3*qua*qua/4 - R*R - 2*qub + (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
+        E = Math.sqrt(3*qua*qua/4 - R*R - 2*qub - (4*qua*qub - 8*quc - qua*qua*qua)/4/R);
+        return new double[] {-qua/4 + R/2 + D/2, -qua/4 + R/2 - D/2, -qua/4 - R/2 + E/2, -qua/4 - R/2 - E/2};
+    }
+
     private static double solve_cubic(double p, double q, double r)
     {
         // see Math CRC book, page 392

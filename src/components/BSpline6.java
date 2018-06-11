@@ -40,7 +40,7 @@ public class BSpline6
         //System.out.println("BSpline6 iterate_at_P2_P3 = " + iterate_at_P2_P3(15, 20, 183, 38, 158, 79) + "\n");
         fitted = new epiTrochoidFxn(0.);
         System.out.println("BSpline6 iterate_at_P2_P3 = " +
-        iterate_at_P2_P3(15.90142522903738, 15.901425229113345, 175.78672583154736, 47.30278318433046, 157.74810463679958, 90.85186711927886) + "\n");
+        iterate_at_P2_P3(16.624489486951397, 14.946247668118907, 176.57737789450186, 48.59041870307481, 155.94233690458145, 91.34718144983118) + "\n");
         //fitted = new epiTrochoidFxn(18.44);
         //System.out.println("BSpline6 convert_to_P2_P3 = " + convert_to_P2_P3(9.016620273713244, 75.83622913947018, true) + "\n");
         //System.out.println("BSpline6 iterate_at_P2_P3 = " + iterate_at_P2_P3(10.432741575200822, 13.925540044687363, 191.17890042589667, 30.996508335507055, 160.1186993640138, 68.3685414189886) + "\n");
@@ -120,8 +120,8 @@ public class BSpline6
             for (i = 0; i < 6; i++)
             {
                 for (k = 0; k <= N; k++)
-                    //trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
-                    trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                    trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
+                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
                 dFdd[i] = t2_vs_t1.integrate(trap_in);
             }
 

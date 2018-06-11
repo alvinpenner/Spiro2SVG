@@ -38,11 +38,16 @@ public class Beta2Spline
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(0.0);
+        //fitted = new epiTrochoidFxn(2.0);
+        fitted = new epiTrochoidFxn(10.0);
         //System.out.println("Beta2-Spline convert_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
         //System.out.println("Beta2-Spline solve_at_P2 = " + solve_at_P2(22.742672063451316, 21.951281542489866, 166.71089691010013, 67.4862883523671, 24.830428922781234, true) + "\n");
-        System.out.println("Beta2-Spline iterate_at_P2 = "
-                          + iterate_at_P2(18.767825828964003, 18.76782582892743, 166.29676657566654, 68.88237609446028, 28.074383011128273) + "\n");
+        //System.out.println("Beta2-Spline iterate_at_P2 = "
+        //                  + iterate_at_P2(18.767825828964003, 18.76782582892743, 166.29676657566654, 68.88237609446028, 28.074383011128273) + "\n");
+        //System.out.println("Beta2-Spline iterate_at_P2 = "
+        //                  + iterate_at_P2(33.0, 11.5, 159.0, 82.8, 20.6) + "\n");
+        System.out.println("Beta2-Spline solve_at_P2 = "
+                          + solve_at_P2(20, 26, 169, 59, 26.0, true) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -147,8 +152,8 @@ public class Beta2Spline
             for (i = 0; i < 5; i++)
             {
                 for (k = 0; k <= N; k++)
-                    //trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
-                    trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                    trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
+                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
                 dFdd[i] = t2_vs_t1.integrate(trap_in);
             }
 
@@ -236,6 +241,10 @@ public class Beta2Spline
 
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
+
+        //d2 += 0.005;
+        //y2 += 0.001;                          // temporary code for calculating response functions
+        d += 0.005;
 
         Bezx = new double[][] {{fitted.getx(t1_start),
                                 fitted.getx(t1_start) + d1*Math.cos(theta_start),
