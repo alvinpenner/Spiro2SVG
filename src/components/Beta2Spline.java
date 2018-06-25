@@ -47,7 +47,7 @@ public class Beta2Spline
         //System.out.println("Beta2-Spline iterate_at_P2 = "
         //                  + iterate_at_P2(33.0, 11.5, 159.0, 82.8, 20.6) + "\n");
         System.out.println("Beta2-Spline solve_at_P2 = "
-                          + solve_at_P2(20, 26, 169, 59, 26.0, true) + "\n");
+                          + solve_at_P2(25.0, 30.0, 166.0, 68.0, 25, true) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -244,7 +244,7 @@ public class Beta2Spline
 
         //d2 += 0.005;
         //y2 += 0.001;                          // temporary code for calculating response functions
-        d += 0.005;
+        //d += 0.005;
 
         Bezx = new double[][] {{fitted.getx(t1_start),
                                 fitted.getx(t1_start) + d1*Math.cos(theta_start),

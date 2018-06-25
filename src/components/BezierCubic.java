@@ -25,6 +25,7 @@ public class BezierCubic
     private static double[][] t2dd = new double[2][N+1];    // partial wrt (d1, d2)
     private static double Jacdet = Double.NaN;
     private static double eig0 = Double.NaN, eig1 = Double.NaN;
+    private static double eigangle = Double.NaN;
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
@@ -37,9 +38,9 @@ public class BezierCubic
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(2.5);
         //iterate_at_P2(55.6, 34.3);
-        fitted = new epiTrochoidFxn(6);
-        iterate_at_P2(30, 70);
-        //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(20, 40, true) + "\n");
+        fitted = new epiTrochoidFxn(3.7);
+        iterate_at_P2(57.38534582567223, 30.949772871499516);
+        //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(57.38, 30.94, true) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -102,8 +103,8 @@ public class BezierCubic
             for (i = 0; i < 2; i++)
             {
                 for (k = 0; k <= N; k++)
-                    //trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
-                    trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                    trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
+                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
                 dFdd[i] = t2_vs_t1.integrate(trap_in);
             }
 
@@ -131,10 +132,12 @@ public class BezierCubic
             Jacdet = BSpline5.detm(Jac);
             eig0 = (Jac[0][0] + Jac[1][1] - Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
             eig1 = (Jac[0][0] + Jac[1][1] + Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
-            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + Jacdet + ", " + eig0 + ", " + eig1);
+            eigangle = Math.atan(-Jac[0][1]/(Jac[0][0] - eig0))*180/Math.PI;       // angle of eigenvector transform
+            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + Jacdet + ", " + eig0 + ", " + eig1 + ", " + eigangle);
             System.out.println("deld = " + deld[0] + ", " + deld[1]);
             BSpline5.dump_Jac(Jac);
-
+            //double[][] invJac = BSpline5.invertm(Jac);
+            //System.out.println("invJac = " + invJac[0][0] + ", " + invJac[0][1] + ", " + invJac[1][0] + ", " + invJac[1][1]);
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
             //System.out.println("\npreliminary recalc of t2[i]\n t1, t2");
@@ -199,10 +202,14 @@ public class BezierCubic
             t2dd[0][i] = calc_t2dxy(i, t2[i], "d1");
             t2dd[1][i] = calc_t2dxy(i, t2[i], "d2");
             if (print)
-                System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i]);
+            {
+                double t1 = t1_start + i*(t1_end - t1_start)/N;
+                double f = (t2_vs_t1.fn(Bezx, t2[i]) - fitted.getx(t1))*t2_vs_t1.dfn(Bezx, t2[i]) + (t2_vs_t1.fn(Bezy, t2[i]) - fitted.gety(t1))*t2_vs_t1.dfn(Bezy, t2[i]);
+                System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + f);
+            }
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1);
+        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) eigangle);
         return retVal;
     }
 
@@ -242,6 +249,7 @@ public class BezierCubic
         double Y = fitted.gety(t1);
         double t;
         int loop = 0;
+        int success = 0;
 
         // initial estimate using quadratic approximation
 
@@ -289,7 +297,9 @@ public class BezierCubic
             t += del_t;
             loop++;
             //System.out.println("         t2 =, " + t + ", " + f + ", " + fprime);
-        } while (Math.abs(del_t) > TOL);
+            if (Math.abs(del_t) < TOL) success++;
+        } while (success < 2);
+        //} while (Math.abs(del_t) > TOL);
         t2[i] = t;
     }
 

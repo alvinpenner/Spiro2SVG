@@ -884,4 +884,104 @@ public class BSpline5
         }
         return det;
     }
+
+    public static double[] gaussj(double[][] m, double[] v)
+    {
+        // solve m*x = v
+        // based on the routine gaussj() in "Numerical Recipes in C", p.39, W.H.Press
+        // Gauss-Jordan elimination with full pivoting
+        if (m.length != m[0].length) return null;
+        if (m.length != v.length) return null;
+        int i, j, k, l, ll, icol = 0, irow = 0;
+        int n = m.length;
+        double big, dum, pivinv;
+        double[][] a = new double[n][n];
+        double[] b = new double[n];
+        int[] indxc = new int[n];
+        int[] indxr = new int[n];
+        int[] ipiv = new int[n];
+        for (i = 0; i < n; i++)
+            for (j = 0; j < n; j++)
+                a[i][j] = m[i][j];
+        for (i = 0; i < n; i++)
+            b[i] = v[i];
+        for (i = 0; i < n; i++)
+            ipiv[i] = 0;
+        for (i = 0; i < n; i++)
+        {
+            big = 0;
+            for (j = 0; j < n; j++)
+                if (ipiv[j] != 1)
+                    for (k = 0; k < n; k++)
+                        if (ipiv[k] == 0)
+                        {
+                            if (Math.abs(a[j][k]) >= big)
+                            {
+                                big = Math.abs(a[j][k]);
+                                irow = j;
+                                icol = k;
+                            }
+                        }
+                        else if (ipiv[k] > 1)
+                        {
+                            System.out.println("gaussj error : Singular Matrix 1");
+                            return null;
+                        }
+            ++(ipiv[icol]);
+            if (irow != icol)
+            {
+                for (l = 0; l < n; l++) swapa (a, irow, l, icol, l);
+                swapv(b, irow, icol);
+            }
+            indxr[i] = irow;
+            indxc[i] = icol;
+            if (a[icol][icol] == 0)
+            {
+                System.out.println("gaussj error : Singular Matrix 2");
+                return null;
+            }
+            pivinv = 1/a[icol][icol];
+            a[icol][icol] = 1;
+            for (l = 0; l < n; l++) a[icol][l] *= pivinv;
+            b[icol] *= pivinv;
+            for (ll = 0; ll < n; ll++)
+                if (ll != icol)
+                {
+                    dum = a[ll][icol];
+                    a[ll][icol] = 0;
+                    for (l = 0; l < n; l++) a[ll][l] -= a[icol][l]*dum;
+                    b[ll] -= b[icol]*dum;
+                }
+        }
+        for (l = n - 1; l >= 0; l--)
+            if (indxr[l] != indxc[l])
+                for (k = 0; k < n; k++)
+                    swapa(a, k, indxr[l], k, indxc[l]);
+        //System.out.println("a inverse");
+        //for (i = 0; i < n; i++)
+        //{
+        //    for (j = 0; j < n; j++)
+        //        System.out.print(a[i][j] + ", ");
+        //    System.out.println();
+        //}
+        //return a;
+        //System.out.println("b");
+        //for (i = 0; i < n; i++)
+        //    System.out.println(b[i]);
+        return b;
+    }
+
+    private static void swapa(double[][] a, int i1, int j1, int i2, int j2)
+    {
+        double temp = a[i1][j1];
+        a[i1][j1] = a[i2][j2];
+        a[i2][j2] = temp;
+    }
+
+    private static void swapv(double[] v, int i1, int i2)
+    {
+        double temp = v[i1];
+        v[i1] = v[i2];
+        v[i2] = temp;
+    }
 }
