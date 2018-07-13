@@ -39,15 +39,15 @@ public class Beta2Spline
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(2.0);
-        fitted = new epiTrochoidFxn(10.0);
+        fitted = new epiTrochoidFxn(15.);
         //System.out.println("Beta2-Spline convert_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
         //System.out.println("Beta2-Spline solve_at_P2 = " + solve_at_P2(22.742672063451316, 21.951281542489866, 166.71089691010013, 67.4862883523671, 24.830428922781234, true) + "\n");
-        //System.out.println("Beta2-Spline iterate_at_P2 = "
-        //                  + iterate_at_P2(18.767825828964003, 18.76782582892743, 166.29676657566654, 68.88237609446028, 28.074383011128273) + "\n");
+        System.out.println("Beta2-Spline iterate_at_P2 = "
+                          + iterate_at_P2(16.49334361380195, 22.01339278228513, 172.0891204817598, 54.96099290834191, 26.62338683834166) + "\n");
         //System.out.println("Beta2-Spline iterate_at_P2 = "
         //                  + iterate_at_P2(33.0, 11.5, 159.0, 82.8, 20.6) + "\n");
-        System.out.println("Beta2-Spline solve_at_P2 = "
-                          + solve_at_P2(25.0, 30.0, 166.0, 68.0, 25, true) + "\n");
+        //System.out.println("Beta2-Spline solve_at_P2 = "
+        //                  + solve_at_P2(25.0, 30.0, 166.0, 68.0, 25, true) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -176,7 +176,8 @@ public class Beta2Spline
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
 
-            deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);    // this is actually the negative of Δd
+            //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);    // this is actually the negative of Δd
+            deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
             d1 -= deld[0]/gain;                                     // fix fix blatant fudge factor in gain
             d2 -= deld[1]/gain;
             x2 -= deld[2]/gain;
@@ -326,7 +327,7 @@ public class Beta2Spline
             }
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + d + ", " + (float) retVal + ", " + (float) Jacdet);
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + d + ", " + (float) retVal + ", " + (float) Jacdet);
         return retVal;
     }
 

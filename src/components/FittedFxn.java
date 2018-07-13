@@ -129,6 +129,16 @@ class epiTrochoidFxn extends FittedFxn
         return c;
     }
 
+    protected double getdxdc(double t)
+    {
+        return Math.cos(t*(a/b + 1));
+    }
+
+    protected double getdydc(double t)
+    {
+        return Math.sin(t*(a/b + 1));
+    }
+
     protected double getx(double t)
     {
         return (a + b)*Math.cos(t) + c*Math.cos(t*(a/b + 1));

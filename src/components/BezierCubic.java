@@ -11,11 +11,13 @@ package components;
 
 // this is file : \Documents\NetBeansProjects\MyDemo\src\components\BezierCubic.java
 
+import java.io.FileWriter;
+
 public class BezierCubic
 {
     public static double t1_start = 0;
     public static final double t1_end = Math.PI/4; // Math.PI;
-    public static final int N = 100;
+    public static final int N = 10;
     public static double[] Bezx;                // cubic Bezier, 4 points, x component
     public static double[] Bezy;                // cubic Bezier, 4 points, y component
     //private static CircleFxn fitted;
@@ -38,9 +40,10 @@ public class BezierCubic
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(2.5);
         //iterate_at_P2(55.6, 34.3);
-        fitted = new epiTrochoidFxn(3.7);
-        iterate_at_P2(57.38534582567223, 30.949772871499516);
-        //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(57.38, 30.94, true) + "\n");
+        fitted = new epiTrochoidFxn(0.);
+        iterate_at_P2(9, 75);
+        //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(58, 31, true) + "\n");
+        //calc_array();               // generate Python 2D contour plot of rms
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -125,7 +128,8 @@ public class BezierCubic
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
 
-            deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
+            //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
+            deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
             d1 -= deld[0]/gain;
             d2 -= deld[1]/gain;
 
@@ -149,7 +153,7 @@ public class BezierCubic
         } while ((loop < MAXLOOP) && !((Math.abs(deld[0]) < TOL) && (Math.abs(deld[1]) < TOL)));
         if (loop < MAXLOOP)
         {
-            System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2);
+            System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + fitted.getc() + ", " + Jac[0][0] + ", " + Jac[1][1] + ", " + Jac[0][1]);
             solve_at_P2(d1, d2, true);                          // final run just for good measure
         }
         else
@@ -205,11 +209,12 @@ public class BezierCubic
             {
                 double t1 = t1_start + i*(t1_end - t1_start)/N;
                 double f = (t2_vs_t1.fn(Bezx, t2[i]) - fitted.getx(t1))*t2_vs_t1.dfn(Bezx, t2[i]) + (t2_vs_t1.fn(Bezy, t2[i]) - fitted.gety(t1))*t2_vs_t1.dfn(Bezy, t2[i]);
-                System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + f);
+                //System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + f);
+                System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + (t2_vs_t1.fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy, t2[i]) - fitted.gety(t1)));
             }
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) eigangle);
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) eigangle);
         return retVal;
     }
 
@@ -236,6 +241,48 @@ public class BezierCubic
             t1 += (t1_end - t1_start)/N;
         }
         return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
+    }
+
+    private static void calc_array()
+    {
+        // generate data suitable for MATPLOTLIB
+        // rms error as function of d1, d2 (copied from Beziererror.java)
+        // to be used by \APP\MATPLOTLIB\mycontour.py
+
+        double d1, d2;
+        double a_b = 180;                               // header info
+        double d1start = 57.8235, d2start = 30.1442;
+        double d1end = 57.3829, d2end = 30.9519;
+        int steps = 64;                                 // number of length segments (even)
+        int buttsteps = 32;                              // +/- steps added on to length
+        double width = .0025;                           // dimensionless relative to length
+
+        double length = Math.sqrt((d1end - d1start)*(d1end - d1start) + (d2end - d2start)*(d2end - d2start));
+        double theta = Math.atan2(d2end - d2start, d1end - d1start);
+
+        try
+        {
+            FileWriter out = new FileWriter("\\APP\\MATPLOTLIB\\CubicBezier\\scan_error.txt");
+            java.text.DateFormat df = java.text.DateFormat.getInstance();
+            out.write(df.format(new java.util.Date()) + " : a-b, c = " + a_b + ", " + fitted.getc() + "\r\n");
+            out.write("extent = (, " + (-width/2) + ", " + (width/2) + ", " + (-(float)buttsteps/steps) + ", " + (1 + (float)buttsteps/steps) + ",) step size = " + 1./steps + ", width = " + width + "\r\n");
+            out.write(String.format("(%f, %f)-(%f, %f) in %d", d1start, d2start, d1end, d2end, steps));
+            out.write("\r\n");
+            for (int i = -buttsteps; i <= steps + buttsteps; i++)
+            {
+                for (int j = -steps/2; j <= steps/2; j++)
+                {
+                    d1 = d1start + i*length*Math.cos(theta)/steps + j*length*width*Math.cos(theta - Math.PI/2)/steps;
+                    d2 = d2start + i*length*Math.sin(theta)/steps + j*length*width*Math.sin(theta - Math.PI/2)/steps;
+                    out.write(String.format(" %g", solve_at_P2(d1, d2, false)));
+                    //out.write(String.format(" %.8f", solve_at_P2(d1, d2, false)));
+                }
+                out.write("\r\n");
+            }
+            out.close();
+        }
+        catch (java.io.IOException e)
+            {System.out.println("calc_array() save error = " + e);}
     }
 
     private static void solve_quintic_for_t2(int i)

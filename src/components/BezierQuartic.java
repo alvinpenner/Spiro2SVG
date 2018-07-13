@@ -37,10 +37,10 @@ public class BezierQuartic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(0.254);
+        fitted = new epiTrochoidFxn(0.25592);
         //paste_data(80, 0.9886277018143461, 0.2624690492231421, 0.7640885237135162, 1.8275481762035848);
         //read_Quartic_Bezier_data(230);
-        iterate_at_P2(31.611824142004824, 38.92989429614355, 172.6929874849817, 65.9635958333916); // 19.25 minimum
+        iterate_at_P2(32.02406276623338, 38.62191169612965, 172.49594071073963, 66.40511369595288); // 19.25 minimum
         //iterate_at_P2(31.464595462598876, 122.8023528021591, 161.91830044656243, 57.58332982440786); // 19.25 saddle
         //iterate_at_P2(40.923936413081165, 174.54348410425095, 135.45126668176417, 77.10113250461616); // 19.25
         //iterate_at_P2(37.81048776975601, 142.1606207834995, 151.90527738346833, 63.000956232673424); // 18.0
@@ -142,7 +142,8 @@ public class BezierQuartic
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
 
-            deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
+            //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
+            deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
             d1 -= deld[0];
             d2 -= deld[1];
             x2 -= deld[2];
@@ -167,7 +168,7 @@ public class BezierQuartic
             //System.out.println("eigenvalue = " + eig[1] + ", " + eig[3] + ", " + eig[2] + ", " + eig[0]);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
-            //BSpline5.dump_Jac(Jac);
+            BSpline5.dump_Jac(Jac);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
@@ -363,7 +364,8 @@ public class BezierQuartic
                 System.out.println("quartic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i]);
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) eig[1] + ", " + (float) eig[3] + ", " + (float) eig[2] + ", " + (float) eig[0]);
+        //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) eig[1] + ", " + (float) eig[3] + ", " + (float) eig[2] + ", " + (float) eig[0]);
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", ");
         return retVal;
     }
 
