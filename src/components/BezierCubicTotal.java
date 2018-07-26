@@ -72,7 +72,6 @@ public class BezierCubicTotal
         double[][] Jac = new double[N+1][N+1];
         double[] dFdd = new double[N+1];
         double[] deld;                                  // (-Δd1, -Δd2)
-        //double[][] dJacdc = new double[N+1][N+1];       // used only for calc of dx[]/dc
         double[] d2Fdddc = new double[N+1];
         int i, j, k, loop = 0;
         double t1, maxdel;
@@ -142,29 +141,20 @@ public class BezierCubicTotal
                         //System.out.println(k + ", " + trap_in[k]);
                     }
                     Jac[i][j] = sum(trap_in);
-                    //dJacdc[i][j] = 0;
                 }
             for (i = 0; i < N - 1; i++)
                 for (j = 0; j < N - 1; j++)
                     if (i == j)
-                    {
                         Jac[i + 2][i + 2] = dfxdu[i]*dfxdu[i] + f_gx[i]*d2fxdudu[i]
                                           + dfydu[i]*dfydu[i] + f_gy[i]*d2fydudu[i];
-                        //dJacdc[i + 2][j + 2] = -dgxdc[i]*d2fxdudu[i] - dgydc[i]*d2fydudu[i];
-                    }
                     else
-                    {
                         Jac[i + 2][j + 2] = 0;
-                        //dJacdc[i + 2][j + 2] = 0;
-                    }
             for (i = 0; i < 2; i++)
                 for (j = 0; j < N - 1; j++)
                 {
                     Jac[i][j + 2] = dfxdd[i][j]*dfxdu[j] + f_gx[j]*d2fxdudd[i][j]
                                   + dfydd[i][j]*dfydu[j] + f_gy[j]*d2fydudd[i][j];
                     Jac[j + 2][i] = Jac[i][j + 2];
-                    //dJacdc[i][j + 2] = -dgxdc[j]*d2fxdudd[i][j] - dgydc[j]*d2fydudd[i][j];
-                    //dJacdc[j + 2][i] = dJacdc[i][j + 2];
                 }
 
             deld = BSpline5.gaussj(Jac, dFdd);      // this is actually the negative of Δd
@@ -191,12 +181,10 @@ public class BezierCubicTotal
             for (i = 0; i < N; i++) System.out.printf("%.4f, ", t2[i]);
             System.out.printf("%.4f\n", t2[N]);
             solve_at_P2(true);                          // final run just for good measure
-            // calculate -dL/dc - (dM/dc)*x
-            //BSpline5.dump_Jac(dJacdc);
+            // calculate dt2dc[i]
             double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
-            System.out.println("\ncheck -dL/dc - (dM/dc)*x at c = ," + fitted.getc());
+            System.out.println("\ni, t2[i], d2Fdddc[i], dt2dc[i], at c = ," + fitted.getc());
             for (i = 0; i <= N; i++)
-                //System.out.println(i + ", " + dFdd[i] + ", " + d2Fdddc[i]);
                 System.out.println(i + ", " + t2[i] + ", " + d2Fdddc[i] + ", " + -dt2dc[i]);
         }
         else
