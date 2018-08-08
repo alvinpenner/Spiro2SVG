@@ -40,8 +40,8 @@ public class BezierCubic
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(2.5);
         //iterate_at_P2(55.6, 34.3);
-        fitted = new epiTrochoidFxn(3.597585);
-        iterate_at_P2(57.88557853692204, 30.031054374161535);
+        fitted = new epiTrochoidFxn(3.5965);
+        iterate_at_P2(57.42308520622645, 30.87996837344);
         //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
         //calc_array();               // generate Python 2D contour plot of rms
         if (fitted == null)
@@ -101,8 +101,8 @@ public class BezierCubic
                 f_gx[i] = t2_vs_t1.fn(Bezx, t2[i]) - fitted.getx(t1);
                 f_gy[i] = t2_vs_t1.fn(Bezy, t2[i]) - fitted.gety(t1);
                 dfxdu[i] = t2_vs_t1.dfn(Bezx, t2[i]);
-                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx, t2[i]);
                 dfydu[i] = t2_vs_t1.dfn(Bezy, t2[i]);
+                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx, t2[i]);
                 d2fydudu[i] = t2_vs_t1.d2fn(Bezy, t2[i]);
                 df_gxdc[i] = calc_df_gxdc(t1, t2[i]);
                 df_gydc[i] = calc_df_gydc(t1, t2[i]);
@@ -191,7 +191,9 @@ public class BezierCubic
             eigangle = Math.atan((Jac[0][0] - eig0)/Jac[0][1]);     // angle of eigenvector transform
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + Jacdet + ", " + eig0 + ", " + eig1 + ", " + eigangle + ", " + BSpline5.detm(Augment));
             System.out.println("deld = " + deld[0] + ", " + deld[1]);
-            //BSpline5.dump_Jac(Jac);
+            System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
+            BSpline5.dump_Jac(Jac);
+            BSpline5.dump_Jac(Augment);
             //double[][] invJac = BSpline5.invertm(Jac);
             //System.out.println("invJac = " + invJac[0][0] + ", " + invJac[0][1] + ", " + invJac[1][0] + ", " + invJac[1][1]);
             // perform a preliminary first-order recalculation of t2[i]

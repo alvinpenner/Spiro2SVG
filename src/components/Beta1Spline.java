@@ -42,13 +42,13 @@ public class Beta1Spline
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(0.9045);    // keep for finite difference 2nd partial difference of F
         //fitted = new epiTrochoidFxn(4.175);
-        fitted = new epiTrochoidFxn(1.501);
+        fitted = new epiTrochoidFxn(4.2);
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(11.244692865076667, 50.78732161191724, 190.0813110769242, 36.1022521075289, true) + "\n");
         //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(25, 30, 166, 68, 1.5, true) + "\n");
         //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(5.247735799810265, 88.77582616704828, 187.98343392273063, 8.508443149700103, 3.4450373827696352, true) + "\n");
-        //System.out.println("Beta1-Spline iterate_at_P2 = " + iterate_at_P2(25, 30, 166, 68, 1.5) + "\n");
+        //System.out.println("Beta1-Spline iterate_at_P2 = " + iterate_at_P2(22.56, 19.97, 156.42, 79.28, 0.40) + "\n");
         System.out.println("Beta1-Spline iterate_at_P2 = "
-                          + iterate_at_P2(38.198590750757354, 10.689246067925524, 147.31700238598822, 101.43587888987314, 0.315042331370051) + "\n");
+                          + iterate_at_P2(9.609407305765854, 85.56846260277769, 183.9185088066995, 7.945370305261703, 4.622844) + "\n");
         //System.out.println("Beta1-Spline solve_at_P2 = "
         //                  + solve_at_P2(11.095840455163636, 35.76777395541423, 177.6310736380369, 32.57345106824122, 3.421498759870758, true) + "\n");
         if (fitted == null)
@@ -240,8 +240,9 @@ public class Beta1Spline
                                    + dfydd[i][k]*dfydd[j][k]
                                    + f_gy[k]*d2fydddd[i][j][k]
                                    - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k];
-                        //if (i == 0)
-                        //    System.out.println(k + ", " + trap_in[k]);
+                        //if (j == 4)
+                            //System.out.println(k + ", " + (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k]);
+                            //System.out.println(k + ", " + trap_in[k]);
                     }
                     Jac[i][j] = integrate(trap_in);
                 }

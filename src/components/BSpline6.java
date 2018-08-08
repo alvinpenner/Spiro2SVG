@@ -38,9 +38,11 @@ public class BSpline6
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(10);
         //System.out.println("BSpline6 iterate_at_P2_P3 = " + iterate_at_P2_P3(15, 20, 183, 38, 158, 79) + "\n");
-        fitted = new epiTrochoidFxn(0.);
+        fitted = new epiTrochoidFxn(19.65);
         System.out.println("BSpline6 iterate_at_P2_P3 = " +
-        iterate_at_P2_P3(16.624489486951397, 14.946247668118907, 176.57737789450186, 48.59041870307481, 155.94233690458145, 91.34718144983118) + "\n");
+        iterate_at_P2_P3(8.25407212370376, 36.179492618946504, 194.66847355581712, 24.985004300240462, 170.4991876375123, 56.122642) + "\n");
+        //System.out.println("BSpline6 solve_at_P2_P3 = " +
+        //solve_at_P2_P3(16.27, 15.47, 176.20, 47.94, 156.91, 91.04, true) + "\n");
         //fitted = new epiTrochoidFxn(18.44);
         //System.out.println("BSpline6 convert_to_P2_P3 = " + convert_to_P2_P3(9.016620273713244, 75.83622913947018, true) + "\n");
         //System.out.println("BSpline6 iterate_at_P2_P3 = " + iterate_at_P2_P3(10.432741575200822, 13.925540044687363, 191.17890042589667, 30.996508335507055, 160.1186993640138, 68.3685414189886) + "\n");
@@ -64,17 +66,27 @@ public class BSpline6
         double[] f_gx = new double[N+1];
         double[] f_gy = new double[N+1];
         double[] dfxdu = new double[N+1];
-        double[] d2fxdudu = new double[N+1];
         double[] dfydu = new double[N+1];
+        double[] d2fxdudu = new double[N+1];
         double[] d2fydudu = new double[N+1];
         double[][] dfxdd = new double[6][N+1];
         double[][] dfydd = new double[6][N+1];
+        double[][] d2fxdudd = new double[6][N+1];
+        double[][] d2fydudd = new double[6][N+1];
+        double[] df_gxdc = new double[N+1];                 // used only for calc of dx[]/dc
+        double[] df_gydc = new double[N+1];
+        double[] t2ddc = new double[N+1];
+
+        double[] trap_in = new double[N+1];
         double[][] Jac = new double[6][6];
         double[] dFdd = new double[6];
-        double[] trap_in = new double[N+1];
+        double[] d2Fdddc = new double[6];                   // augmented matrix
+        double dFdc;
+        double d2Fdcdc;                                     // augmented matrix
+        double[][] Augment = new double[7][7];
         double[] deld;                                      // (-Δd1, -Δd2, -Δx2, -Δy2, -Δx3, -Δy3)
         int loop = 0;
-        int i, j, k, seg;                                  // Bezier segment, before or after the splice
+        int i, j, k, seg;                                   // Bezier segment, before or after the splice
         double t1;
 
         do
@@ -100,6 +112,8 @@ public class BSpline6
                 d2fxdudu[i] = t2_vs_t1.d2fn(Bezx[seg], t2[i] - seg);
                 dfydu[i] = t2_vs_t1.dfn(Bezy[seg], t2[i] - seg);
                 d2fydudu[i] = t2_vs_t1.d2fn(Bezy[seg], t2[i] - seg);
+                df_gxdc[i] = calc_df_gxdc(t1, t2[i]);
+                df_gydc[i] = calc_df_gydc(t1, t2[i]);
                 dfxdd[0][i] = calc_dfxdd1(t2[i]);
                 dfydd[0][i] = calc_dfydd1(t2[i]);
                 dfxdd[1][i] = calc_dfxdd2(t2[i]);
@@ -113,6 +127,21 @@ public class BSpline6
                 dfxdd[5][i] = 0;
                 dfydd[5][i] = calc_dfydy3(t2[i]);
                 //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i] + ", " + t2dd[4][i] + ", " + t2dd[5][i] + ", " + f_gx[i] + ", " + f_gy[i] + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + dfxdd[0][i] + ", " + dfydd[0][i] + ", " + dfxdd[1][i] + ", " + dfydd[1][i] + ", " + dfxdd[2][i] + ", " + dfydd[2][i] + ", " + dfxdd[3][i] + ", " + dfydd[3][i] + ", " + dfxdd[4][i] + ", " + dfydd[4][i] + ", " + dfxdd[5][i] + ", " + dfydd[5][i] + ", " + d2fxdudd[0][i] + ", " + d2fydudd[0][i] + ", " + d2fxdudd[1][i] + ", " + d2fydudd[1][i] + ", " + d2fxdudd[2][i] + ", " + d2fydudd[2][i] + ", " + d2fxdudd[3][i] + ", " + d2fydudd[3][i] + ", " + d2fxdudd[4][i] + ", " + d2fydudd[4][i] + ", " + d2fxdudd[5][i] + ", " + d2fydudd[5][i]);
+
+                d2fxdudd[0][i] = calc_d2fxdudd1(t2[i]);
+                d2fydudd[0][i] = calc_d2fydudd1(t2[i]);
+                d2fxdudd[1][i] = calc_d2fxdudd2(t2[i]);
+                d2fydudd[1][i] = calc_d2fydudd2(t2[i]);
+                d2fxdudd[2][i] = calc_d2fxdudx2(t2[i]);
+                d2fydudd[2][i] = 0;
+                d2fxdudd[3][i] = 0;
+                d2fydudd[3][i] = calc_d2fydudy2(t2[i]);
+                d2fxdudd[4][i] = calc_d2fxdudx3(t2[i]);
+                d2fydudd[4][i] = 0;
+                d2fxdudd[5][i] = 0;
+                d2fydudd[5][i] = calc_d2fydudy3(t2[i]);
+
+                t2ddc[i] = calc_t2dd(i, seg, t2[i], "c");
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2, x3, y3)
@@ -121,8 +150,14 @@ public class BSpline6
             {
                 for (k = 0; k <= N; k++)
                     trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
-                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];         // new code
+                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];   // new code
                 dFdd[i] = t2_vs_t1.integrate(trap_in);
+                for (k = 0; k <= N; k++)
+                    trap_in[k] = (df_gxdc[k] + dfxdu[k]*t2ddc[k])*dfxdd[i][k]   // new code
+                               + f_gx[k]*d2fxdudd[i][k]*t2ddc[k]
+                               + (df_gydc[k] + dfydu[k]*t2ddc[k])*dfydd[i][k]
+                               + f_gy[k]*d2fydudd[i][k]*t2ddc[k];
+                d2Fdddc[i] = t2_vs_t1.integrate(trap_in);                       // augmented matrix
             }
 
             // calc d2Fdd[i]dd[j] (symmetric Jacobean matrix)
@@ -140,7 +175,30 @@ public class BSpline6
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
 
-            deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
+            // calculate determinant of augmented matrix
+
+            for (k = 0; k <= N; k++)
+                trap_in[k] = f_gx[k]*df_gxdc[k] + f_gy[k]*df_gydc[k];
+            dFdc = t2_vs_t1.integrate(trap_in);
+            for (k = 0; k <= N; k++)
+                trap_in[k] = df_gxdc[k]*df_gxdc[k]
+                           + (df_gxdc[k]*dfxdu[k] + f_gx[k]*calc_d2fxdudc(t2[k]))*t2ddc[k]
+                           + df_gydc[k]*df_gydc[k]
+                           + (df_gydc[k]*dfydu[k] + f_gy[k]*calc_d2fydudc(t2[k]))*t2ddc[k];
+            d2Fdcdc = t2_vs_t1.integrate(trap_in);
+            for (i = 0; i < 6; i++)
+                for (j = 0; j < 6; j++)
+                    Augment[i][j] = Jac[i][j];
+            for (i = 0; i < 6; i++)
+            {
+                Augment[i][6] = d2Fdddc[i];
+                Augment[6][i] = Augment[i][6];
+            }
+            Augment[6][6] = d2Fdcdc;
+            //System.out.println("dFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
+
+            //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
+            deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
             d1 -= deld[0]/gain;                 // gain is just a fudge factor to 'improve' convergence
             d2 -= deld[1]/gain;
             x2 -= deld[2]/gain;
@@ -158,7 +216,9 @@ public class BSpline6
             Jacdet = BSpline5.detm(Jac);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + dFdd[4] + ", " + dFdd[5] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ", " + deld[4] + ", " + deld[5]);
+            System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
             BSpline5.dump_Jac(Jac);
+            BSpline5.dump_Jac(Augment);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
@@ -173,6 +233,9 @@ public class BSpline6
         if (loop < MAXLOOP)
         {
             System.out.println("\n__converged in " + loop + " at new d1 d2 x2 y2 x3 y3 = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + x3 + ", " + y3);
+            // calculate dddc[i]
+            double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
+            System.out.println("\nfinal BSpline6, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) -dt2dc[2] + ", " + (float) -dt2dc[3] + ", " + (float) -dt2dc[4] + ", " + (float) -dt2dc[5] + ", " + (float) BSpline5.detm(Augment));
             return solve_at_P2_P3(d1, d2, x2, y2, x3, y3, true);                    // final run just for good measure
         }
         else
@@ -297,10 +360,10 @@ public class BSpline6
             t2dd[4][i] = calc_t2dd(i, seg, t2[i], "x3");
             t2dd[5][i] = calc_t2dd(i, seg, t2[i], "y3");
             if (print)
-                System.out.println(seg + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i] + ", " + t2dd[4][i] + ", " + t2dd[5][i]);
+                System.out.println(seg + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i] + ", " + t2dd[4][i] + ", " + t2dd[5][i] + ", " + calc_t2dd(i, seg, t2[i], "c"));
         }
         double retVal = calc_error();
-        System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + x3 + ", " + y3 + ", " + (float) retVal + ", " + (float) Jacdet);
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + x3 + ", " + y3 + ", " + (float) retVal + ", " + (float) Jacdet);
         return retVal;
     }
 
@@ -419,6 +482,9 @@ public class BSpline6
             numer = t2_vs_t1.dfn(Bezx[seg], t2 - seg)*calc_dfxdx3(t2) + (t2_vs_t1.fn(Bezx[seg], t2 - seg) - X)*calc_d2fxdudx3(t2);
         else if (type.equals("y3"))
             numer = t2_vs_t1.dfn(Bezy[seg], t2 - seg)*calc_dfydy3(t2) + (t2_vs_t1.fn(Bezy[seg], t2 - seg) - Y)*calc_d2fydudy3(t2);
+        else if (type.equals("c"))
+            numer = calc_df_gxdc(t1, t2)*t2_vs_t1.dfn(Bezx[seg], t2 - seg) + (t2_vs_t1.fn(Bezx[seg], t2 - seg) - X)*calc_d2fxdudc(t2)
+                  + calc_df_gydc(t1, t2)*t2_vs_t1.dfn(Bezy[seg], t2 - seg) + (t2_vs_t1.fn(Bezy[seg], t2 - seg) - Y)*calc_d2fydudc(t2);
         return -numer/denom;
     }
 
@@ -500,6 +566,26 @@ public class BSpline6
     private static double calc_d2fydudy3(double t2)
     {
         return dN53(t2)[3];
+    }
+
+    private static double calc_df_gxdc(double t1, double t2)
+    {
+        return fitted.getdxdc(t1_start)*(N53(t2)[0] + N53(t2)[1]) + fitted.getdxdc(t1_end)*(N53(t2)[4] + N53(t2)[5]) - fitted.getdxdc(t1);
+    }
+
+    private static double calc_df_gydc(double t1, double t2)
+    {
+        return fitted.getdydc(t1_start)*(N53(t2)[0] + N53(t2)[1]) + fitted.getdydc(t1_end)*(N53(t2)[4] + N53(t2)[5]) - fitted.getdydc(t1);
+    }
+
+    private static double calc_d2fxdudc(double t2)
+    {
+        return fitted.getdxdc(t1_start)*(dN53(t2)[0] + dN53(t2)[1]) + fitted.getdxdc(t1_end)*(dN53(t2)[4] + dN53(t2)[5]);
+    }
+
+    private static double calc_d2fydudc(double t2)
+    {
+        return fitted.getdydc(t1_start)*(dN53(t2)[0] + dN53(t2)[1]) + fitted.getdydc(t1_end)*(dN53(t2)[4] + dN53(t2)[5]);
     }
 
     private static double[] N53(double u)
