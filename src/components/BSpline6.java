@@ -109,8 +109,8 @@ public class BSpline6
                 f_gx[i] = t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1);
                 f_gy[i] = t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1);
                 dfxdu[i] = t2_vs_t1.dfn(Bezx[seg], t2[i] - seg);
-                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx[seg], t2[i] - seg);
                 dfydu[i] = t2_vs_t1.dfn(Bezy[seg], t2[i] - seg);
+                d2fxdudu[i] = t2_vs_t1.d2fn(Bezx[seg], t2[i] - seg);
                 d2fydudu[i] = t2_vs_t1.d2fn(Bezy[seg], t2[i] - seg);
                 df_gxdc[i] = calc_df_gxdc(t1, t2[i]);
                 df_gydc[i] = calc_df_gydc(t1, t2[i]);
