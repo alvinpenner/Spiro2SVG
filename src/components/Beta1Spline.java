@@ -43,13 +43,14 @@ public class Beta1Spline
         //fitted = new epiTrochoidFxn(0.9045);    // keep for finite difference 2nd partial difference of F
         //fitted = new epiTrochoidFxn(4.175);
         //fitted = new epiTrochoidFxn(19.8 - .0025);
-        fitted = new epiTrochoidFxn(2.514);
+        fitted = new epiTrochoidFxn(0.0);
         //System.out.println("Beta1-Spline convert_at_P2 = " + convert_at_P2(11.244692865076667, 50.78732161191724, 190.0813110769242, 36.1022521075289, true) + "\n");
         //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(25, 30, 166, 68, 1.5, true) + "\n");
         //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(20.23, 24.41, 164.22, 72.57, 0.6227, true) + "\n");
-        System.out.println("Beta1-Spline iterate_at_P2 = "
-                          + iterate_at_P2(33.03468974661394, 12.069410573058104, 158.31090252435808, 83.50592612856443, 0.875123605129779) + "\n");
-        //System.out.println("Beta1-Spline solve_at_P2 = " + solve_at_P2(23.849235501951565, 23.849235502011112, 166.29841931017188, 68.88306067938679, 1.0, true) + "\n");
+        //System.out.println("Beta1-Spline iterate_at_P2 = "
+        //                  + iterate_at_P2(19.894534447557504, 15.42257264455448, 172.73626099162183, 54.37109910205891, 2.085275) + "\n");
+        System.out.println("Beta1-Spline solve_at_P2 = " 
+                          + iterate_at_P2(23.849235501951565, 23.849235502011112, 166.29841931017188, 68.88306067938679, 1.0) + "\n");
         //System.out.println("Beta1-Spline iterate_at_P2 = " + iterate_at_P2(22.56, 19.97, 156.42, 79.28, 0.40) + "\n");
         //System.out.println("Beta1-Spline iterate_at_P2 = "
         //                  + iterate_at_P2(23.686962633324175, 18.326697796941833, 139.88954856635974, 86.58082601420564, 0.1675789980868262) + "\n");
@@ -67,7 +68,7 @@ public class Beta1Spline
     private static double iterate_at_P2(double d1, double d2, double x2, double y2, double m_beta1)
     {
         // calculate a new estimate of (d1, d2, x2, y2, m_beta1) by setting dF = 0
-        // include only first-order responses
+        // include second-order responses: d2f/ddi/ddj
         // see Spiro2SVG Book 4, page 24 (applied to 5-point cubic Beta1-Spline)
         // setup 5-variable Newton-Raphson iteration
 
@@ -294,7 +295,7 @@ public class Beta1Spline
                 Augment[5][i] = Augment[i][5];
             }
             Augment[5][5] = d2Fdcdc;
-            System.out.println("dFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
+            //System.out.println("dFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
 
             //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
             //deld = BSpline5.multmv(BSpline5.gaussj(Jac), dFdd);  // this is actually the negative of Δd
@@ -325,7 +326,7 @@ public class Beta1Spline
             Jacdet = BSpline5.detm(Jac);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + dFdd[4] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ", " + deld[4]);
-            //System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
+            System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
             BSpline5.dump_Jac(Jac);
             BSpline5.dump_Jac(Augment);
             //BSpline5.gaussj(new double[][] {{1,2,1,4,3}, {2,3,1,5,2}, {1,1,2,4,3}, {4,5,4,5,5}, {3,2,3,5,4}}, new double[] {3.1, 3.2, 3.9, 7.2, 2.3});       // fix fix test code
@@ -538,7 +539,7 @@ public class Beta1Spline
         }
         double retVal = calc_error();
         //System.out.println("__new t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + beta1 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) (splicei + spliced) + ", " + (float) (Math.sqrt(delx*delx + dely*dely)/beta1));
-        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + beta1 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) (splicei + spliced));
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + beta1 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) (splicei + spliced));
         return retVal;
     }
 

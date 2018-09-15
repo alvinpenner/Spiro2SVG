@@ -40,8 +40,8 @@ public class BezierCubic
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(2.5);
         //iterate_at_P2(55.6, 34.3);
-        fitted = new epiTrochoidFxn(3.5965);
-        iterate_at_P2(57.42308520622645, 30.87996837344);
+        fitted = new epiTrochoidFxn(3.597585);
+        iterate_at_P2(57.38138650938862, 30.953327399505515);
         //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
         //calc_array();               // generate Python 2D contour plot of rms
         if (fitted == null)
@@ -208,14 +208,15 @@ public class BezierCubic
         if (loop < MAXLOOP)
         {
             System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + fitted.getc() + ", " + Jac[0][0] + ", " + Jac[1][1] + ", " + Jac[0][1]);
-            solve_at_P2(d1, d2, true);                          // final run just for good measure
+            double rms = solve_at_P2(d1, d2, true);                          // final run just for good measure
             // calculate dddc[i]
-            double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
+            //double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (Math.cos(eigangle)*d2Fdddc[0] - Math.sin(eigangle)*d2Fdddc[1]) + ", " + (float) (Math.sin(eigangle)*d2Fdddc[0] + Math.cos(eigangle)*d2Fdddc[1]));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (eigangle*180.0/Math.PI) + ", " + (float) (Math.atan(d2Fdddc[0]/d2Fdddc[1])*180.0/Math.PI));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) -d2Fdddc[0] + ", " + (float) -d2Fdddc[1]);
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (Jac[1][0]/Jac[0][0]) + ", " + (float) (Jac[1][1]/Jac[0][1]) + ", " + (float) (d2Fdddc[1]/d2Fdddc[0]));
-            System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) BSpline5.detm(Augment));
+            //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) BSpline5.detm(Augment));
+            System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + rms*rms*180*180);
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ")");

@@ -43,8 +43,8 @@ public class BSpline5
         //read_data(1, 16);
         //fitted = new epiTrochoidFxn(10);            // keep this, 25 iterations to converge at c = 10
         //iterate_at_P2(19, 26, 175.2, 62);           // keep this, 25 iterations to converge at c = 10
-        fitted = new epiTrochoidFxn(10);
-        iterate_at_P2(19.983314292966476, 26.4276333695844, 175.47633731103548, 59.0566819528455);
+        fitted = new epiTrochoidFxn(0);
+        iterate_at_P2(23.849235501951565, 23.849235502011112, 166.29841931017188, 68.88306067938679);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -171,7 +171,8 @@ public class BSpline5
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
 
-            deld = multmv(invertm(Jac), dFdd);  // this is actually the negative of Δd
+            //deld = multmv(invertm(Jac), dFdd);  // this is actually the negative of Δd
+            deld = gaussj(Jac, dFdd);           // this is actually the negative of Δd
             d1 -= deld[0];
             d2 -= deld[1];
             x2 -= deld[2];
