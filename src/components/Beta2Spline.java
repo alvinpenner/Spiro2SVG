@@ -39,7 +39,7 @@ public class Beta2Spline
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(2.0);
-        fitted = new epiTrochoidFxn(4.);
+        fitted = new epiTrochoidFxn(20.);
         //System.out.println("Beta2-Spline convert_at_P2 = " + convert_at_P2(19.983314292966483, 26.42763336958588, 175.47633731103565, 59.05668195284478, true) + "\n");
         //System.out.println("Beta2-Spline solve_at_P2 = " + solve_at_P2(22.742672063451316, 21.951281542489866, 166.71089691010013, 67.4862883523671, 24.830428922781234, true) + "\n");
         //System.out.println("Beta2-Spline iterate_at_P2 = "
@@ -49,7 +49,7 @@ public class Beta2Spline
         //System.out.println("Beta2-Spline iterate_at_P2 = "
         //                  + iterate_at_P2(33.058170116030524, 14.792438118940211, 160.4365791345325, 80.57013373272483, 22.681350095595867) + "\n");
         System.out.println("Beta2-Spline iterate_at_P2 = "
-                          + iterate_at_P2(23.51485618469241, 17.02503229812916, 165.1188770877158, 70.45232046832649, 26.543379990222597) + "\n");
+                          + iterate_at_P2(13.962863916573056, 46.22107083465216, 179.20386507814197, 44.16955161174365, 21.314192060654243) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -168,7 +168,7 @@ public class Beta2Spline
                 d2fydddd[4][0][i] = d2fydddd[0][4][i];
                 d2fydddd[4][1][i] = d2fydddd[1][4][i];
                 //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + t2dd1[i] + ", " + t2dd2[i] + ", " + t2dx2[i] + ", " + t2dy2[i] + ", " + t2dd[i] + ", " + f_gx[i] + ", " + f_gy[i] + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + dfxdd1[i] + ", " + dfydd1[i] + ", " + dfxdd2[i] + ", " + dfydd2[i] + ", " + dfxdx2[i] + ", " + dfydx2[i] + ", " + dfxdy2[i] + ", " + dfydy2[i] + ", " + dfxdd[i] + ", " + dfydd[i] + ", " + d2fxdudd1[i] + ", " + d2fydudd1[i] + ", " + d2fxdudd2[i] + ", " + d2fydudd2[i] + ", " + d2fxdudx2[i] + ", " + d2fydudx2[i] + ", " + d2fxdudy2[i] + ", " + d2fydudy2[i] + ", " + d2fxdudd[i] + ", " + d2fydudd[i]);
-                //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + d2fxdcdc[i] + ", " + d2fydcdc[i] + ", " + f_gx[i] + ", " + f_gy[i]);
+                //System.out.println(i + ", " + seg + ", " + t2[i] + ", " + d2fxdcdc[i] + ", " + d2fydcdc[i] + ", " + f_gx[i]*d2fxdcdc[i] + ", " + f_gy[i]*d2fydcdc[i]);
                 t2ddc[i] = calc_t2dxy(i, seg, t2[i] - seg, "c");
             }
 
