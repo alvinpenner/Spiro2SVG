@@ -4,51 +4,48 @@ package components;
 // consider a parametric curve, g, either cycloid or trochoid, with parameter t1
 // fit a 4-point cubic Bezier (P0 - P3) to it, using parameter 0 < t2 < 1.
 // constrain only the slopes at the endpoints
-// linearize the equations wrt (d1, d2) and solve a 2x2 system of equations
+// constrain the area to be correct
+// optimize wrt to d1 subject to this constraint
 // Bezier[4] = f(x0, x1, x2, x3, t2)
 // t2 must be chosen to minimize the distance to g(t1)
-// this is a complete rewrite of the code in t2_vs_t1.iterate_at_d1_d2
+// this is based on BezierCubic.java which is from t2_vs_t1.iterate_at_d1_d2
 
-// this is file : \Documents\NetBeansProjects\MyDemo\src\components\BezierCubic.java
+// this is file : \Documents\NetBeansProjects\MyDemo\src\components\BezierCubicOneDim.java
 
-import java.io.FileWriter;
-
-public class BezierCubic
+public class BezierCubicOneDim
 {
-    public static double t1_start = 0;
-    public static final double t1_end = Math.PI/4; // Math.PI;
-    public static final int N = 100;
-    public static double[] Bezx;                // cubic Bezier, 4 points, x component
-    public static double[] Bezy;                // cubic Bezier, 4 points, y component
-    //private static CircleFxn fitted;
-    //private static CycloidFxn fitted;
+    private static final double a_b = 180;          // scale factor to make rms error dimensionless
+    private static final double t1_start = 0;
+    private static final double t1_end = Math.PI/4;
+    private static final int N = 100;
+    private static double[] Bezx;                   // cubic Bezier, 4 points, x component
+    private static double[] Bezy;                   // cubic Bezier, 4 points, y component
     private static epiTrochoidFxn fitted;
     private static double[] t2 = new double[N+1];
     private static double[][] t2dd = new double[2][N+1];    // partial wrt (d1, d2)
-    private static double Jacdet = Double.NaN;
-    private static double eig0 = Double.NaN, eig1 = Double.NaN;
-    private static double eigangle = Double.NaN;
-    public static double theta_start, theta_end;
+    private static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
     public static void main (String[] args)
     {
-        // extract the point of maximum curvature of a cycloid from a tangent angle phi
-        //double phi = 53;
-        //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
-        //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
-        //fitted = new CycloidFxn(tempc);
-        //fitted = new epiTrochoidFxn(2.5);
-        //iterate_at_P2(55.6, 34.3);
-        fitted = new epiTrochoidFxn(3.58);
-        iterate_at_P2(57, 30);
-        //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
-        //calc_array();               // generate Python 2D contour plot of rms
+        //fitted = new epiTrochoidFxn(3.61 + 0*0.00001);
+        //iterate_at_P2(57.31291807448238 + 0*0.01, 0);
+        fitted = new epiTrochoidFxn(3.61463);
+        iterate_at_P2(57.6, 0);
+        //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
             return;
         }
+        //for (int i = 0; i <= 10; i++)
+        //{
+        //    double tempd1 = 60 + 0.01*i;
+        //    System.out.println(i + ", " + spiro_area() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_d2d2dd1dd1(tempd1));
+        //}
+        //double tempd1 = 20 + 0*0.001;
+        //System.out.println("test , " + fitted.getc() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_dd2dc(tempd1) + ", " + calc_d2d2dd1dc(tempd1));
+        //System.out.println("test , " + fitted.getc() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_d2d2dd1dd1(tempd1));
     }
 
     private static void iterate_at_P2(double d1, double d2)
@@ -72,20 +69,20 @@ public class BezierCubic
         double[][] d2fydudd = new double[2][N+1];
         double[] df_gxdc = new double[N+1];                 // used only for calc of dx[]/dc
         double[] df_gydc = new double[N+1];
-//        double[] d2fxdudc = new double[N+1];                // used only for calc of dx[]/dc
-//        double[] d2fydudc = new double[N+1];
 
         double[] trap_in = new double[N+1];
-        double[][] Jac = new double[2][2];
-        double[] dFdd = new double[2];
-        double[] d2Fdddc = new double[2];                           // augmented matrix
+        double[][] Jac = new double[1][1];
+        double[] dFdd = new double[1];
+        double[] d2Fdddc = new double[1];                           // augmented matrix
         double dFdc;
-        double d2Fdcdc;                                             // augmented matrix
-        double[][] Augment = new double[3][3];
-        double[] deld;                                              // (-Δd1, -Δd2)
+        //double d2Fdcdc;                                             // augmented matrix
+        double[][] Augment = new double[2][2];
+        double deld;                                                // (-Δd1)
         int i, j, k, loop = 0;
         double t1;
 
+        d2 = calc_d2(d1);                                           // initiallize
+        //fitted = new epiTrochoidFxn(fitted.getc() + 0.00001);        // just for numerical d2Fdddc
         do
         {
             loop++;
@@ -106,8 +103,6 @@ public class BezierCubic
                 d2fydudu[i] = t2_vs_t1.d2fn(Bezy, t2[i]);
                 df_gxdc[i] = calc_df_gxdc(t1, t2[i]);
                 df_gydc[i] = calc_df_gydc(t1, t2[i]);
-//                d2fxdudc[i] = calc_d2fxdudc(t2[i]);           // set to zero as a test
-//                d2fydudc[i] = calc_d2fydudc(t2[i]);           // set to zero as a test
 
                 dfxdd[0][i] = Math.cos(theta_start)*N33(t2[i])[1];
                 dfydd[0][i] = Math.sin(theta_start)*N33(t2[i])[1];
@@ -121,93 +116,99 @@ public class BezierCubic
 
             // calc dFdd[j] at current (d1, d2)
 
-            for (i = 0; i < 2; i++)
+            double dd1dd1, dd1dd2, dd2dd2, dd2;
+            for (i = 0; i < 1; i++)                 // one loop only
             {
                 for (k = 0; k <= N; k++)
-                    trap_in[k] = f_gx[k]*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k]) + f_gy[k]*(dfydd[i][k] + dfydu[k]*t2dd[i][k]); // original code
-                    //trap_in[k] = f_gx[k]*dfxdd[i][k] + f_gy[k]*dfydd[i][k];                   // new code
+                    trap_in[k] =  f_gx[k]*(dfxdd[0][k] + dfxdu[k]*t2dd[0][k]) + f_gy[k]*(dfydd[0][k] + dfydu[k]*t2dd[0][k]) // original code
+                               + (f_gx[k]*(dfxdd[1][k] + dfxdu[k]*t2dd[1][k]) + f_gy[k]*(dfydd[1][k] + dfydu[k]*t2dd[1][k]))*calc_dd2dd1(d1);
+                    //trap_in[k] = f_gx[k]*dfxdd[0][k] + f_gy[k]*dfydd[0][k]
+                    //           + (f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k])*calc_dd2dd1(d1);   // new code
                 dFdd[i] = t2_vs_t1.integrate(trap_in);
                 for (k = 0; k <= N; k++)
-//                    trap_in[k] = (df_gxdc[k] + dfxdu[k]*calc_t2dxy(k, t2[k], "c"))*(dfxdd[i][k] + dfxdu[k]*t2dd[i][k])    // original code
-//                               + f_gx[k]*(d2fxdudc[k] + d2fxdudu[k]*calc_t2dxy(k, t2[k], "c"))*t2dd[i][k]
-//                               + f_gx[k]*d2fxdudd[i][k]*calc_t2dxy(k, t2[k], "c")
-//                               + (df_gydc[k] + dfydu[k]*calc_t2dxy(k, t2[k], "c"))*(dfydd[i][k] + dfydu[k]*t2dd[i][k])
-//                               + f_gy[k]*(d2fydudc[k] + d2fydudu[k]*calc_t2dxy(k, t2[k], "c"))*t2dd[i][k]
-//                               + f_gy[k]*d2fydudd[i][k]*calc_t2dxy(k, t2[k], "c");
-                    trap_in[k] = (df_gxdc[k] + dfxdu[k]*calc_t2dxy(k, t2[k], "c"))*dfxdd[i][k]  // new code
-                               + f_gx[k]*d2fxdudd[i][k]*calc_t2dxy(k, t2[k], "c")
-                               + (df_gydc[k] + dfydu[k]*calc_t2dxy(k, t2[k], "c"))*dfydd[i][k]
-                               + f_gy[k]*d2fydudd[i][k]*calc_t2dxy(k, t2[k], "c");
+                {
+                    dd1dd2 = dfxdd[0][k]*dfxdd[1][k] + dfydd[0][k]*dfydd[1][k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[1][k];
+                    dd2dd2 = dfxdd[1][k]*dfxdd[1][k] + dfydd[1][k]*dfydd[1][k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*t2dd[1][k];
+                    trap_in[k] = dfxdd[0][k]*df_gxdc[k] + dfydd[0][k]*df_gydc[k]
+                               - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*calc_t2dxy(k, t2[k], "c")
+                               + dd1dd2*calc_dd2dc(d1);
+                    trap_in[k] += ((dfxdd[1][k]*df_gxdc[k] + dfydd[1][k]*df_gydc[k]
+                               - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*calc_t2dxy(k, t2[k], "c"))
+                               + dd2dd2*calc_dd2dc(d1))*calc_dd2dd1(d1);
+                    trap_in[k] += (f_gx[k]*(dfxdd[1][k] + dfxdu[k]*t2dd[1][k]) + f_gy[k]*(dfydd[1][k] + dfydu[k]*t2dd[1][k]))*calc_d2d2dd1dc(d1);
+                    // System.out.println(i + ", " + k + ", " + trap_in[k]);
+                }
                 d2Fdddc[i] = t2_vs_t1.integrate(trap_in);               // augmented matrix
             }
 
             // calc d2Fdd[i]dd[j] (Jacobean matrix)
 
-            for (i = 0; i < 2; i++)
-                for (j = 0; j < 2; j++)
+            for (i = 0; i < 1; i++)                 // one loop only
+                for (j = 0; j < 1; j++)             // one loop only
                 {
                     //System.out.println(i + ", "+ j);
                     for (k = 0; k <= N; k++)
                     {
-                        trap_in[k] = dfxdd[i][k]*dfxdd[j][k] + dfydd[i][k]*dfydd[j][k]
-                                   - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k];
-                        //System.out.println(k + ", " + trap_in[k]);
-                        //System.out.println(k + ", " + (dfxdd[i][k]*dfxdd[j][k] + dfydd[i][k]*dfydd[j][k]));
-                        //System.out.println(k + ", " + ((dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[i][k]*t2dd[j][k]));
+                        dd1dd1 = dfxdd[0][k]*dfxdd[0][k] + dfydd[0][k]*dfydd[0][k]
+                               - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[0][k];
+                        dd1dd2 = dfxdd[0][k]*dfxdd[1][k] + dfydd[0][k]*dfydd[1][k]
+                               - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[1][k];
+                        dd2dd2 = dfxdd[1][k]*dfxdd[1][k] + dfydd[1][k]*dfydd[1][k]
+                               - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*t2dd[1][k];
+                        dd2 = f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k];
+                        trap_in[k] = dd1dd1 + 2*calc_dd2dd1(d1)*dd1dd2 + calc_dd2dd1(d1)*calc_dd2dd1(d1)*dd2dd2
+                                   + calc_d2d2dd1dd1(d1)*dd2;
                     }
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
+            //System.out.println("test Jac(d2) : " + Jac[0][0] + ", " + Jac[0][0]/calc_dd2dd1(d1)/calc_dd2dd1(d1));
 
             // calculate determinant of augmented matrix
 
             for (k = 0; k <= N; k++)
-                trap_in[k] = f_gx[k]*df_gxdc[k] + f_gy[k]*df_gydc[k];
+                trap_in[k] =  f_gx[k]*df_gxdc[k] + f_gy[k]*df_gydc[k]
+                           + (f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k])*calc_dd2dc(d1);
             dFdc = t2_vs_t1.integrate(trap_in);
-            for (k = 0; k <= N; k++)
-                trap_in[k] = df_gxdc[k]*df_gxdc[k]
-                           + (df_gxdc[k]*dfxdu[k] + f_gx[k]*calc_d2fxdudc(t2[k]))*calc_t2dxy(k, t2[k], "c")
-                           + df_gydc[k]*df_gydc[k]
-                           + (df_gydc[k]*dfydu[k] + f_gy[k]*calc_d2fydudc(t2[k]))*calc_t2dxy(k, t2[k], "c");
-            d2Fdcdc = t2_vs_t1.integrate(trap_in);
-            for (i = 0; i < 2; i++)
-                for (j = 0; j < 2; j++)
+            //for (k = 0; k <= N; k++)
+            //    trap_in[k] = df_gxdc[k]*df_gxdc[k] + df_gydc[k]*df_gydc[k]
+            //               - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*calc_t2dxy(k, t2[k], "c")*calc_t2dxy(k, t2[k], "c");
+            //d2Fdcdc = t2_vs_t1.integrate(trap_in);        // not needed
+            for (i = 0; i < 1; i++)                         // one loop only
+                for (j = 0; j < 1; j++)
                     Augment[i][j] = Jac[i][j];
-            for (i = 0; i < 2; i++)
+            for (i = 0; i < 1; i++)
             {
-                Augment[i][2] = d2Fdddc[i];
-                Augment[2][i] = Augment[i][2];
+                //Augment[i][1] = d2Fdddc[i];
+                //Augment[1][i] = Augment[i][1];
             }
-            Augment[2][2] = d2Fdcdc;
+            //Augment[1][1] = d2Fdcdc;
             //System.out.println("dFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
 
-            //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
-            deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
-            d1 -= deld[0]/gain;
-            d2 -= deld[1]/gain;
+            deld = dFdd[0]/Jac[0][0];                               // this is actually the negative of Δd1
+            d1 -= deld/gain;
+            d2 = calc_d2(d1);                                       // try to prevent error propagation
 
-            Jacdet = BSpline5.detm(Jac);
-            eig0 = (Jac[0][0] + Jac[1][1] - Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
-            eig1 = (Jac[0][0] + Jac[1][1] + Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
-            eigangle = Math.atan((Jac[0][0] - eig0)/Jac[0][1]);     // angle of eigenvector transform
-            System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + Jacdet + ", " + eig0 + ", " + eig1 + ", " + eigangle + ", " + BSpline5.detm(Augment));
-            System.out.println("deld = " + deld[0] + ", " + deld[1]);
-            System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
-            BSpline5.dump_Jac(Jac);
-            BSpline5.dump_Jac(Augment);
+            System.out.println("dFdd = , " + dFdd[0] + ", " + Jac[0][0] + ", " + BSpline5.detm(Augment));
+            System.out.println("deld = , " + deld + ", " + dFdc + ", " + d2Fdddc[0]);
+            //System.out.println("\ndFdc = , " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
+            //BSpline5.dump_Jac(Jac);
+            //BSpline5.dump_Jac(Augment);
             //double[][] invJac = BSpline5.invertm(Jac);
             //System.out.println("invJac = " + invJac[0][0] + ", " + invJac[0][1] + ", " + invJac[1][0] + ", " + invJac[1][1]);
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
             //System.out.println("\npreliminary recalc of t2[i]\n t1, t2");
-            for (i = 0; i <= N; i++)            // disabled due to crashes
-            {
-                t2[i] -= t2dd[0][i]*deld[0] + t2dd[1][i]*deld[1];   // first-order response
+            //for (i = 0; i <= N; i++)            // disabled due to crashes
+            //{
+            //    t2[i] -= t2dd[0][i]*deld[0] + t2dd[1][i]*deld[1];   // first-order response
                 // System.out.println("incrementing t2 array : " + i + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
-            }
-        } while ((loop < MAXLOOP) && !((Math.abs(deld[0]) < TOL) && (Math.abs(deld[1]) < TOL)));
+            //}
+        } while ((loop < MAXLOOP) && !(Math.abs(deld) < TOL));
         if (loop < MAXLOOP)
         {
-            System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + fitted.getc() + ", " + Jac[0][0] + ", " + Jac[1][1] + ", " + Jac[0][1]);
+            System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + fitted.getc() + ", " + Jac[0][0]);
             double rms = solve_at_P2(d1, d2, true);                          // final run just for good measure
             // calculate dddc[i]
             //double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
@@ -217,10 +218,10 @@ public class BezierCubic
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (Jac[1][0]/Jac[0][0]) + ", " + (float) (Jac[1][1]/Jac[0][1]) + ", " + (float) (d2Fdddc[1]/d2Fdddc[0]));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) BSpline5.detm(Augment));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + rms*rms*180*180);
-            System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + 180.0*eigangle/Math.PI);
+            System.out.println("\nfinal oneDim CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + Jac[0][0] + ", " + d2Fdddc[0]);
         }
         else
-            System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ")");
+            System.out.println("\nNOT converged after " + loop + " loops! (" + deld + ")");
     }
 
     private static double solve_at_P2(double d1, double d2, boolean print)
@@ -243,7 +244,7 @@ public class BezierCubic
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            System.out.println("__start cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -254,7 +255,7 @@ public class BezierCubic
         //System.out.println(Bezx[2] + "\t " + Bezy[2]);
         //System.out.println(Bezx[3] + "\t " + Bezy[3]);
 
-        if (print) System.out.println("\n           , t1, t2, t2dd1, t2dd2");
+        if (print) System.out.println("\n                , t1, t2, t2dd1, t2dd2, t2dc");
         for (int i = 0; i <= N; i++)
         {
             solve_quintic_for_t2(i);
@@ -275,11 +276,12 @@ public class BezierCubic
                 //double f = (t2_vs_t1.fn(Bezx, t2[i]) - fitted.getx(t1))*t2_vs_t1.dfn(Bezx, t2[i]) + (t2_vs_t1.fn(Bezy, t2[i]) - fitted.gety(t1))*t2_vs_t1.dfn(Bezy, t2[i]);
                 //System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + f);
                 //System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + (t2_vs_t1.fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy, t2[i]) - fitted.gety(t1)));
-                System.out.println("cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + calc_t2dxy(i, t2[i], "c"));
+                System.out.println("oneDim cubic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + calc_t2dxy(i, t2[i], "c"));
             }
         }
         double retVal = calc_error();
-        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) eigangle);
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
+        System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
         return retVal;
     }
 
@@ -288,8 +290,6 @@ public class BezierCubic
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        double a_b = 180;         // scale factor to make rms error dimensionless
-        //double a_b = 1;             // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
 
@@ -306,48 +306,6 @@ public class BezierCubic
             t1 += (t1_end - t1_start)/N;
         }
         return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
-    }
-
-    private static void calc_array()
-    {
-        // generate data suitable for MATPLOTLIB
-        // rms error as function of d1, d2 (copied from Beziererror.java)
-        // to be used by \APP\MATPLOTLIB\mycontour.py
-
-        double d1, d2;
-        double a_b = 180;                               // header info
-        double d1start = 57.8235, d2start = 30.1442;
-        double d1end = 57.3829, d2end = 30.9519;
-        int steps = 64;                                 // number of length segments (even)
-        int buttsteps = 32;                              // +/- steps added on to length
-        double width = .0025;                           // dimensionless relative to length
-
-        double length = Math.sqrt((d1end - d1start)*(d1end - d1start) + (d2end - d2start)*(d2end - d2start));
-        double theta = Math.atan2(d2end - d2start, d1end - d1start);
-
-        try
-        {
-            FileWriter out = new FileWriter("\\APP\\MATPLOTLIB\\CubicBezier\\scan_error.txt");
-            java.text.DateFormat df = java.text.DateFormat.getInstance();
-            out.write(df.format(new java.util.Date()) + " : a-b, c = " + a_b + ", " + fitted.getc() + "\r\n");
-            out.write("extent = (, " + (-width/2) + ", " + (width/2) + ", " + (-(float)buttsteps/steps) + ", " + (1 + (float)buttsteps/steps) + ",) step size = " + 1./steps + ", width = " + width + "\r\n");
-            out.write(String.format("(%f, %f)-(%f, %f) in %d", d1start, d2start, d1end, d2end, steps));
-            out.write("\r\n");
-            for (int i = -buttsteps; i <= steps + buttsteps; i++)
-            {
-                for (int j = -steps/2; j <= steps/2; j++)
-                {
-                    d1 = d1start + i*length*Math.cos(theta)/steps + j*length*width*Math.cos(theta - Math.PI/2)/steps;
-                    d2 = d2start + i*length*Math.sin(theta)/steps + j*length*width*Math.sin(theta - Math.PI/2)/steps;
-                    out.write(String.format(" %g", solve_at_P2(d1, d2, false)));
-                    //out.write(String.format(" %.8f", solve_at_P2(d1, d2, false)));
-                }
-                out.write("\r\n");
-            }
-            out.close();
-        }
-        catch (java.io.IOException e)
-            {System.out.println("calc_array() save error = " + e);}
     }
 
     private static void solve_quintic_for_t2(int i)
@@ -447,14 +405,67 @@ public class BezierCubic
 
     private static double calc_d2fxdudc(double t2)
     {
-        //return 0;                                                   // fix fix test code
         return fitted.getdxdc(t1_start)*(dN33(t2)[0] + dN33(t2)[1]) + fitted.getdxdc(t1_end)*(dN33(t2)[2] + dN33(t2)[3]);
     }
 
     private static double calc_d2fydudc(double t2)
     {
-        //return 0;                                                   // fix fix test code
         return fitted.getdydc(t1_start)*(dN33(t2)[0] + dN33(t2)[1]) + fitted.getdydc(t1_end)*(dN33(t2)[2] + dN33(t2)[3]);
+    }
+
+    private static double spiro_area()
+    {
+        return a_b*a_b*(Math.PI/2 - Math.sqrt(2))/4                     // <1>
+             - fitted.getc()*fitted.getc()*(3*Math.PI/2 - Math.sqrt(2))/4;
+    }
+
+    private static double dspiro_areadc()
+    {
+        return -fitted.getc()*(3*Math.PI/2 - Math.sqrt(2))/2;
+    }
+
+    private static double calc_d2(double d1)
+    {
+        // satisfy area constraint
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20*spiro_area()/3 - 2*d1*(l1 - l2/Math.sqrt(2)))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_dd2dd1(double d1)
+    {
+        // satisfy area constraint (first derivative)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return -(2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_dd2dc(double d1)
+    {
+        // satisfy area constraint (first derivative)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return ((2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))*(20./3.*dspiro_areadc() - 2*d1*(1 + 1/Math.sqrt(2)))
+               + (20*spiro_area()/3 - 2*d1*(l1 - l2/Math.sqrt(2)))*2*(1 + 1/Math.sqrt(2)))
+               /(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_d2d2dd1dd1(double d1)
+    {
+        // satisfy area constraint (second derivative)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return Math.sqrt(2)*calc_dd2dd1(d1)/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_d2d2dd1dc(double d1)
+    {
+        // satisfy area constraint (second derivative)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return -((2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))*(2*(1 + 1/Math.sqrt(2)) - calc_dd2dc(d1)/Math.sqrt(2))
+               + (2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2))*2*(1 + 1/Math.sqrt(2)))
+                /(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
     }
 
     private static double[] N33(double u)
