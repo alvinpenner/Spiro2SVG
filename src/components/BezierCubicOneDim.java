@@ -30,9 +30,10 @@ public class BezierCubicOneDim
     {
         //fitted = new epiTrochoidFxn(3.61 + 0*0.00001);
         //iterate_at_P2(57.31291807448238 + 0*0.01, 0);
-        fitted = new epiTrochoidFxn(3.61463);
-        iterate_at_P2(57.6, 0);
+        fitted = new epiTrochoidFxn(20);
+        //iterate_at_P2(57.6, 0);
         //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
+        scan_at_P2();
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -244,7 +245,8 @@ public class BezierCubicOneDim
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            ;
+            //System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -280,9 +282,33 @@ public class BezierCubicOneDim
             }
         }
         double retVal = calc_error();
-        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
+//        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
         System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
         return retVal;
+    }
+
+    private static void scan_at_P2()
+    {
+        // calculate F over the whole range of (d1, d2)
+        // holding area constant
+        // to run this, temporarily comment out lines 248 and 284 to reduce the output
+        // keep only line 285 : 'F = , ...'
+
+        double d1;
+        double d_average = 57.1;
+        double d1_start = 57.1; //d_average - 1;
+        double d1_end = 58.1; //d_average + 1;
+        int Nd1 = 4;
+
+        fitted = new epiTrochoidFxn(3.62);
+        System.out.println("scan F @ , c, d1, d2, " + fitted.getc());
+        for (int i = 0; i <= Nd1; i++)
+        {
+            t2[N] = 0;                                  // just to control the output
+            d1 = d1_start + i*(d1_end - d1_start)/Nd1;
+            if (calc_d2(d1) < 0) break;
+            solve_at_P2(d1, calc_d2(d1), false);
+        }
     }
 
     private static double calc_error()
