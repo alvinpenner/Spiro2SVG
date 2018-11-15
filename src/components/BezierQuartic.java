@@ -38,10 +38,12 @@ public class BezierQuartic
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(0.25592);
-        fitted = new epiTrochoidFxn(0.25592);
+        //fitted = new epiTrochoidFxn(0.25592);
+        fitted = new epiTrochoidFxn(2.9);
         //paste_data(80, 0.9886277018143461, 0.2624690492231421, 0.7640885237135162, 1.8275481762035848);
         //read_Quartic_Bezier_data(230);
-        iterate_at_P2(31.97219182723345, 38.66105265926219, 172.521055352539, 66.34898239);
+        //iterate_at_P2(31.97219182723345, 38.66105265926219, 172.521055352539, 66.34898239);
+        iterate_at_P2(33.07325404217647, 21.826588775756665, 172.71999346440768, 73.8622729);
         //iterate_at_P2(32.02406276623338, 38.62191169612965, 172.49594071073963, 66.40511369595288); // 19.25 minimum
         //iterate_at_P2(31.464595462598876, 122.8023528021591, 161.91830044656243, 57.58332982440786); // 19.25 saddle
         //iterate_at_P2(40.923936413081165, 174.54348410425095, 135.45126668176417, 77.10113250461616); // 19.25
@@ -136,6 +138,12 @@ public class BezierQuartic
                 d2fydudd[2][i] = 0;
                 d2fxdudd[3][i] = 0;
                 d2fydudd[3][i] = dN44(t2[i])[2];
+
+                //double testf0 = dfxdd[0][i]*f_gx[i] + dfydd[0][i]*f_gy[i];    // temporary test code fix fix
+                //double testf1 = dfxdd[1][i]*f_gx[i] + dfydd[1][i]*f_gy[i];    // temporary test code fix fix
+                //double testf2 = dfxdd[2][i]*f_gx[i] + dfydd[2][i]*f_gy[i];    // temporary test code fix fix
+                //double testf3 = dfxdd[3][i]*f_gx[i] + dfydd[3][i]*f_gy[i];    // temporary test code fix fix
+                //System.out.println("testf = ," + t1 + ", " + testf0 + ", " + testf1 + ", " + testf2 + ", " + testf3);
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2)
@@ -238,6 +246,7 @@ public class BezierQuartic
             //double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
             //System.out.println("\nfinal quarticBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) -dt2dc[2] + ", " + (float) -dt2dc[3] + ", " + (float) BSpline5.detm(Augment));
             System.out.println("\nfinal quarticBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) Jacdet + ", " + (float) BSpline5.detm(Augment));
+            calc_oval_det(d1, d2, x2, y2);      // check to see if this is the oval branch
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ")");
@@ -422,6 +431,16 @@ public class BezierQuartic
         System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) eig[1] + ", " + (float) eig[3] + ", " + (float) eig[2] + ", " + (float) eig[0]);
         //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", ");
         return retVal;
+    }
+
+    private static void calc_oval_det(double d1, double d2, double x2, double y2)
+    {
+        double[][] oval = new double[][] {{3*((y2 - Bezy[0])*Math.cos(theta_start) - (x2 - Bezx[0])*Math.sin(theta_start)), 0, d1*Math.sin(theta_start), d1*Math.cos(theta_start)},
+                                          {3*((Bezy[4] - y2)*Math.cos(theta_start) - (Bezx[4] - x2)*Math.sin(theta_start)) - 3*d2*Math.sin(theta_end - theta_start), -d1*Math.sin(theta_end - theta_start), 3*(y2 - Bezy[0] - d1*Math.sin(theta_start)), 3*(x2 - Bezx[0] - d1*Math.cos(theta_start))},
+                                          {d2*Math.sin(theta_end - theta_start), 3*((y2 - Bezy[0])*Math.cos(theta_end) - (x2 - Bezx[0])*Math.sin(theta_end)) + 3*d1*Math.sin(theta_end - theta_start), 3*(Bezy[4] - y2 - d2*Math.sin(theta_end)), 3*(Bezx[4] - x2 - d2*Math.cos(theta_end))},
+                                          {0, 3*((Bezy[4] - y2)*Math.cos(theta_end) - (Bezx[4] - x2)*Math.sin(theta_end)), d2*Math.sin(theta_end), d2*Math.cos(theta_end)}};
+        //BSpline5.dump_Jac(oval);
+        System.out.println("det of oval = ," + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + BSpline5.detm(oval));
     }
 
     private static double calc_error()

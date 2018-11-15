@@ -31,9 +31,11 @@ public class BezierCubicTotal
     public static void main (String[] args)
     {
         //long startTime = System.currentTimeMillis();
-        fitted = new epiTrochoidFxn(9.1);
+        fitted = new epiTrochoidFxn(2);
+        //fitted = new epiTrochoidFxn(3.599);
         //t2 = new double[] {15.9753, 92.2577, 0.1945, 0.3346, 0.4501, 0.5510, 0.6418, 0.7250, 0.8018, 0.8729, 0.9389};
-        t2 = new double[] {7.6036, 79.2178, 0.2367, 0.3672, 0.4729, 0.5657, 0.6502, 0.7288, 0.8024, 0.8720, 0.9377};
+        //t2 = new double[] {57.3829, 30.9521, 0.0785, 0.1596, 0.2438, 0.3315, 0.4232, 0.5197, 0.6222, 0.7329, 0.8558};
+        t2 = new double[] {68., 14., 0.09, 0.19, 0.29, 0.39, 0.49, 0.59, 0.69, 0.79, 0.90};
         //t2 = new double[] {65, 25, 0.2296, 0.3599, 0.4660, 0.5595, 0.6448, 0.7241, 0.7987, 0.8693, 0.9363};
         iterate_at_P2();
         //System.out.println("cubic Bezier (Total) solve_at_P2 = " + solve_at_P2(true) + "\n");
@@ -73,6 +75,9 @@ public class BezierCubicTotal
         double[] dFdd = new double[N+1];
         double[] deld;                                  // (-Δd1, -Δd2)
         double[] d2Fdddc = new double[N+1];
+        double dFdc;
+        double d2Fdcdc;                                             // augmented matrix
+        double[][] Augment = new double[N+2][N+2];
         int i, j, k, loop = 0;
         double t1, maxdel;
 
@@ -107,6 +112,9 @@ public class BezierCubicTotal
                 d2fydudd[0][i] = Math.sin(theta_start)*dN33(t2[i + 2])[1];
                 d2fxdudd[1][i] = -Math.cos(theta_end)*dN33(t2[i + 2])[2];
                 d2fydudd[1][i] = -Math.sin(theta_end)*dN33(t2[i + 2])[2];
+                //double testf0 = dfxdd[0][i]*f_gx[i] + dfydd[0][i]*f_gy[i];    // temporary test code fix fix
+                //double testf1 = dfxdd[1][i]*f_gx[i] + dfydd[1][i]*f_gy[i];    // temporary test code fix fix
+                //System.out.println("testf = ," + t1 + ", " + testf0 + ", " + testf1);
             }
 
             // calc dFdd[j] at current (d1, d2)
@@ -157,6 +165,25 @@ public class BezierCubicTotal
                     Jac[j + 2][i] = Jac[i][j + 2];
                 }
 
+            // calculate determinant of augmented matrix
+
+            for (k = 0; k < N - 1; k++)
+                trap_in[k + 1] = f_gx[k]*df_gxdc[k] + f_gy[k]*df_gydc[k];
+            dFdc = sum(trap_in);
+            for (k = 0; k < N - 1; k++)
+                trap_in[k + 1] = df_gxdc[k]*df_gxdc[k] + df_gydc[k]*df_gydc[k];
+            d2Fdcdc = sum(trap_in);
+            for (i = 0; i <= N; i++)
+                for (j = 0; j <= N; j++)
+                    Augment[i][j] = Jac[i][j];
+            for (i = 0; i <= N; i++)
+            {
+                Augment[i][N + 1] = d2Fdddc[i];
+                Augment[N + 1][i] = Augment[i][N + 1];
+            }
+            Augment[N + 1][N + 1] = d2Fdcdc;
+            //System.out.println("dFdc = " + fitted.getc() + ", " + t2[0] + ", " + t2[1] + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
+
             deld = BSpline5.gaussj(Jac, dFdd);      // this is actually the negative of Δd
             for (i = 0; i <= N; i++)
                 t2[i] -= deld[i]/gain;
@@ -168,6 +195,7 @@ public class BezierCubicTotal
             System.out.print("deld = ");
             for (i = 0; i <= N; i++) System.out.print(", " + deld[i]);
             System.out.println();
+            System.out.println("\ndFdc = " + fitted.getc() + ", " + t2[0] + ", " + t2[1] + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
             maxdel = 0;
             for (i = 0; i <= N; i++)
                 if (Math.abs(deld[i]) > maxdel)
@@ -176,11 +204,15 @@ public class BezierCubicTotal
         if (loop < MAXLOOP)
         {
             BSpline5.dump_Jac(Jac);
+            BSpline5.dump_Jac(Augment);
             //Jacdet = BSpline5.detm(Jac);
             System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + t2[0] + ", " + t2[1] + ", " + fitted.getc());
             for (i = 0; i < N; i++) System.out.printf("%.4f, ", t2[i]);
             System.out.printf("%.4f\n", t2[N]);
-            solve_at_P2(true);                          // final run just for good measure
+            System.out.println("det M_org = ," + fitted.getc() + ", " + (float) t2[0] + ", " + (float) t2[1] + ", " + (Jac[0][0]*Jac[1][1] - Jac[0][1]*Jac[1][0])
+                                        + ", " + (Jac[0][0]*Jac[1][1]*d2Fdcdc + Jac[0][1]*d2Fdddc[1]*d2Fdddc[0] + Jac[1][0]*d2Fdddc[1]*d2Fdddc[0]
+                                               -  Jac[1][1]*d2Fdddc[0]*d2Fdddc[0] - Jac[0][0]*d2Fdddc[1]*d2Fdddc[1] - Jac[0][1]*Jac[1][0]*d2Fdcdc));
+            solve_at_P2(true);                 // final run just for good measure
             // calculate dt2dc[i]
             double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
             System.out.println("\ni, t2[i], d2Fdddc[i], dt2dc[i], at c = ," + fitted.getc());
@@ -230,6 +262,7 @@ public class BezierCubicTotal
         }
         double retVal = calc_error();
         System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + t2[0] + ", " + t2[1] + ", " + retVal + ", " + (float) Jacdet);
+        //System.out.println("\nCubicBezierTotal F = , , , " + fitted.getc() + ", " + retVal*retVal*180*180);
         return retVal;
     }
 

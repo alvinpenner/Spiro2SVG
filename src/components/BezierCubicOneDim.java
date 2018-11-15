@@ -30,10 +30,13 @@ public class BezierCubicOneDim
     {
         //fitted = new epiTrochoidFxn(3.61 + 0*0.00001);
         //iterate_at_P2(57.31291807448238 + 0*0.01, 0);
+        //fitted = new epiTrochoidFxn(3.6145);
+        //iterate_at_P2(57.3, 0);
         fitted = new epiTrochoidFxn(20);
-        //iterate_at_P2(57.6, 0);
-        //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
-        scan_at_P2();
+        iterate_at_P2(27, 0);
+        //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(17.889026722854, 92.22096516520845, true) + "\n");
+        //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(56.811, 32.006, true) + "\n");
+        //scan_at_P2();
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -44,9 +47,11 @@ public class BezierCubicOneDim
         //    double tempd1 = 60 + 0.01*i;
         //    System.out.println(i + ", " + spiro_area() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_d2d2dd1dd1(tempd1));
         //}
-        //double tempd1 = 20 + 0*0.001;
+        //double tempd1 = 18;
         //System.out.println("test , " + fitted.getc() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_dd2dc(tempd1) + ", " + calc_d2d2dd1dc(tempd1));
+        //System.out.println("test , " + fitted.getc() + ", " + tempd1 + ", " + calc_dd2dc_at_d1(tempd1) + ", " + calc_dd1dc_at_d2(tempd1) + ", " + calc_d2d1dcdd2_at_d2(tempd1) + ", " + calc_d2d2dcdd1_at_d1(tempd1));
         //System.out.println("test , " + fitted.getc() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_d2d2dd1dd1(tempd1));
+        //calc_d1_d2_at_h();
     }
 
     private static void iterate_at_P2(double d1, double d2)
@@ -76,7 +81,9 @@ public class BezierCubicOneDim
         double[] dFdd = new double[1];
         double[] d2Fdddc = new double[1];                           // augmented matrix
         double dFdc;
-        //double d2Fdcdc;                                             // augmented matrix
+        double d2Fdh2, d2Fdhdc;                                     // response wrt anti-symmetric variable h
+        double d2Fdd2dc;                                            // for testing only, alternative to d2Fdddc[0]
+        //double d2Fdcdc;                                           // augmented matrix
         double[][] Augment = new double[2][2];
         double deld;                                                // (-Δd1)
         int i, j, k, loop = 0;
@@ -117,7 +124,7 @@ public class BezierCubicOneDim
 
             // calc dFdd[j] at current (d1, d2)
 
-            double dd1dd1, dd1dd2, dd2dd2, dd2;
+            double dd1dd1, dd1dd2, dd2dd2, dd1dc, dd2dc, dd1, dd2;
             for (i = 0; i < 1; i++)                 // one loop only
             {
                 for (k = 0; k <= N; k++)
@@ -139,10 +146,28 @@ public class BezierCubicOneDim
                                - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*calc_t2dxy(k, t2[k], "c"))
                                + dd2dd2*calc_dd2dc(d1))*calc_dd2dd1(d1);
                     trap_in[k] += (f_gx[k]*(dfxdd[1][k] + dfxdu[k]*t2dd[1][k]) + f_gy[k]*(dfydd[1][k] + dfydu[k]*t2dd[1][k]))*calc_d2d2dd1dc(d1);
+                    //trap_in[k] += (f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k])*calc_d2d2dd1dc(d1);
                     // System.out.println(i + ", " + k + ", " + trap_in[k]);
                 }
                 d2Fdddc[i] = t2_vs_t1.integrate(trap_in);               // augmented matrix
             }
+
+            // test the hypothesis : dd1dd2 + calc_dd2dd1(d1)*dd2dd2 = 0
+
+            for (k = 0; k <= N; k++)
+                trap_in[k] = dfxdd[0][k]*dfxdd[0][k] + dfydd[0][k]*dfydd[0][k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[0][k];
+            dd1dd1 = t2_vs_t1.integrate(trap_in);
+            for (k = 0; k <= N; k++)
+                trap_in[k] = dfxdd[0][k]*dfxdd[1][k] + dfydd[0][k]*dfydd[1][k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[1][k];
+            dd1dd2 = t2_vs_t1.integrate(trap_in);
+            for (k = 0; k <= N; k++)
+                trap_in[k] = dfxdd[1][k]*dfxdd[1][k] + dfydd[1][k]*dfydd[1][k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*t2dd[1][k];
+            dd2dd2 = t2_vs_t1.integrate(trap_in);
+            System.out.println("test dd1dd2 + calc_dd2dd1(d1)*dd2dd2 = 0 : " + dd1dd2 + ", " + calc_dd2dd1(d1) + ", " + dd2dd2 + ", " + calc_dd2dc_at_d1(d1)*(dd1dd2 + calc_dd2dd1(d1)*dd2dd2));
+            System.out.println("test dd1dd1 + calc_dd2dd1(d1)*dd1dd2 = 0 : " + dd1dd1 + ", " + calc_dd2dd1(d1) + ", " + dd1dd2 + ", " + calc_dd1dc_at_d2(d1)*(dd1dd1 + calc_dd2dd1(d1)*dd1dd2));
 
             // calc d2Fdd[i]dd[j] (Jacobean matrix)
 
@@ -165,6 +190,65 @@ public class BezierCubicOneDim
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
             //System.out.println("test Jac(d2) : " + Jac[0][0] + ", " + Jac[0][0]/calc_dd2dd1(d1)/calc_dd2dd1(d1));
+
+            // d2Fdd2dc : for testing only, alternative to d2Fdddc[0]
+
+            for (k = 0; k <= N; k++)
+            {
+                dd1dd1 = dfxdd[0][k]*dfxdd[0][k] + dfydd[0][k]*dfydd[0][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[0][k];
+                dd1dd2 = dfxdd[0][k]*dfxdd[1][k] + dfydd[0][k]*dfydd[1][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[1][k];
+                trap_in[k] = dfxdd[1][k]*df_gxdc[k] + dfydd[1][k]*df_gydc[k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*calc_t2dxy(k, t2[k], "c")
+                           + dd1dd2*calc_dd1dc_at_d2(d1);
+                trap_in[k] += ((dfxdd[0][k]*df_gxdc[k] + dfydd[0][k]*df_gydc[k]
+                           - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*calc_t2dxy(k, t2[k], "c"))
+                           + dd1dd1*calc_dd1dc_at_d2(d1))/calc_dd2dd1(d1);
+                trap_in[k] += (f_gx[k]*(dfxdd[0][k] + dfxdu[k]*t2dd[0][k]) + f_gy[k]*(dfydd[0][k] + dfydu[k]*t2dd[0][k]))*calc_d2d1dcdd2_at_d2(d1);
+                //trap_in[k] += (f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k])*calc_d2d2dd1dc(d1);
+                // System.out.println(i + ", " + k + ", " + trap_in[k]);
+            }
+            d2Fdd2dc = t2_vs_t1.integrate(trap_in);               // augmented matrix
+
+            // d2Fdh2: the second-order response wrt the anti-symmetric variable h = ln(d1/d2)
+
+            for (k = 0; k <= N; k++)
+            {
+                dd1 = f_gx[k]*dfxdd[0][k] + f_gy[k]*dfydd[0][k];
+                dd2 = f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k];
+                dd1dd1 = dfxdd[0][k]*dfxdd[0][k] + dfydd[0][k]*dfydd[0][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[0][k];
+                dd1dd2 = dfxdd[0][k]*dfxdd[1][k] + dfydd[0][k]*dfydd[1][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[1][k];
+                dd2dd2 = dfxdd[1][k]*dfxdd[1][k] + dfydd[1][k]*dfydd[1][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*t2dd[1][k];
+                trap_in[k] = calc_dd1dh(d1)*calc_dd1dh(d1)*dd1dd1 + 2*calc_dd1dh(d1)*calc_dd2dh(d1)*dd1dd2 + calc_dd2dh(d1)*calc_dd2dh(d1)*dd2dd2
+                           + calc_d2d1dh2(d1)*dd1 + calc_d2d2dh2(d1)*dd2;
+            }
+            d2Fdh2 = t2_vs_t1.integrate(trap_in);
+
+            // d2Fdhdc: the second-order response wrt the anti-symmetric variable h = ln(d1/d2)
+
+            for (k = 0; k <= N; k++)
+            {
+                dd1 = f_gx[k]*dfxdd[0][k] + f_gy[k]*dfydd[0][k];
+                dd2 = f_gx[k]*dfxdd[1][k] + f_gy[k]*dfydd[1][k];
+                dd1dc = dfxdd[0][k]*df_gxdc[k] + dfydd[0][k]*df_gydc[k]
+                      - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*calc_t2dxy(k, t2[k], "c");
+                dd2dc = dfxdd[1][k]*df_gxdc[k] + dfydd[1][k]*df_gydc[k]
+                      - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*calc_t2dxy(k, t2[k], "c");
+                dd1dd1 = dfxdd[0][k]*dfxdd[0][k] + dfydd[0][k]*dfydd[0][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[0][k];
+                dd1dd2 = dfxdd[0][k]*dfxdd[1][k] + dfydd[0][k]*dfydd[1][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[0][k]*t2dd[1][k];
+                dd2dd2 = dfxdd[1][k]*dfxdd[1][k] + dfydd[1][k]*dfydd[1][k]
+                       - (dfxdu[k]*dfxdu[k] + dfydu[k]*dfydu[k] + f_gx[k]*d2fxdudu[k] + f_gy[k]*d2fydudu[k])*t2dd[1][k]*t2dd[1][k];
+                trap_in[k] = calc_dd1dh(d1)*calc_dd1dc_at_h(d1)*dd1dd1 + (calc_dd1dh(d1)*calc_dd2dc_at_h(d1) + calc_dd2dh(d1)*calc_dd1dc_at_h(d1))*dd1dd2 + calc_dd2dh(d1)*calc_dd2dc_at_h(d1)*dd2dd2
+                           + calc_d2d1dcdh(d1)*dd1 + calc_d2d2dcdh(d1)*dd2
+                           + calc_dd1dh(d1)*dd1dc + calc_dd2dh(d1)*dd2dc;
+            }
+            d2Fdhdc = t2_vs_t1.integrate(trap_in);
 
             // calculate determinant of augmented matrix
 
@@ -219,7 +303,8 @@ public class BezierCubicOneDim
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (Jac[1][0]/Jac[0][0]) + ", " + (float) (Jac[1][1]/Jac[0][1]) + ", " + (float) (d2Fdddc[1]/d2Fdddc[0]));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) BSpline5.detm(Augment));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + rms*rms*180*180);
-            System.out.println("\nfinal oneDim CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + Jac[0][0] + ", " + d2Fdddc[0]);
+            //System.out.println("\nfinal oneDim CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + Jac[0][0] + ", " + d2Fdddc[0] + ", " + d2Fdd2dc);
+            System.out.println("d2Fdh2 / d2Fdhdc = , , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + d2Fdh2 + ", " + d2Fdhdc);
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld + ")");
@@ -245,8 +330,7 @@ public class BezierCubicOneDim
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            ;
-            //System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -282,8 +366,25 @@ public class BezierCubicOneDim
             }
         }
         double retVal = calc_error();
-//        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
-        System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
+        //System.out.println("calc_dd2dd1(d1) = " + calc_dd2dd1(d1) + ", " + calc_d2(d1));
+        //System.out.println("calc_dd1dh      = " + calc_dd1dh(d1) + ", " + calc_dd2dh(d1) + ", " + calc_d2d1dh2(d1) + ", " + calc_d2d2dh2(d1));
+        //System.out.println("calc_dd1dc_at_h = " + calc_dd1dc_at_h(d1) + ", " + calc_dd2dc_at_h(d1) + ", " + calc_d2d1dcdh(d1) + ", " + calc_d2d2dcdh(d1));
+        //System.out.println("1 consistency (d/dh)    : " + (calc_dd1dh(d1)/d1 - calc_dd2dh(d1)/d2 - 1));
+        //System.out.println("2 consistency (d2/dh2)  : " + (-calc_dd1dh(d1)*calc_dd1dh(d1)/d1/d1 + calc_dd2dh(d1)*calc_dd2dh(d1)/d2/d2 + calc_d2d1dh2(d1)/d1 - calc_d2d2dh2(d1)/d2));
+        //System.out.println("3 consistency (d2/dcdh) : " + (-calc_dd1dc_at_h(d1)*calc_dd1dh(d1)/d1/d1 + calc_dd2dc_at_h(d1)*calc_dd2dh(d1)/d2/d2 + calc_d2d1dcdh_alt(d1)/d1 - calc_d2d2dcdh_alt(d1)/d2));
+        //System.out.println("4 consistency (d/dc)    : " + (2*calc_dd1dc_at_h(d1)*(l1 - l2/Math.sqrt(2)) + 2*calc_dd2dc_at_h(d1)*(l2 - l1/Math.sqrt(2)) - (d1*calc_dd2dc_at_h(d1) + d2*calc_dd1dc_at_h(d1))/Math.sqrt(2) + 2.*(d1 - d2)*(1. + 1./Math.sqrt(2)) - 20.*dspiro_areadc()/3.));
+        //System.out.println("5 consistency (d/dh)    : " + (2*calc_dd1dh(d1)*(l1 - l2/Math.sqrt(2)) + 2*calc_dd2dh(d1)*(l2 - l1/Math.sqrt(2)) - (d1*calc_dd2dh(d1) + d2*calc_dd1dh(d1))/Math.sqrt(2)));
+        //System.out.println("6 consistency (d/dc)    : " + (d2*calc_dd1dc_at_h(d1) - d1*calc_dd2dc_at_h(d1)));
+        //System.out.println("7 consistency (d2/dh2)  : " + (calc_d2d1dh2(d1)*(2*(l1 - l2/Math.sqrt(2)) - d2/Math.sqrt(2)) + calc_d2d2dh2(d1)*(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2)) - 2*calc_dd1dh(d1)*calc_dd2dh(d1)/Math.sqrt(2)));
+        //System.out.println("8 consistency (d2/dcdh) : " + (calc_d2d1dcdh(d1)*(2*(l1 - l2/Math.sqrt(2)) - d2/Math.sqrt(2)) + calc_d2d2dcdh(d1)*(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))
+        //                                                +  calc_dd1dh(d1)*(2*(1 + 1/Math.sqrt(2)) - calc_dd2dc_at_h(d1)/Math.sqrt(2)) + calc_dd2dh(d1)*(-2*(1 + 1/Math.sqrt(2)) - calc_dd1dc_at_h(d1)/Math.sqrt(2))));
+        //System.out.println("cancel test = " + calc_dd1dh(d1)*calc_dd2dc_at_h(d1) + ", " + calc_dd2dh(d1)*calc_dd1dc_at_h(d1) + ", " + (calc_dd1dh(d1)*calc_dd2dc_at_h(d1) + calc_dd2dh(d1)*calc_dd1dc_at_h(d1))
+        //                   + ", " + (20*dspiro_areadc()/3 + 2*(d2 - d1)*(1 + 1/Math.sqrt(2)))*2*d1*d2*(d2*(l2 - l1/Math.sqrt(2)) - d1*(l1 - l2/Math.sqrt(2)))/2/(d1*(l1 - l2/Math.sqrt(2)) + d2*(l2 - l1/Math.sqrt(2)) - d1*d2/Math.sqrt(2))/2/(d1*(l1 - l2/Math.sqrt(2)) + d2*(l2 - l1/Math.sqrt(2)) - d1*d2/Math.sqrt(2)));
+        //System.out.println("verify cancel = " + calc_d2(d1) + ", " + calc_dd1dh_dd2dc(d1));
+        //System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
         return retVal;
     }
 
@@ -295,12 +396,12 @@ public class BezierCubicOneDim
         // keep only line 285 : 'F = , ...'
 
         double d1;
-        double d_average = 57.1;
-        double d1_start = 57.1; //d_average - 1;
-        double d1_end = 58.1; //d_average + 1;
+        //double d_average = 57.1;
+        double d1_start = 5; //d_average - 1;
+        double d1_end = 50; //d_average + 1;
         int Nd1 = 4;
 
-        fitted = new epiTrochoidFxn(3.62);
+        fitted = new epiTrochoidFxn(12);
         System.out.println("scan F @ , c, d1, d2, " + fitted.getc());
         for (int i = 0; i <= Nd1; i++)
         {
@@ -450,6 +551,18 @@ public class BezierCubicOneDim
         return -fitted.getc()*(3*Math.PI/2 - Math.sqrt(2))/2;
     }
 
+    private static void calc_d1_d2_at_h()
+    {
+        // satisfy area constraint at given c
+        // satisfy h = ln(d1/d2)
+        double h = -1.64;
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double tempT = l1 - l2/Math.sqrt(2) + Math.exp(-h)*(l2 - l1/Math.sqrt(2));
+        double d1 = Math.sqrt(2)*Math.exp(h)*(tempT - Math.sqrt(tempT*tempT - Math.exp(-h)*20*spiro_area()/3/Math.sqrt(2)));
+        System.out.println("calc_d1_d2_at_h = " + d1 + ", " + calc_d2(d1));
+    }
+
     private static double calc_d2(double d1)
     {
         // satisfy area constraint
@@ -469,11 +582,55 @@ public class BezierCubicOneDim
     private static double calc_dd2dc(double d1)
     {
         // satisfy area constraint (first derivative)
+        // holding d1 fixed
         double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
         double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
         return ((2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))*(20./3.*dspiro_areadc() - 2*d1*(1 + 1/Math.sqrt(2)))
                + (20*spiro_area()/3 - 2*d1*(l1 - l2/Math.sqrt(2)))*2*(1 + 1/Math.sqrt(2)))
                /(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_dd2dc_at_d1(double d1)
+    {
+        // satisfy area constraint (first derivative)
+        // holding d1 fixed
+        // proposed improvement to calc_dd2dc (tested - works!)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20./3.*dspiro_areadc() + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2)))
+              /(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_dd1dc_at_d2(double d1)
+    {
+        // satisfy area constraint (first derivative)
+        // holding d2 fixed (tested - works!)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20./3.*dspiro_areadc() + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2)))
+              /(2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2));
+    }
+
+    private static double calc_d2d1dcdd2_at_d2(double d1)
+    {
+        // satisfy area constraint (first derivative)
+        // holding d2 fixed (tested - works!)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double Num = 20./3.*dspiro_areadc() + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2));
+        double Den = 2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2);
+        return (2*Den*(1. - 1./calc_dd2dd1(d1))*(1. + 1./Math.sqrt(2)) + Num/Math.sqrt(2))/Den/Den;
+    }
+
+    private static double calc_d2d2dcdd1_at_d1(double d1)
+    {
+        // satisfy area constraint (first derivative)
+        // proposed improvement to calc_dd2dc (tested - works!)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double Num = 20./3.*dspiro_areadc() + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2));
+        double Den = 2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2);
+        return (2*Den*(calc_dd2dd1(d1) - 1.)*(1. + 1./Math.sqrt(2)) + Num/Math.sqrt(2))/Den/Den;
     }
 
     private static double calc_d2d2dd1dd1(double d1)
@@ -492,6 +649,150 @@ public class BezierCubicOneDim
         return -((2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))*(2*(1 + 1/Math.sqrt(2)) - calc_dd2dc(d1)/Math.sqrt(2))
                + (2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2))*2*(1 + 1/Math.sqrt(2)))
                 /(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_dd1dh(double d1)
+    {
+        // dimensionless variable h = ln(d1/d2)
+        // satisfy area constraint
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return d1*calc_d2(d1)*(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2))/2
+              /(calc_d2(d1)*(l2 - l1/Math.sqrt(2)) + d1*(l1 - l2/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2));
+    }
+
+    private static double calc_dd2dh(double d1)
+    {
+        // dimensionless variable h = ln(d1/d2)
+        // satisfy area constraint
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return -d1*calc_d2(d1)*(2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2))/2
+               /(d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2));
+//        return -d1*calc_d2(d1)*(2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2))
+//               /(d1*(2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2)) + calc_d2(d1)*(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2)));
+    }
+
+    private static double calc_dd1dc_at_h(double d1)
+    {
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20*dspiro_areadc()/3 + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2)))*d1/2
+               /(d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2));
+    }
+
+    private static double calc_dd2dc_at_h(double d1)
+    {
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20*dspiro_areadc()/3 + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2)))*calc_d2(d1)/2
+               /(d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2));
+    }
+
+    private static double calc_dd1dh_dd2dc(double d1)
+    {
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        // calculate the cross product : dd1dh*dd2dc + dd2dh*dd1dc
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20*dspiro_areadc()/3 + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2)))*2*d1*calc_d2(d1)*(calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*(l1 - l2/Math.sqrt(2)))/2/(d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2))/2/(d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2));
+    }
+
+    private static double calc_d2d1dh2(double d1)
+    {
+        // dimensionless variable h = ln(d1/d2)
+        // satisfy area constraint
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double num1 = 1/d1*(l2 - l1/Math.sqrt(2)) + 1/calc_d2(d1)*(l1 - l2/Math.sqrt(2)) - 1/Math.sqrt(2);
+        double num2 = 2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2);
+        //return (-num1*calc_dd1dh(d1)/Math.sqrt(2) + num2*(1/d1/d1*calc_dd1dh(d1)*(l2 - l1/Math.sqrt(2)) + 1/calc_d2(d1)/calc_d2(d1)*calc_dd2dh(d1)*(l1 - l2/Math.sqrt(2))))
+        //       /2/num1/num1;
+        return (2./calc_d2(d1)*calc_dd1dh(d1)*calc_dd2dh(d1)/Math.sqrt(2) + num2*(calc_dd1dh(d1)/d1 + calc_dd2dh(d1)/calc_d2(d1)))/2/num1;
+    }
+
+    private static double calc_d2d2dh2(double d1)
+    {
+        // dimensionless variable h = ln(d1/d2)
+        // satisfy area constraint
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double num1 = 1/calc_d2(d1)*(l1 - l2/Math.sqrt(2)) + 1/d1*(l2 - l1/Math.sqrt(2)) - 1/Math.sqrt(2);
+        double num2 = 2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2);
+        //return -(-num1*calc_dd2dh(d1)/Math.sqrt(2) + num2*(1/calc_d2(d1)/calc_d2(d1)*calc_dd2dh(d1)*(l1 - l2/Math.sqrt(2)) + 1/d1/d1*calc_dd1dh(d1)*(l2 - l1/Math.sqrt(2))))
+        //        /2/num1/num1;
+        return (2./d1*calc_dd1dh(d1)*calc_dd2dh(d1)/Math.sqrt(2) - num2*(calc_dd1dh(d1)/d1 + calc_dd2dh(d1)/calc_d2(d1)))/2/num1;
+    }
+
+    private static double calc_d2d1dcdh(double d1)
+    {
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        // calculate d/dh at fixed c
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        //double Num = 20*dspiro_areadc()/3 + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2));
+        //double Den = d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2);
+        //return Num*calc_dd1dh(d1)/2/Den + d1/2/Den/Den
+        //       *(Den*2*(calc_dd2dh(d1) - calc_dd1dh(d1))*(1 + 1/Math.sqrt(2))
+        //       - Num*(calc_dd1dh(d1)*(l1 - l2/Math.sqrt(2)) + calc_dd2dh(d1)*(l2 - l1/Math.sqrt(2)) - (d1*calc_dd2dh(d1) + calc_d2(d1)*calc_dd1dh(d1))/Math.sqrt(2)));
+        double num1 = 1/d1*(l2 - l1/Math.sqrt(2)) + 1/calc_d2(d1)*(l1 - l2/Math.sqrt(2)) - 1/Math.sqrt(2);
+        double num2 = 2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2);
+        double num3 = calc_dd1dh(d1)/d1 + calc_dd2dh(d1)/calc_d2(d1);
+        return (2./calc_d2(d1)*(1 + 1/Math.sqrt(2))*(calc_dd2dh(d1) - calc_dd1dh(d1)) + calc_dd1dc_at_h(d1)*num3/Math.sqrt(2) + 1/calc_d2(d1)*num2*calc_dd2dc_at_h(d1))/2/num1;
+    }
+
+    private static double calc_d2d2dcdh(double d1)
+    {
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        // calculate d/dh at fixed c
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        //double Num = 20*dspiro_areadc()/3 + 2*(calc_d2(d1) - d1)*(1 + 1/Math.sqrt(2));
+        //double Den = d1*(l1 - l2/Math.sqrt(2)) + calc_d2(d1)*(l2 - l1/Math.sqrt(2)) - d1*calc_d2(d1)/Math.sqrt(2);
+        //return Num*calc_dd2dh(d1)/2/Den + calc_d2(d1)/2/Den/Den
+        //       *(Den*2*(calc_dd2dh(d1) - calc_dd1dh(d1))*(1 + 1/Math.sqrt(2))
+        //       - Num*(calc_dd1dh(d1)*(l1 - l2/Math.sqrt(2)) + calc_dd2dh(d1)*(l2 - l1/Math.sqrt(2)) - (d1*calc_dd2dh(d1) + calc_d2(d1)*calc_dd1dh(d1))/Math.sqrt(2)));
+        double num1 = 1/d1*(l2 - l1/Math.sqrt(2)) + 1/calc_d2(d1)*(l1 - l2/Math.sqrt(2)) - 1/Math.sqrt(2);
+        double num2 = 2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2);
+        double num3 = calc_dd1dh(d1)/d1 + calc_dd2dh(d1)/calc_d2(d1);
+        return (2./d1*(1 + 1/Math.sqrt(2))*(calc_dd2dh(d1) - calc_dd1dh(d1)) + calc_dd2dc_at_h(d1)*num3/Math.sqrt(2) - 1/d1*num2*calc_dd1dc_at_h(d1))/2/num1;
+    }
+
+    private static double calc_d2d1dcdh_alt(double d1)
+    {
+        // alternate calc of d2d1dcdh (hopefully not needed)
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        // calculate d/dh at fixed c
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double Num = 2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2);
+        double Den = 2*(1/d1*(l2 - l1/Math.sqrt(2)) + 1/calc_d2(d1)*(l1 - l2/Math.sqrt(2)) - 1/Math.sqrt(2));
+        return (Den*(-2*(1 + 1/Math.sqrt(2)) - calc_dd1dc_at_h(d1)/Math.sqrt(2))
+             - 2*Num*(-calc_dd1dc_at_h(d1)/d1/d1*(l2 - l1/Math.sqrt(2)) - calc_dd2dc_at_h(d1)/calc_d2(d1)/calc_d2(d1)*(l1 - l2/Math.sqrt(2))
+             - 1/d1*(1 + 1/Math.sqrt(2)) + 1/calc_d2(d1)*(1 + 1/Math.sqrt(2))))/Den/Den;
+    }
+
+    private static double calc_d2d2dcdh_alt(double d1)
+    {
+        // alternate calc of d2d2dcdh (hopefully not needed)
+        // satisfy area constraint
+        // calculate d/dc at fixed h = ln(b1/b2)
+        // calculate d/dh at fixed c
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        double Num = 2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2);
+        double Den = 2*(1/d1*(l2 - l1/Math.sqrt(2)) + 1/calc_d2(d1)*(l1 - l2/Math.sqrt(2)) - 1/Math.sqrt(2));
+        return -(Den*(2*(1 + 1/Math.sqrt(2)) - calc_dd2dc_at_h(d1)/Math.sqrt(2))
+             - 2*Num*(-calc_dd1dc_at_h(d1)/d1/d1*(l2 - l1/Math.sqrt(2)) - calc_dd2dc_at_h(d1)/calc_d2(d1)/calc_d2(d1)*(l1 - l2/Math.sqrt(2))
+             - 1/d1*(1 + 1/Math.sqrt(2)) + 1/calc_d2(d1)*(1 + 1/Math.sqrt(2))))/Den/Den;
     }
 
     private static double[] N33(double u)
