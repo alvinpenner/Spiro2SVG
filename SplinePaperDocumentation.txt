@@ -1,0 +1,30 @@
+web file: https://github.com/alvinpenner/Spiro2SVG/blob/master/SplinePaperDocumentation.txt
+
+This is documentation for the source code for the paper "Fitting Splines to a Parametric Function", to be published as a SpringerBrief.
+
+The source code is at: https://github.com/alvinpenner/Spiro2SVG/tree/master/src/components
+These are standalone java files which can be compiled and run from DOS without any user-interface. (Originally created in NetBeans 6.9.1).
+
+Six different types of splines are considered, using the files:
+- BezierCubic.java
+- BSpline5.java
+- BSpline6.java
+- BezierQuartic.java
+- Beta2Spline.java
+- Beta1Spline.java
+
+When these execute they will call:
+- FittedFxn.java
+which defines the curve to be fit, which in this case is an epiTrochoidFxn.
+
+Additional support routines which may be called are:
+- t2_vs_t1.fn(Bezx, t2[i])
+- t2_vs_t1.dfn(Bezx, t2[i])
+- t2_vs_t1.integrate(trap_in)
+- fitymoment.solve_quartic_all(1, qua, qub, quc, qud)
+- BSpline5.gaussj(Jac, dFdd)
+which will calculate values of a Bezier curve and its derivatives, perform numerical integration using the trapezoid rule, solve a quartic equation to calculate eigenvalues, and invert a matrix using Gauss-Jordan elimination.
+
+Each of the six spline types will contain the routine 'solve_at_P2(a0, a1, a2, a3, ..., print)' or something analogous to it. This is used to calculate the rms error if the arm lengths are known. This will call the routine 'solve_quintic_for_t2', or something analogous to it, to find the u(t) profile, which is called t2[i] in the program. Given the u(t) profile, the actual error calculation is done in 'calc_error()'. The routine 'solve_at_P2' can be used by any fitting method to calculate rms error regardless of whether the fit is optimal or not. This routine will also calculate the array t2dd[j][i] which is the first order response of the function u(t) to changes in a[j].
+
+The ODF method is implemented in the routine 'iterate_at_P2(a0, a1, a2, a3, ...)', or something analogous to it, which requires an initial estimate of the arm lengths. This will setup a Newton-Raphson iteration to define new values of arm lengths and will then call 'solve_at_P2' to re-optimize the u(t) profile, and will loop until convergence is achieved. The output will all be generated as console output using System.out.println().

@@ -39,11 +39,17 @@ public class BezierQuartic
         //fitted = new CycloidFxn(tempc);
         //fitted = new epiTrochoidFxn(0.25592);
         //fitted = new epiTrochoidFxn(0.25592);
-        fitted = new epiTrochoidFxn(2.9);
+        //fitted = new epiTrochoidFxn(0.25592);
         //paste_data(80, 0.9886277018143461, 0.2624690492231421, 0.7640885237135162, 1.8275481762035848);
         //read_Quartic_Bezier_data(230);
-        //iterate_at_P2(31.97219182723345, 38.66105265926219, 172.521055352539, 66.34898239);
-        iterate_at_P2(33.07325404217647, 21.826588775756665, 172.71999346440768, 73.8622729);
+        //iterate_at_P2(32.01122727913818, 38.63160818520913, 172.50216357248277, 66.391208);
+//        fitted = new epiTrochoidFxn(0.25);
+//        iterate_at_P2(31.99895839545201, 38.643421590075945, 172.50595431469327, 66.37888711433044);
+        fitted = new epiTrochoidFxn(0.2);
+        iterate_at_P2(31.89782854188669, 38.74180857509222, 172.5364009404442, 66.2769);
+        //fitted = new epiTrochoidFxn(5.);
+        //iterate_at_P2(35, 36, 170, 67);
+        //iterate_at_P2(67.47348868439731, 3.3205789868742337, 140.12629225585843, 110.0936044);
         //iterate_at_P2(32.02406276623338, 38.62191169612965, 172.49594071073963, 66.40511369595288); // 19.25 minimum
         //iterate_at_P2(31.464595462598876, 122.8023528021591, 161.91830044656243, 57.58332982440786); // 19.25 saddle
         //iterate_at_P2(40.923936413081165, 174.54348410425095, 135.45126668176417, 77.10113250461616); // 19.25
@@ -89,6 +95,7 @@ public class BezierQuartic
         double[][] d2fydudd = new double[4][N+1];
         double[] df_gxdc = new double[N+1];                         // used only for calc of dx[]/dc
         double[] df_gydc = new double[N+1];
+        double[] h_inv = new double[N+1];                           // Book 7, page 40
 
         double[] trap_in = new double[N+1];
         double[][] Jac = new double[4][4];
@@ -143,7 +150,7 @@ public class BezierQuartic
                 //double testf1 = dfxdd[1][i]*f_gx[i] + dfydd[1][i]*f_gy[i];    // temporary test code fix fix
                 //double testf2 = dfxdd[2][i]*f_gx[i] + dfydd[2][i]*f_gy[i];    // temporary test code fix fix
                 //double testf3 = dfxdd[3][i]*f_gx[i] + dfydd[3][i]*f_gy[i];    // temporary test code fix fix
-                //System.out.println("testf = ," + t1 + ", " + testf0 + ", " + testf1 + ", " + testf2 + ", " + testf3);
+                //System.out.println("testf = ," + (float) t1 + ", " + (float) testf0 + ", " + (float) testf1 + ", " + (float) testf2 + ", " + (float) testf3 + ", " + testf1/testf0 + ", " + testf2/testf0 + ", " + testf3/testf0);
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2)
@@ -199,6 +206,62 @@ public class BezierQuartic
             Augment[4][4] = d2Fdcdc;
             //System.out.println("dFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
 
+            // calculate the "oval RHS residual", Book 7, page 40
+
+            double beta[] = calc_oval_det(d1, d2, x2, y2);      // check to see if this is the oval branch
+            //System.out.println("beta vector = , " + beta[0] + ", " + beta[1] + ", " + beta[2] + ", " + beta[3]);
+            for (i = 0; i <= N; i++)
+            {
+                h_inv[i] = -(beta[0]*t2dd[0][i] + beta[1]*t2dd[1][i] + beta[2]*t2dd[2][i] + beta[3]*t2dd[3][i]);
+                //double num = Math.sqrt(dfxdu[i]*dfxdu[i] + dfydu[i]*dfydu[i]);
+                //double den = Math.sqrt((beta[0]*dfxdd[0][i] + beta[1]*dfxdd[1][i] + beta[2]*dfxdd[2][i] + beta[3]*dfxdd[3][i])
+                //                      *(beta[0]*dfxdd[0][i] + beta[1]*dfxdd[1][i] + beta[2]*dfxdd[2][i] + beta[3]*dfxdd[3][i])
+                //                     + (beta[0]*dfydd[0][i] + beta[1]*dfydd[1][i] + beta[2]*dfydd[2][i] + beta[3]*dfydd[3][i])
+                //                      *(beta[0]*dfydd[0][i] + beta[1]*dfydd[1][i] + beta[2]*dfydd[2][i] + beta[3]*dfydd[3][i]));
+                //double X1 = dfxdu[i];
+                //double Y1 = dfydu[i];
+                //double X2 = beta[0]*dfxdd[0][i] + beta[1]*dfxdd[1][i] + beta[2]*dfxdd[2][i] + beta[3]*dfxdd[3][i];
+                //double Y2 = beta[0]*dfydd[0][i] + beta[1]*dfydd[1][i] + beta[2]*dfydd[2][i] + beta[3]*dfydd[3][i];
+                //System.out.println("normalization = , " + i + ", " + h_inv[i]);
+            }
+            //System.out.println("normalization = , " + i + ", " + num/den + ", " + 1/h_inv[i]);
+
+            for (k = 0; k <= N; k++)
+            {
+                trap_in[k] = h_inv[k]*(f_gx[k]*calc_d2fxdudc(t2[k]) + f_gy[k]*calc_d2fydudc(t2[k]));
+                //System.out.println(k + ", " + trap_in[k]);
+            }
+            double rhsc = -t2_vs_t1.integrate(trap_in);
+            System.out.println("oval residual c = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (beta[0]*d2Fdddc[0] + beta[1]*d2Fdddc[1] + beta[2]*d2Fdddc[2] + beta[3]*d2Fdddc[3]) + ", " + rhsc);
+            for (k = 0; k <= N; k++)
+            {
+                trap_in[k] = h_inv[k]*(f_gx[k]*d2fxdudd[0][k] + f_gy[k]*d2fydudd[0][k]);
+                //System.out.println(k + ", " + trap_in[k]);
+            }
+            double rhs0 = -t2_vs_t1.integrate(trap_in);
+            System.out.println("oval residual 0 = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (beta[0]*Jac[0][0] + beta[1]*Jac[0][1] + beta[2]*Jac[0][2] + beta[3]*Jac[0][3]) + ", " + rhs0);
+            for (k = 0; k <= N; k++)
+            {
+                trap_in[k] = h_inv[k]*(f_gx[k]*d2fxdudd[1][k] + f_gy[k]*d2fydudd[1][k]);
+                //System.out.println(k + ", " + trap_in[k]);
+            }
+            double rhs1 = -t2_vs_t1.integrate(trap_in);
+            System.out.println("oval residual 1 = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (beta[0]*Jac[1][0] + beta[1]*Jac[1][1] + beta[2]*Jac[1][2] + beta[3]*Jac[1][3]) + ", " + rhs1);
+            for (k = 0; k <= N; k++)
+            {
+                trap_in[k] = h_inv[k]*(f_gx[k]*d2fxdudd[2][k] + f_gy[k]*d2fydudd[2][k]);
+                //System.out.println(k + ", " + trap_in[k]);
+            }
+            double rhs2 = -t2_vs_t1.integrate(trap_in);
+            System.out.println("oval residual 2 = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (beta[0]*Jac[2][0] + beta[1]*Jac[2][1] + beta[2]*Jac[2][2] + beta[3]*Jac[2][3]) + ", " + rhs2);
+            for (k = 0; k <= N; k++)
+            {
+                trap_in[k] = h_inv[k]*(f_gx[k]*d2fxdudd[3][k] + f_gy[k]*d2fydudd[3][k]);
+                //System.out.println(k + ", " + trap_in[k]);
+            }
+            double rhs3 = -t2_vs_t1.integrate(trap_in);
+            System.out.println("oval residual 3 = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (beta[0]*Jac[3][0] + beta[1]*Jac[3][1] + beta[2]*Jac[3][2] + beta[3]*Jac[3][3]) + ", " + rhs3);
+
             //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
             deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
             d1 -= deld[0];
@@ -246,7 +309,7 @@ public class BezierQuartic
             //double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
             //System.out.println("\nfinal quarticBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) -dt2dc[2] + ", " + (float) -dt2dc[3] + ", " + (float) BSpline5.detm(Augment));
             System.out.println("\nfinal quarticBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) Jacdet + ", " + (float) BSpline5.detm(Augment));
-            calc_oval_det(d1, d2, x2, y2);      // check to see if this is the oval branch
+            //calc_oval_det(d1, d2, x2, y2);      // check to see if this is the oval branch
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ")");
@@ -433,14 +496,53 @@ public class BezierQuartic
         return retVal;
     }
 
-    private static void calc_oval_det(double d1, double d2, double x2, double y2)
+    private static double[] calc_oval_det(double d1, double d2, double x2, double y2)
     {
-        double[][] oval = new double[][] {{3*((y2 - Bezy[0])*Math.cos(theta_start) - (x2 - Bezx[0])*Math.sin(theta_start)), 0, d1*Math.sin(theta_start), d1*Math.cos(theta_start)},
-                                          {3*((Bezy[4] - y2)*Math.cos(theta_start) - (Bezx[4] - x2)*Math.sin(theta_start)) - 3*d2*Math.sin(theta_end - theta_start), -d1*Math.sin(theta_end - theta_start), 3*(y2 - Bezy[0] - d1*Math.sin(theta_start)), 3*(x2 - Bezx[0] - d1*Math.cos(theta_start))},
-                                          {d2*Math.sin(theta_end - theta_start), 3*((y2 - Bezy[0])*Math.cos(theta_end) - (x2 - Bezx[0])*Math.sin(theta_end)) + 3*d1*Math.sin(theta_end - theta_start), 3*(Bezy[4] - y2 - d2*Math.sin(theta_end)), 3*(Bezx[4] - x2 - d2*Math.cos(theta_end))},
-                                          {0, 3*((Bezy[4] - y2)*Math.cos(theta_end) - (Bezx[4] - x2)*Math.sin(theta_end)), d2*Math.sin(theta_end), d2*Math.cos(theta_end)}};
-        //BSpline5.dump_Jac(oval);
-        System.out.println("det of oval = ," + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + BSpline5.detm(oval));
+        double[][] oval = new double[][] {{2*((y2 - Bezy[0])*Math.cos(theta_start) - (x2 - Bezx[0])*Math.sin(theta_start)), 0, d1*Math.sin(theta_start), -d1*Math.cos(theta_start)},
+                                          {6*((Bezy[4] - y2)*Math.cos(theta_start) - (Bezx[4] - x2)*Math.sin(theta_start)) - 6*d2*Math.sin(theta_end - theta_start), 2*d1*Math.sin(theta_end - theta_start), 9*(y2 - Bezy[0] - d1*Math.sin(theta_start)), -9*(x2 - Bezx[0] - d1*Math.cos(theta_start))},
+                                          {2*d2*Math.sin(theta_end - theta_start), -6*((y2 - Bezy[0])*Math.cos(theta_end) - (x2 - Bezx[0])*Math.sin(theta_end)) - 6*d1*Math.sin(theta_end - theta_start), 9*(Bezy[4] - y2 - d2*Math.sin(theta_end)), -9*(Bezx[4] - x2 - d2*Math.cos(theta_end))},
+                                          {0, -2*((Bezy[4] - y2)*Math.cos(theta_end) - (Bezx[4] - x2)*Math.sin(theta_end)), d2*Math.sin(theta_end), -d2*Math.cos(theta_end)}};
+        BSpline5.dump_Jac(oval);
+        double[][] suboval = new double[][] {{oval[1][1], oval[1][2], oval[1][3]},
+                                             {oval[2][1], oval[2][2], oval[2][3]},
+                                             {oval[3][1], oval[3][2], oval[3][3]}};
+        double[] subvec = new double[] {-oval[1][0], -oval[2][0], -oval[3][0]};
+        double[] beta = BSpline5.gaussj(suboval, subvec);
+        System.out.println("beta  vector = ,1 ," + beta[0] + ", " + beta[1] + ", " + beta[2]);
+
+        double CS0 = (x2 - Bezx[0])*Math.cos(theta_start) + (y2 - Bezy[0])*Math.sin(theta_start);
+        double CE0 = (x2 - Bezx[0])*Math.cos(theta_end) + (y2 - Bezy[0])*Math.sin(theta_end);
+        double SS0 = (x2 - Bezx[0])*Math.sin(theta_start) - (y2 - Bezy[0])*Math.cos(theta_start);
+        double SE0 = (x2 - Bezx[0])*Math.sin(theta_end) - (y2 - Bezy[0])*Math.cos(theta_end);
+        double CS4 = (Bezx[4] - x2)*Math.cos(theta_start) + (Bezy[4] - y2)*Math.sin(theta_start);
+        double CE4 = (Bezx[4] - x2)*Math.cos(theta_end) + (Bezy[4] - y2)*Math.sin(theta_end);
+        double SS4 = (Bezx[4] - x2)*Math.sin(theta_start) - (Bezy[4] - y2)*Math.cos(theta_start);
+        double SE4 = (Bezx[4] - x2)*Math.sin(theta_end) - (Bezy[4] - y2)*Math.cos(theta_end);
+        double[][] ovalc = new double[][] {{d1, SS0, 0, -d1*Math.sin(theta_start), d1*Math.cos(theta_start)},
+                                           {-3*CS0 - d1*(1 + Math.cos(theta_end - theta_start)), -SS0 - SS4 - d2*Math.sin(theta_end - theta_start), d1*Math.sin(theta_end - theta_start), 3*(y2 - Bezy[0]), -3*(x2 - Bezx[0])},
+//                                           {-27*CS0 - 27*CE4 - 9*CE0 - 9*CS4, -8*d2*Math.sin(theta_end - theta_start), 8*d1*Math.sin(theta_end - theta_start), -18*(Bezy[4] - y2) + 18*(y2 - Bezy[0]), 18*(Bezx[4] - x2) - 18*(x2 - Bezx[0])},
+                                           {-9*CS0 - 9*CS4 - 9*CE0 - 9*CE4 + 6*(d1 + d2)*(1 + Math.cos(theta_end - theta_start)), 6*SS0 + 6*SS4 + 4*d2*Math.sin(theta_end - theta_start), 6*SE0 + 6*SE4 - 4*d1*Math.sin(theta_end - theta_start), 0, 0},
+                                           {-3*CE4 - d2*(1 + Math.cos(theta_end - theta_start)), -d2*Math.sin(theta_end - theta_start), -SE0 - SE4 + d1*Math.sin(theta_end - theta_start), -3*(Bezy[4] - y2), 3*(Bezx[4] - x2)},
+                                           {d2, 0, SE4, d2*Math.sin(theta_end), -d2*Math.cos(theta_end)}};
+        suboval = new double[][] {{ovalc[1][1], ovalc[1][2], ovalc[1][3], ovalc[1][4]},
+                                  {ovalc[2][1], ovalc[2][2], ovalc[2][3], ovalc[2][4]},
+                                  {ovalc[3][1], ovalc[3][2], ovalc[3][3], ovalc[3][4]},
+                                  {ovalc[4][1], ovalc[4][2], ovalc[4][3], ovalc[4][4]}};
+        subvec = new double[] {-ovalc[1][0], -ovalc[2][0], -ovalc[3][0], -ovalc[4][0]};
+        double[] gamma = BSpline5.gaussj(suboval, subvec);
+        System.out.println("gamma vector = ,1 ," + gamma[0] + ", " + gamma[1] + ", " + gamma[2] + ", " + gamma[3]);
+
+        System.out.println("det of oval  = ," + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + BSpline5.detm(oval));
+        System.out.println("det of ovalc = ," + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + BSpline5.detm(ovalc));
+        double anal_det = -81*SS0*SE4*((x2 - Bezx[0])*(Bezy[4] - y2) - (y2 - Bezy[0])*(Bezx[4] - x2))
+                          - 27*d1*SE4*SS4*(SS4 + 3*SS0)
+                          + 27*d2*SE0*SS0*(SE0 + 3*SE4)
+                          - 9*d1*d2*(SE0*SS4 + 6*SE0*SS0 + 6*SE4*SS4 + 11*SE4*SS0)*Math.sin(theta_end - theta_start)
+                          - 9*d1*d2*d2*(SE0 + 3*SE4)*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start)
+                          + 9*d1*d1*d2*(3*SS0 + SS4)*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start)
+                          + 8*d1*d1*d2*d2*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start);
+        System.out.println("anal det of oval  = ," + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + 4*anal_det);
+        return new double[] {1, beta[0], beta[1], beta[2]};
     }
 
     private static double calc_error()
@@ -448,8 +550,8 @@ public class BezierQuartic
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        double a_b = 180;         // scale factor to make rms error dimensionless
-        //double a_b = 1;             // Cycloid only
+        double a_b = 180;               // scale factor to make rms error dimensionless
+        //double a_b = 1;               // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
 
