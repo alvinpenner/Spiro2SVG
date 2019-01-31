@@ -40,11 +40,11 @@ public class BSpline5
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
         //read_data(80, 0);
-        //read_data(1, 16);
+        //read_data(1, 8);
         //fitted = new epiTrochoidFxn(10);            // keep this, 25 iterations to converge at c = 10
         //iterate_at_P2(19, 26, 175.2, 62);           // keep this, 25 iterations to converge at c = 10
-        fitted = new epiTrochoidFxn(0);
-        iterate_at_P2(23.849235501951565, 23.849235502011112, 166.29841931017188, 68.88306067938679);
+        fitted = new epiTrochoidFxn(2);
+        iterate_at_P2(15, 35, 170., 70.);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -138,6 +138,12 @@ public class BSpline5
                 dfydd[2][i] = 0;
                 dfxdd[3][i] = 0;
                 dfydd[3][i] = N43(t2[i])[2];
+
+                //double testf0 = dfxdd[0][i]*f_gx[i] + dfydd[0][i]*f_gy[i];    // temporary test code fix fix
+                //double testf1 = dfxdd[1][i]*f_gx[i] + dfydd[1][i]*f_gy[i];    // temporary test code fix fix
+                //double testf2 = dfxdd[2][i]*f_gx[i] + dfydd[2][i]*f_gy[i];    // temporary test code fix fix
+                //double testf3 = dfxdd[3][i]*f_gx[i] + dfydd[3][i]*f_gy[i];    // temporary test code fix fix
+                //System.out.println("testf = ," + (float) t1 + ", " + testf0 + ", " + testf1 + ", " + testf2 + ", " + testf3);
             }
 
             // calc dFdd[j] at current (d1, d2, x2, y2)
@@ -392,10 +398,10 @@ public class BSpline5
 
         try
         {
-            //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig5_hypocofmd1d2.csv"));
+            BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig5_hypocofmd1d2.csv"));
             //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig7_hypoODFd1d2.csv"));
             //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_Cycloidcofmd1d2.csv"));
-            BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_CycloidODFd1d2rms.csv"));
+            //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_CycloidODFd1d2rms.csv"));
             //BufferedReader istr = new BufferedReader(new FileReader("C:\\APP\\Java\\SpiroGraph\\ODFPaper\\Fig2_CircleODFd1d2rms.csv"));
             try
             {
@@ -438,17 +444,17 @@ public class BSpline5
         //    fitted = new CircleFxn(tempc);                      // set c value (radius)
         //    t1_start = Math.PI - theta*Math.PI/180;             // set arc angle
         //}
-        if (firstline.startsWith("theta"))                    // cycloid, calculate c
-        {
-            // calculate the point of maximum curvature of a cycloid from a tangent angle
-            tempc = Math.sqrt(1 - .75*Math.cos(theta*Math.PI/180)*Math.cos(theta*Math.PI/180)); // override for cycloid
-            //fitted = new CycloidFxn(tempc);                             // set c value
-            t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
-        }
-        //if (firstline.startsWith("root"))
-        //    fitted = new epiTrochoidFxn(tempc);                           // set c value
-        //d1 = 2*9.5;        // fix fix test code
-        //d2 = 2*52.9;
+        //if (firstline.startsWith("theta"))                    // cycloid, calculate c
+        //{
+        //    // calculate the point of maximum curvature of a cycloid from a tangent angle
+        //    tempc = Math.sqrt(1 - .75*Math.cos(theta*Math.PI/180)*Math.cos(theta*Math.PI/180)); // override for cycloid
+        //    //fitted = new CycloidFxn(tempc);                             // set c value
+        //    t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
+        //}
+        if (firstline.startsWith("root"))
+            fitted = new epiTrochoidFxn(tempc);                           // set c value
+        d1 = 42;        // fix fix test code
+        d2 = 52;
         System.out.println("file data at theta c t d1 d2   = ," + theta + ", , " + tempc + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + fitted.getkappa(t1_start) + ", " + fitted.getkappa(t1_end));
 
         // calculate P2 for a B-Spline
@@ -468,9 +474,9 @@ public class BSpline5
         //P2x = 0.67; // 1.2545; // 2.408125;
         //P2y = 1.39; // 1.5819; // 1.540;
         // convert from cubic Bezier (d1, d2) to B-Spline (d1, d2)
-        System.out.println("return code solve_at_P2 = " + solve_at_P2(d1/2, d2/2, P2x, P2y, true));
+        //System.out.println("return code solve_at_P2 = " + solve_at_P2(d1/2, d2/2, P2x, P2y, true));
         //grid_search_at_P2(P2x, P2y);
-        //iterate_at_P2(d1/2, d2/2, P2x, P2y);     // default
+        iterate_at_P2(d1/2, d2/2, P2x, P2y);     // default
         //iterate_at_P2(9.5, 52.9, 192, 33.5);      // over-ride
         //iterate_at_P2(16.6, 26, 180, 50);      // over-ride
         //iterate_at_P2(10, 44, 190, 36);      // over-ride

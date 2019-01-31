@@ -32,11 +32,10 @@ public class BezierCubicOneDim
         //iterate_at_P2(57.31291807448238 + 0*0.01, 0);
         //fitted = new epiTrochoidFxn(3.6145);
         //iterate_at_P2(57.3, 0);
-        fitted = new epiTrochoidFxn(20);
-        iterate_at_P2(27, 0);
+        fitted = new epiTrochoidFxn(-3.6);
+        iterate_at_P2(31.1, 0);
         //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(17.889026722854, 92.22096516520845, true) + "\n");
         //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(56.811, 32.006, true) + "\n");
-        //scan_at_P2();
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -305,6 +304,7 @@ public class BezierCubicOneDim
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + rms*rms*180*180);
             //System.out.println("\nfinal oneDim CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + Jac[0][0] + ", " + d2Fdddc[0] + ", " + d2Fdd2dc);
             System.out.println("d2Fdh2 / d2Fdhdc = , , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + d2Fdh2 + ", " + d2Fdhdc);
+            scan_at_P2(d1, d2, Jac[0][0]);
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld + ")");
@@ -330,7 +330,8 @@ public class BezierCubicOneDim
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            ;   // temporary code
+            //System.out.println("__start oneDim cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -366,9 +367,8 @@ public class BezierCubicOneDim
             }
         }
         double retVal = calc_error();
-        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
-        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
-        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
+        //double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        //double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
         //System.out.println("calc_dd2dd1(d1) = " + calc_dd2dd1(d1) + ", " + calc_d2(d1));
         //System.out.println("calc_dd1dh      = " + calc_dd1dh(d1) + ", " + calc_dd2dh(d1) + ", " + calc_d2d1dh2(d1) + ", " + calc_d2d2dh2(d1));
         //System.out.println("calc_dd1dc_at_h = " + calc_dd1dc_at_h(d1) + ", " + calc_dd2dc_at_h(d1) + ", " + calc_d2d1dcdh(d1) + ", " + calc_d2d2dcdh(d1));
@@ -384,31 +384,34 @@ public class BezierCubicOneDim
         //System.out.println("cancel test = " + calc_dd1dh(d1)*calc_dd2dc_at_h(d1) + ", " + calc_dd2dh(d1)*calc_dd1dc_at_h(d1) + ", " + (calc_dd1dh(d1)*calc_dd2dc_at_h(d1) + calc_dd2dh(d1)*calc_dd1dc_at_h(d1))
         //                   + ", " + (20*dspiro_areadc()/3 + 2*(d2 - d1)*(1 + 1/Math.sqrt(2)))*2*d1*d2*(d2*(l2 - l1/Math.sqrt(2)) - d1*(l1 - l2/Math.sqrt(2)))/2/(d1*(l1 - l2/Math.sqrt(2)) + d2*(l2 - l1/Math.sqrt(2)) - d1*d2/Math.sqrt(2))/2/(d1*(l1 - l2/Math.sqrt(2)) + d2*(l2 - l1/Math.sqrt(2)) - d1*d2/Math.sqrt(2)));
         //System.out.println("verify cancel = " + calc_d2(d1) + ", " + calc_dd1dh_dd2dc(d1));
-        //System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
+        //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal);
+        System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
         return retVal;
     }
 
-    private static void scan_at_P2()
+    private static void scan_at_P2(double d1_org, double d2_org, double eig0)
     {
-        // calculate F over the whole range of (d1, d2)
-        // holding area constant
-        // to run this, temporarily comment out lines 248 and 284 to reduce the output
-        // keep only line 285 : 'F = , ...'
+        // calculate F over a local range around (d1_org, d2_org)
+        // move in direction that is tangent to the area constraint
+        // to run this, temporarily comment out lines 334 and 387 to reduce the output
+        // keep only line 388 : 'F = , ...'
 
-        double d1;
-        //double d_average = 57.1;
-        double d1_start = 5; //d_average - 1;
-        double d1_end = 50; //d_average + 1;
-        int Nd1 = 4;
+        double d_inc = 0.5;
+        double eigangle = 0;                                    // scan at fixed d2
+        //double eigangle = Math.atan(calc_dd2dd1(d1_org));     // scan at tangent to d2(d1)
+        int N_inc = 7;
 
-        fitted = new epiTrochoidFxn(12);
-        System.out.println("scan F @ , c, d1, d2, " + fitted.getc());
-        for (int i = 0; i <= Nd1; i++)
+        //System.out.println("calc_dd2dd1(double d1) = " + calc_dd2dd1(d1_org) + ", " + eigangle*180/Math.PI);
+        System.out.println("del =," + d_inc + ", eig0 =," + (float) eig0 + ", theta = " + (float) (eigangle*180/Math.PI));
+        System.out.println("scan F:, c, d1, d2, F");
+        for (int i = -(N_inc - 1)/2; i <= (N_inc - 1)/2; i++)
         {
             t2[N] = 0;                                  // just to control the output
-            d1 = d1_start + i*(d1_end - d1_start)/Nd1;
-            if (calc_d2(d1) < 0) break;
-            solve_at_P2(d1, calc_d2(d1), false);
+            // scan at fixed increments of d1, with d2 on the constant area constraint
+            if (calc_d2(d1_org + i*d_inc) < 0) break;
+            solve_at_P2(d1_org + i*d_inc, calc_d2(d1_org + i*d_inc), false);
+            // scan at fixed increments of both d1 and d2, tangent to the constant area constraint
+            //solve_at_P2(d1_org + i*d_inc*Math.cos(eigangle), d2_org + i*d_inc*Math.sin(eigangle), false);
         }
     }
 

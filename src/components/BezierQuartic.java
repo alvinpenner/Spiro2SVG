@@ -27,6 +27,7 @@ public class BezierQuartic
     private static double[][] t2dd = new double[4][N+1];    // partial wrt (d1, d2, x2, y2, x3, y3)
     private static double Jacdet = Double.NaN;
     private static double[] eig = new double[] {0,0,0,0};
+    private static double[] eigvec;
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
@@ -43,10 +44,10 @@ public class BezierQuartic
         //paste_data(80, 0.9886277018143461, 0.2624690492231421, 0.7640885237135162, 1.8275481762035848);
         //read_Quartic_Bezier_data(230);
         //iterate_at_P2(32.01122727913818, 38.63160818520913, 172.50216357248277, 66.391208);
-//        fitted = new epiTrochoidFxn(0.25);
-//        iterate_at_P2(31.99895839545201, 38.643421590075945, 172.50595431469327, 66.37888711433044);
-        fitted = new epiTrochoidFxn(0.2);
-        iterate_at_P2(31.89782854188669, 38.74180857509222, 172.5364009404442, 66.2769);
+        //fitted = new epiTrochoidFxn(0.255);
+        //iterate_at_P2(31.81198164131742, 38.78122063888702, 172.59805169717345, 66.1766);
+        fitted = new epiTrochoidFxn(-0.22);
+        iterate_at_P2(31.937751962965212, 38.70274635210755, 172.5245546079171, 66.3172);
         //fitted = new epiTrochoidFxn(5.);
         //iterate_at_P2(35, 36, 170, 67);
         //iterate_at_P2(67.47348868439731, 3.3205789868742337, 140.12629225585843, 110.0936044);
@@ -107,6 +108,17 @@ public class BezierQuartic
         double[] deld;                                              // (-Δd1, -Δd2, -Δx2, -Δy2)
         int i, j, k, loop = 0;
         double t1;
+
+        if (fitted.getc() < 0)
+        {
+            double temp = d1;
+            d1 = d2;
+            d2 = temp;
+            double tempx2 = Math.cos(Math.PI/8)*x2 + Math.sin(Math.PI/8)*y2;
+            double tempy2 = -Math.sin(Math.PI/8)*x2 + Math.cos(Math.PI/8)*y2;
+            x2 = Math.cos(Math.PI/8)*tempx2 + Math.sin(Math.PI/8)*tempy2;
+            y2 = Math.sin(Math.PI/8)*tempx2 - Math.cos(Math.PI/8)*tempy2;
+        }
 
         do
         {
@@ -285,7 +297,7 @@ public class BezierQuartic
                        + 2*Jac[0][0]*Jac[1][2]*Jac[2][3]*Jac[1][3] + 2*Jac[1][1]*Jac[0][2]*Jac[2][3]*Jac[0][3] + 2*Jac[2][2]*Jac[0][1]*Jac[1][3]*Jac[0][3] + 2*Jac[3][3]*Jac[0][1]*Jac[1][2]*Jac[0][2]
                        - 2*Jac[0][1]*Jac[1][2]*Jac[2][3]*Jac[0][3] - 2*Jac[0][1]*Jac[0][2]*Jac[2][3]*Jac[1][3] - 2*Jac[0][2]*Jac[0][3]*Jac[1][3]*Jac[1][2];
             eig = fitymoment.solve_quartic_all(1, qua, qub, quc, qud);
-            //System.out.println("eigenvalue = " + eig[1] + ", " + eig[3] + ", " + eig[2] + ", " + eig[0]);
+            System.out.println("eigenvalue = ," + eig[1] + ", " + eig[3] + ", " + eig[2] + ", " + eig[0]);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
             System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
@@ -309,7 +321,20 @@ public class BezierQuartic
             //double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
             //System.out.println("\nfinal quarticBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) -dt2dc[2] + ", " + (float) -dt2dc[3] + ", " + (float) BSpline5.detm(Augment));
             System.out.println("\nfinal quarticBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) Jacdet + ", " + (float) BSpline5.detm(Augment));
-            //calc_oval_det(d1, d2, x2, y2);      // check to see if this is the oval branch
+            calc_oval_det(d1, d2, x2, y2);          // check to see if this is the oval branch
+            double[][] suboval = new double[][] {{1, 0, 0, 0},                          // calculate eigenvector
+                                                 {0, Jac[1][1] - eig[1], Jac[1][2], Jac[1][3]},
+                                                 {0, Jac[2][1], Jac[2][2] - eig[1], Jac[2][3]},
+                                                 {0, Jac[3][1], Jac[3][2], Jac[3][3] - eig[1]}};
+            double[] subvec = new double[] {1, -Jac[1][0], -Jac[2][0], -Jac[3][0]};
+            eigvec = BSpline5.gaussj(suboval, subvec);
+            double mag = 0;                                                             // normalize eigenvector
+            for (k = 0; k < eigvec.length; k++)
+                mag += eigvec[k]*eigvec[k];
+            for (k = 0; k < eigvec.length; k++)
+                eigvec[k] /= Math.sqrt(mag);
+            System.out.println("eigvec = ," + eigvec[0] + ", " + eigvec[1] + ", " + eigvec[2] + ", " + eigvec[3]);
+            scan_at_P2(d1, d2, x2, y2);             // scan 5 points to get F response function
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3] + ")");
@@ -443,6 +468,7 @@ public class BezierQuartic
 
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
+        double a_b = 180;         // scale factor to make rms error dimensionless
 
         Bezx = new double[] {fitted.getx(t1_start),
                              fitted.getx(t1_start) + d1*Math.cos(theta_start),
@@ -456,7 +482,7 @@ public class BezierQuartic
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            System.out.println("__start quartic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
+            ;   //System.out.println("__start quartic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -491,9 +517,29 @@ public class BezierQuartic
                 System.out.println("quartic Bez, " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i] + ", " + t2dd[0][i] + ", " + t2dd[1][i] + ", " + t2dd[2][i] + ", " + t2dd[3][i] + ", " + calc_t2dxy(i, t2[i], "c"));
         }
         double retVal = calc_error();
-        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) eig[1] + ", " + (float) eig[3] + ", " + (float) eig[2] + ", " + (float) eig[0]);
-        //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", ");
+//        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + (float) retVal + ", " + (float) Jacdet + ", " + (float) eig[1] + ", " + (float) eig[3] + ", " + (float) eig[2] + ", " + (float) eig[0]);
+        System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + a_b*a_b*retVal*retVal/2);
         return retVal;
+    }
+
+    private static void scan_at_P2(double d1_org, double d2_org, double x2_org, double y2_org)
+    {
+        // calculate F over a local range around (d1_org, d2_org, x2_org, y2_org)
+        // move in direction of eigenvector corresponding to the lowest eigenvalue
+        // to run this, temporarily comment out lines 473 and 508 to reduce the output
+        // keep only line 509 : "F = , ..."
+
+        double d_inc = 0.1;
+        int N_inc = 7;
+
+        System.out.println("del =," + d_inc + ", eig1 =," + (float) eig[1] + ", N = " + N_inc);
+        System.out.println("scan F:, c, d1, d2, F");
+        for (int i = -(N_inc - 1)/2; i <= (N_inc - 1)/2; i++)
+        {
+            t2[N] = 0;                                  // just to control the output
+            //solve_at_P2(d1_org, d2_org, x2_org, y2_org, false);
+            solve_at_P2(d1_org + i*d_inc*eigvec[0], d2_org + i*d_inc*eigvec[1], x2_org + i*d_inc*eigvec[2], y2_org + i*d_inc*eigvec[3], false);
+        }
     }
 
     private static double[] calc_oval_det(double d1, double d2, double x2, double y2)
@@ -507,6 +553,7 @@ public class BezierQuartic
                                              {oval[2][1], oval[2][2], oval[2][3]},
                                              {oval[3][1], oval[3][2], oval[3][3]}};
         double[] subvec = new double[] {-oval[1][0], -oval[2][0], -oval[3][0]};
+        System.out.println("calc beta  det suboval = ," + BSpline5.detm(suboval));
         double[] beta = BSpline5.gaussj(suboval, subvec);
         System.out.println("beta  vector = ,1 ," + beta[0] + ", " + beta[1] + ", " + beta[2]);
 
@@ -529,6 +576,7 @@ public class BezierQuartic
                                   {ovalc[3][1], ovalc[3][2], ovalc[3][3], ovalc[3][4]},
                                   {ovalc[4][1], ovalc[4][2], ovalc[4][3], ovalc[4][4]}};
         subvec = new double[] {-ovalc[1][0], -ovalc[2][0], -ovalc[3][0], -ovalc[4][0]};
+        System.out.println("calc gamma det suboval = ," + BSpline5.detm(suboval));
         double[] gamma = BSpline5.gaussj(suboval, subvec);
         System.out.println("gamma vector = ,1 ," + gamma[0] + ", " + gamma[1] + ", " + gamma[2] + ", " + gamma[3]);
 
@@ -542,6 +590,7 @@ public class BezierQuartic
                           + 9*d1*d1*d2*(3*SS0 + SS4)*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start)
                           + 8*d1*d1*d2*d2*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start)*Math.sin(theta_end - theta_start);
         System.out.println("anal det of oval  = ," + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + 4*anal_det);
+        System.out.println("gamma vs beta = ," + fitted.getc() + ", " + (float) d1 + ", " + beta[0] + ", " + beta[1] + ", " + beta[2] + ", " + gamma[0] + ", " + gamma[1] + ", " + gamma[2] + ", " + gamma[3] + "\n");
         return new double[] {1, beta[0], beta[1], beta[2]};
     }
 
