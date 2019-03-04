@@ -32,7 +32,7 @@ public class BezierCubicOneDim
         //iterate_at_P2(57.31291807448238 + 0*0.01, 0);
         //fitted = new epiTrochoidFxn(3.6145);
         //iterate_at_P2(57.3, 0);
-        fitted = new epiTrochoidFxn(-3.6);
+        fitted = new epiTrochoidFxn(8.5);
         iterate_at_P2(31.1, 0);
         //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(17.889026722854, 92.22096516520845, true) + "\n");
         //System.out.println("oneDim cubic Bezier solve_at_P2 = " + solve_at_P2(56.811, 32.006, true) + "\n");
@@ -43,8 +43,9 @@ public class BezierCubicOneDim
         }
         //for (int i = 0; i <= 10; i++)
         //{
-        //    double tempd1 = 60 + 0.01*i;
-        //    System.out.println(i + ", " + spiro_area() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_d2d2dd1dd1(tempd1));
+        //    double tempd1 = 15.0 + 2.*i;
+            //System.out.println(i + ", " + spiro_area() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_d2d2dd1dd1(tempd1));
+        //    System.out.println(fitted.getc() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + Math.atan(calc_dd2dd1(tempd1)));
         //}
         //double tempd1 = 18;
         //System.out.println("test , " + fitted.getc() + ", " + tempd1 + ", " + calc_d2(tempd1) + ", " + calc_dd2dd1(tempd1) + ", " + calc_dd2dc(tempd1) + ", " + calc_d2d2dd1dc(tempd1));
@@ -304,7 +305,7 @@ public class BezierCubicOneDim
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + rms*rms*180*180);
             //System.out.println("\nfinal oneDim CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + Jac[0][0] + ", " + d2Fdddc[0] + ", " + d2Fdd2dc);
             System.out.println("d2Fdh2 / d2Fdhdc = , , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms + ", " + d2Fdh2 + ", " + d2Fdhdc);
-            scan_at_P2(d1, d2, Jac[0][0]);
+            //scan_at_P2(d1, d2, Jac[0][0]);
         }
         else
             System.out.println("\nNOT converged after " + loop + " loops! (" + deld + ")");

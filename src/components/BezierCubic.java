@@ -25,6 +25,8 @@ public class BezierCubic
     private static epiTrochoidFxn fitted;
     private static double[] t2 = new double[N+1];
     private static double[][] t2dd = new double[2][N+1];    // partial wrt (d1, d2)
+    private static double[] dFdd = new double[2];           // defined here so we can share it with 'scan_streanline_at_P2'
+    //private static double del_d, del_angle;                 // size and direction of iteration for streamlines
     private static double Jacdet = Double.NaN;
     private static double eig0 = Double.NaN, eig1 = Double.NaN;
     private static double eigangle = Double.NaN;
@@ -38,14 +40,26 @@ public class BezierCubic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(3.596);
-        iterate_at_P2(57.38561333420672, 30.94953);
+        fitted = new epiTrochoidFxn(3.592);
+        //iterate_at_P2(59, 29);     // normal optimization
+        //iterate_at_P2(14, 38, 2);                     // area-constrained optimization
+        //scan_streamline_at_P2(56, 34.5);
+        //scan_streamline_at_P2(56.1, 34.56);
+        //scan_streamline_at_P2(56.053 + .005, 34.557);
+        //scan_streamline_at_P2(58.94795711624154, 29.62577804214821);
+        //scan_streamline_at_P2(56.05, 34.53);
+        //scan_streamline_at_P2(56.06272 - .1, 34.54501);
+//        scan_streamline_at_P2(56.05399864376891, 34.559340683666015);   // intermediate position
+        //scan_streamline_at_P2(53.3, 38.9);
+        //iterate_at_P2(36.063996220825075, 63.23990306508096, 36.28674943705403, 62.840719240125544);    // linear-constrained optimization
         //fitted = new epiTrochoidFxn(3.59611);
-        //iterate_at_P2(57.38441137202696, 30.95147);
+        //iterate_at_P2(14.959259818763828, 92.24198234164545);
+        scan_streamline_at_P2(57.13628153609134, 31.41210991725839);
         //fitted = new epiTrochoidFxn(3.5);
         //iterate_at_P2(57.6415663538542, 30.721902560475314);
         //fitted = new epiTrochoidFxn(3.5965);
         //iterate_at_P2(57.42308520622449 ,  30.879968);
+        //solve_at_P2(60, 40, false);
         //System.out.println("cubic Bezier solve_at_P2 = " + solve_at_P2(60, 40, true) + "\n");
         //calc_array();               // generate Python 2D contour plot of rms
         if (fitted == null)
@@ -55,15 +69,18 @@ public class BezierCubic
         }
     }
 
-    private static void iterate_at_P2(double d1, double d2)
+    //private static void iterate_at_P2(double d1, double d2)
+    private static void iterate_at_P2(double... values)
     {
         // calculate a new estimate of (d1, d2) by setting dF = 0
         // include only first-order responses
         // see Spiro2SVG Book 3, page 54 (applied to quartic Bezier)
         // setup 2-variable Newton-Raphson iteration
+        // see Core Java Vol I, p. 189, for use of 'variable number of parameters'
 
         final double gain = 1;                              // fudge factor to reduce gain
         final int MAXLOOP = 1000;
+        double d1, d2, theta_perp = Double.NaN;             // initial (d1,d2), angle of scan
         double[] f_gx = new double[N+1];
         double[] f_gy = new double[N+1];
         double[] dfxdu = new double[N+1];
@@ -81,7 +98,7 @@ public class BezierCubic
 
         double[] trap_in = new double[N+1];
         double[][] Jac = new double[2][2];
-        double[] dFdd = new double[2];
+        //double[] dFdd = new double[2];
         double[] d2Fdddc = new double[2];                           // augmented matrix
         double dFdc;
         double d2Fdcdc;                                             // augmented matrix
@@ -90,6 +107,43 @@ public class BezierCubic
         int i, j, k, loop = 0;
         double t1;
 
+        if (values.length == 2)                 // normal 2D optimization of (d1, d2)
+        {
+            d1 = values[0];
+            d2 = values[1];
+        }
+        else if (values.length == 3)
+        {
+            double index = values[2];           // should be (0 - 4) or Double.NaN
+            if (Double.isNaN(index))
+            {
+                d1 = values[0];                 // steepest-descent optimization
+                d2 = values[1];
+            }
+            else                                // area-constrained optimization
+            {
+                // interpolate d1 linearly between values[0] and values[1]
+                // calculate d2 using area constraint
+                // define scan direction as perpendicular to dd2/dd1
+                d1 = values[0] + index*(values[1] - values[0])/4;
+                d2 = calc_d2(d1);
+                theta_perp = Math.atan(calc_dd2dd1(d1)) - Math.PI/2;
+                System.out.println("area-constrained optimization at , " + values[0] + ", " + values[1] + ", " + values[2] + ", " + d1 + ", " + d2 + ", " + theta_perp*180/Math.PI);
+            }
+        }
+        else if (values.length == 4)            // linear-constrained 1D optimization
+        {                                       // moving perpendicular to the midpoint between two solutions
+            d1 = (values[0] + values[2])/2;     // calculate midpoint
+            d2 = (values[1] + values[3])/2;
+            theta_perp = Math.atan2(values[3] - values[1], values[2] - values[0]) - Math.PI/2;
+            System.out.println("linear-constrained optimization at , " + values[0] + ", " + values[1] + ", " + values[2] + ", " + values[3] + ", " + d1 + ", " + d2 + ", " + theta_perp*180/Math.PI);
+        }
+        else
+        {
+            System.out.println("Wrong number of arguments in 'iterate_at_P2'");
+            return;
+        }
+        //System.out.println("args = " + values.length + ", " + d1 + ", " + d2 + ", " + theta_perp);
         do
         {
             loop++;
@@ -207,6 +261,18 @@ public class BezierCubic
                     Jac[i][j] = t2_vs_t1.integrate(trap_in);
                 }
 
+            Jacdet = BSpline5.detm(Jac);
+            eig0 = (Jac[0][0] + Jac[1][1] - Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
+            eig1 = (Jac[0][0] + Jac[1][1] + Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
+            eigangle = -Math.atan((Jac[0][0] - eig0)/Jac[0][1]);        // angle of eigenvector transform
+            //del_angle = Math.atan2(-dFdd[1], -dFdd[0]);                 // we wish to decrease F (zeroth-order estimate, obsolete)
+            //del_d = Math.sqrt(dFdd[0]*dFdd[0] + dFdd[1]*dFdd[1])/(Math.cos(del_angle)*Math.cos(del_angle)*Jac[0][0] + 2*Math.cos(del_angle)*Math.sin(del_angle)*Jac[0][1] + Math.sin(del_angle)*Math.sin(del_angle)*Jac[1][1]);
+            //if (del_d > .01) del_d = .01;
+            //del_d = del_d/4;
+            //del_d = .0004;
+            if (values.length == 3 && Double.isNaN(values[2]))          // steepest-descent optimization
+                return;
+
             // calculate determinant of augmented matrix
 
             for (k = 0; k <= N; k++)
@@ -248,15 +314,17 @@ public class BezierCubic
             //                         + ", " + h_inv[k]*(f_gx[k]*d2fxdudd[0][k] + f_gy[k]*d2fydudd[0][k])
             //                         + ", " + h_inv[k]*(f_gx[k]*d2fxdudd[1][k] + f_gy[k]*d2fydudd[1][k]));
 
-            //deld = BSpline5.multmv(BSpline5.invertm(Jac), dFdd);  // this is actually the negative of Δd
-            deld = BSpline5.gaussj(Jac, dFdd);                      // this is actually the negative of Δd
+            if (values.length == 2)                         // normal 2D optimization
+                deld = BSpline5.gaussj(Jac, dFdd);          // this is actually the negative of Δd
+            else                                            // constrained 1D optimization
+            {
+                double fp = dFdd[0]*Math.cos(theta_perp) + dFdd[1]*Math.sin(theta_perp);
+                double f2p = Jac[0][0]*Math.cos(theta_perp)*Math.cos(theta_perp) + 2*Jac[0][1]*Math.cos(theta_perp)*Math.sin(theta_perp) + Jac[1][1]*Math.sin(theta_perp)*Math.sin(theta_perp);
+                deld = new double[] {fp/f2p*Math.cos(theta_perp), fp/f2p*Math.sin(theta_perp)};
+            }
             d1 -= deld[0]/gain;
             d2 -= deld[1]/gain;
 
-            Jacdet = BSpline5.detm(Jac);
-            eig0 = (Jac[0][0] + Jac[1][1] - Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
-            eig1 = (Jac[0][0] + Jac[1][1] + Math.sqrt((Jac[0][0] - Jac[1][1])*(Jac[0][0] - Jac[1][1]) + 4*Jac[0][1]*Jac[0][1]))/2;
-            eigangle = Math.atan((Jac[0][0] - eig0)/Jac[0][1]);     // angle of eigenvector transform
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + Jacdet + ", " + eig0 + ", " + eig1 + ", " + (float) (eigangle*180/Math.PI) + ", " + BSpline5.detm(Augment));
             System.out.println("deld = " + deld[0] + ", " + deld[1]);
             System.out.println("\ndFdc = " + fitted.getc() + ", " + d1 + ", " + d2 + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
@@ -285,7 +353,12 @@ public class BezierCubic
             //System.out.println("final Det, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + Jac[0][0] + ", " + Jac[0][1] + ", " + Jac[1][1]);
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (Jac[1][0]/Jac[0][0]) + ", " + (float) (Jac[1][1]/Jac[0][1]) + ", " + (float) (d2Fdddc[1]/d2Fdddc[0]));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) BSpline5.detm(Augment));
-            System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms*rms*180.0*180.0/2.0 + ", " + eig0 + ", " + eigangle);
+            if (values.length == 2)
+                System.out.println("\nfinal CubicBezier , , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms*rms*180.0*180.0/2.0 + ", " + eig0 + ", " + eigangle + ", " + eig1);
+            else if (values.length == 3)
+                System.out.println("\narea-constrained Cubic, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms*rms*180.0*180.0/2.0 + ", , " + (theta_perp + Math.PI/2));
+            else if (values.length == 4)
+                System.out.println("\ninterpolated Cubic, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + rms*rms*180.0*180.0/2.0 + ", , " + (theta_perp + Math.PI/2));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + 180.0*eigangle/Math.PI);
             //System.out.println(  "collinearity test, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + Jac[1][0]/Jac[0][0] + ", " + Jac[1][1]/Jac[0][1] + ", " + d2Fdddc[1]/d2Fdddc[0]);
             //System.out.println("Jac ratio  = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + d2Fdddc[0]/d2Fdddc[1] + ", " + Jac[0][0]/Jac[0][1] + ", " + Jac[1][0]/Jac[1][1]);
@@ -317,7 +390,7 @@ public class BezierCubic
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            ; // System.out.println("__start cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            ; //System.out.println("__start cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -354,30 +427,82 @@ public class BezierCubic
         }
         double retVal = calc_error();
         //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) (eigangle*180/Math.PI));
-        System.out.println("F = , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2);
+        System.out.println("F = , , , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2 + ", " + eig0 + ", " + eigangle + ", " + dFdd[0] + ", " + dFdd[1]);
         return retVal;
+    }
+
+    private static void scan_streamline_at_P2(double d1_org, double d2_org)
+    {
+        // calculate a streamline of steepest-descent starting at a saddle point
+        // perform one normal optimization to determine a saddle point
+        // then move in increments of del_d at an angle determined by dFdd[1]/dFdd[0]
+        // to run this, temporarily comment out lines 393 and 429 to reduce the output
+        // keep only line 430 : "F = , ..."
+        // see Book 8, page 33
+
+        int Nstr = 200;
+        double del_d = 0.002;
+        double old_angle = Double.NaN;
+//        double a0p, a1p, C;
+
+        System.out.println("streamline, " + d1_org + ", " + d2_org + ", " + Nstr + ", " + del_d);
+        //iterate_at_P2(d1_org, d2_org);  // normal optimization
+                                        // this MUST be a previously converged result
+        iterate_at_P2(d1_org, d2_org, Double.NaN);  // initiallize dFdd
+        old_angle = eigangle;
+        //old_angle = Math.atan2(-dFdd[1], -dFdd[0]);
+
+        for (int i = 0; i < Nstr; i++)
+        {
+            t2[N] = 0;                                  // just to control the output
+            //System.out.println("dFdd , " + dFdd[0] + ", " + dFdd[1]);
+//            if (Math.abs(dFdd[0]) < TOL/100. && Math.abs(dFdd[1]) < TOL/1000.)
+//            {
+//                System.out.println("override");
+                //angle = eigangle + (eigangle - old_angle)/2; // + Math.PI;
+                //old_angle = eigangle;
+//            }
+//            else
+                //angle = Math.atan2(-dFdd[1], -dFdd[0]);  // we wish to decrease F (zeroth-order estimate, obsolete)
+            //eigangle = Math.atan2(dFdd[1], dFdd[0]); // test uphill
+            //a0p = ( Math.cos(eigangle)*dFdd[0] + Math.sin(eigangle)*dFdd[1])/eig0;   // current position in
+            //a1p = (-Math.sin(eigangle)*dFdd[0] + Math.cos(eigangle)*dFdd[1])/eig1;   // normalized coordinates (page 32)
+            //C = Math.pow(Math.abs(a1p), 1.0/eig1)/Math.pow(Math.abs(a0p), 1.0/eig0);
+            //System.out.println("eigen data: " + i + ", " + Math.pow(Math.abs(a1p), 1.0/eig1) + ", " + Math.pow(Math.abs(a0p), 1.0/eig0));
+            //System.out.println("eigen data: " + i + ", " + a0p + ", " + a1p + ", " + C + ", " + eig0 + ", " + eig1 + ", " + eigangle*180/Math.PI);
+
+            d1_org += del_d*Math.cos(eigangle + (eigangle - old_angle)/2);
+            d2_org += del_d*Math.sin(eigangle + (eigangle - old_angle)/2);
+            old_angle = eigangle;
+            iterate_at_P2(d1_org, d2_org, Double.NaN);  // steepest-descent optimization
+        }
+        //System.out.println("....................");
+        //for (int i = 0; i < 360; i+= 5)
+        //{
+        //    iterate_at_P2(d1_org + del_d*Math.cos(i*Math.PI/180), d2_org + del_d*Math.sin(i*Math.PI/180), Double.NaN);
+        //}
     }
 
     private static void scan_at_P2(double d1_org, double d2_org)
     {
         // calculate F over a local range around (d1_org, d2_org)
         // move in direction of eigenvector corresponding to the lowest eigenvalue
-        // to run this, temporarily comment out lines 320 and 356 to reduce the output
-        // keep only line 357 : "F = , ..."
+        // to run this, temporarily comment out lines 341 and 377 to reduce the output
+        // keep only line 378 : "F = , ..."
 
         double d_inc = 0.5;
         int N_inc = 7;
 
-        eigangle = 1.071734874;       // overwrite the angle
+        //eigangle = 1.071734874;       // overwrite the angle
         System.out.println("del =," + d_inc + ", eig0 =," + (float) eig0 + ", eigangle = " + (float) (eigangle*180/Math.PI));
         //d_inc /= 2;                                     // interpolate between data points to do a least squares fit
         System.out.println("scan F:, c, d1, d2, F");
         for (int i = -(N_inc - 1)/2; i <= (N_inc - 1)/2; i++)
         {
             t2[N] = 0;                                  // just to control the output
-            solve_at_P2(d1_org + i*d_inc*Math.cos(eigangle), d2_org - i*d_inc*Math.sin(eigangle), false);
-            //solve_at_P2(d1_org + i*d_inc*Math.cos(-eigangle), d2_org - i*d_inc*Math.sin(-eigangle), false); // test code fix fix
-            //solve_at_P2(d1_org + i*d_inc*Math.cos(eigangle + Math.PI/2), d2_org - i*d_inc*Math.sin(eigangle + Math.PI/2), false);
+            solve_at_P2(d1_org + i*d_inc*Math.cos(eigangle), d2_org + i*d_inc*Math.sin(eigangle), false);
+            //solve_at_P2(d1_org + i*d_inc*Math.cos(-eigangle), d2_org + i*d_inc*Math.sin(-eigangle), false); // test code fix fix
+            //solve_at_P2(d1_org + i*d_inc*Math.cos(eigangle + Math.PI/2), d2_org + i*d_inc*Math.sin(eigangle + Math.PI/2), false);
         }
     }
 
@@ -633,5 +758,33 @@ public class BezierCubic
                               3*(1 - u)*(1 - 3*u),
                               3*u*(2 - 3*u),
                               3*u*u};
+    }
+
+    private static double spiro_area()
+    {
+        // copied from BezierCubicOneDim.java
+        double a_b = 180;         // scale factor to make rms error dimensionless
+        return a_b*a_b*(Math.PI/2 - Math.sqrt(2))/4                     // <1>
+             - fitted.getc()*fitted.getc()*(3*Math.PI/2 - Math.sqrt(2))/4;
+    }
+
+    private static double calc_d2(double d1)
+    {
+        // copied from BezierCubicOneDim.java
+        double a_b = 180;         // scale factor to make rms error dimensionless
+        // satisfy area constraint
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return (20*spiro_area()/3 - 2*d1*(l1 - l2/Math.sqrt(2)))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
+    }
+
+    private static double calc_dd2dd1(double d1)
+    {
+        // copied from BezierCubicOneDim.java
+        double a_b = 180;         // scale factor to make rms error dimensionless
+        // satisfy area constraint (first derivative)
+        double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
+        double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
+        return -(2*(l1 - l2/Math.sqrt(2)) - calc_d2(d1)/Math.sqrt(2))/(2*(l2 - l1/Math.sqrt(2)) - d1/Math.sqrt(2));
     }
 }
