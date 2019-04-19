@@ -40,10 +40,10 @@ public class BezierCubic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(3.592);
+        fitted = new epiTrochoidFxn(3.5935);
         //iterate_at_P2(59, 29);     // normal optimization
         //iterate_at_P2(14, 38, 2);                     // area-constrained optimization
-        //scan_streamline_at_P2(56, 34.5);
+        //scan_streamline_at_P2(53.02173034981266, 39.359792006089855);
         //scan_streamline_at_P2(56.1, 34.56);
         //scan_streamline_at_P2(56.053 + .005, 34.557);
         //scan_streamline_at_P2(58.94795711624154, 29.62577804214821);
@@ -53,8 +53,8 @@ public class BezierCubic
         //scan_streamline_at_P2(53.3, 38.9);
         //iterate_at_P2(36.063996220825075, 63.23990306508096, 36.28674943705403, 62.840719240125544);    // linear-constrained optimization
         //fitted = new epiTrochoidFxn(3.59611);
-        //iterate_at_P2(14.959259818763828, 92.24198234164545);
-        scan_streamline_at_P2(57.13628153609134, 31.41210991725839);
+        //iterate_at_P2(57.13628153609134, 31.41210991725839);
+        scan_streamline_at_P2(57.21007140978496, 31.274794790562517);
         //fitted = new epiTrochoidFxn(3.5);
         //iterate_at_P2(57.6415663538542, 30.721902560475314);
         //fitted = new epiTrochoidFxn(3.5965);
@@ -428,6 +428,7 @@ public class BezierCubic
         double retVal = calc_error();
         //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) (eigangle*180/Math.PI));
         System.out.println("F = , , , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2 + ", " + eig0 + ", " + eigangle + ", " + dFdd[0] + ", " + dFdd[1]);
+        //System.out.println("F = , , , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2 + ", " + eig0 + ", " + eig1 + ", " + eigangle*180/Math.PI + ", " + dFdd[0] + ", " + dFdd[1]);
         return retVal;
     }
 
@@ -440,7 +441,7 @@ public class BezierCubic
         // keep only line 430 : "F = , ..."
         // see Book 8, page 33
 
-        int Nstr = 200;
+        int Nstr = 1200;
         double del_d = 0.002;
         double old_angle = Double.NaN;
 //        double a0p, a1p, C;
