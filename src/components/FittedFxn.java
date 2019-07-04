@@ -7,9 +7,9 @@ package components;
 
 public abstract class FittedFxn
 {
-    private final double origin_x = 80;             // just for svg output
-    private final double origin_y = 500;            // just for svg output
-    private final double scale = 2; // 200;               // just for svg output
+    private final double origin_x = 400;             // just for svg output
+    private final double origin_y = 500; // 700;            // just for svg output
+    private final double scale = 2; // 1.5; // 2; // 200;               // just for svg output
 
     protected abstract double getc();
     protected abstract double getx(double t);
@@ -59,6 +59,31 @@ public abstract class FittedFxn
                           origin_x + scale*ptx[2][1], origin_y - scale*pty[2][1],
                           origin_x + scale*ptx[2][2], origin_y - scale*pty[2][2],
                           origin_x + scale*ptx[2][3], origin_y - scale*pty[2][3]);
+    }
+
+    protected void gen_BezierN(double[] ptx, double[] pty)
+    {
+        // ptx[], pty[] are N-point uniform cubic B-Splines (closed)
+        double[] ptx1 = new double[ptx.length];
+        double[] ptx2 = new double[ptx.length];
+        double[] pty1 = new double[pty.length];
+        double[] pty2 = new double[pty.length];
+
+        for (int i = 0; i < ptx.length; i++)
+        {
+            ptx1[i] = (2*ptx[i] + ptx[(i + 1) % ptx.length])/3;
+            ptx2[i] = (ptx[i] + 2*ptx[(i + 1) % ptx.length])/3;
+            pty1[i] = (2*pty[i] + pty[(i + 1) % pty.length])/3;
+            pty2[i] = (pty[i] + 2*pty[(i + 1) % pty.length])/3;
+            //System.out.println("gen_BezierN = ," + ptx[i] + ", " + ptx1[i] + ", " + ptx2[i] + ", " + pty[i] + ", " + pty1[i] + ", " + pty2[i]);
+        }
+        System.out.printf("M %f, %f ", origin_x + scale*(ptx2[ptx.length - 1] + ptx1[0])/2, origin_y - scale*(pty2[pty.length - 1] + pty1[0])/2);
+        for (int i = 0; i < ptx.length; i++)
+            System.out.printf("C %f, %f %f, %f %f, %f ",
+                                        origin_x + scale*ptx1[i], origin_y - scale*pty1[i],
+                                        origin_x + scale*ptx2[i], origin_y - scale*pty2[i],
+                                        origin_x + scale*(ptx2[i] + ptx1[(i + 1)%ptx.length])/2, origin_y - scale*(pty2[i] + pty1[(i + 1)%pty.length])/2);
+        System.out.printf("\n");
     }
 }
 
@@ -114,14 +139,14 @@ class epiTrochoidFxn extends FittedFxn
     //  x = (a + b) cos(t) + c cos((a/b + 1)t)
     //  y = (a + b) sin(t) + c sin((a/b + 1)t)
 
-    private static final double a = 240;
-    private static final double b = -60;
+    protected final double a = 240;
+    protected final double b = -60; // 120; // -60;
     private static double c;
 
     public epiTrochoidFxn(double m_c)
     {
         c = m_c;
-        //gen_points(0, Math.PI/4, 100);
+        //gen_points(0, 2*Math.PI, 360);
     }
 
     protected double getc()

@@ -17,7 +17,7 @@ import java.io.*;
 public class BSpline5
 {
     public static double t1_start = 0;           // Math.PI/3;
-    public static final double t1_end = Math.PI/4; // Math.PI/4;
+    public static final double t1_end = Math.PI/6; // Math.PI/4;
     public static final int N = 100;
     public static double[] Splinex, Spliney;    // 5 point spline
     public static double[][] Bezx;              // 2 Beziers, 4 points each, x component
@@ -39,12 +39,14 @@ public class BSpline5
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        //read_data(80, 0);
+        //read_data(1, 0);
         //read_data(1, 8);
         //fitted = new epiTrochoidFxn(10);            // keep this, 25 iterations to converge at c = 10
         //iterate_at_P2(19, 26, 175.2, 62);           // keep this, 25 iterations to converge at c = 10
-        fitted = new epiTrochoidFxn(2);
-        iterate_at_P2(15, 35, 170., 70.);
+        fitted = new epiTrochoidFxn(0);
+        //iterate_at_P2(15, 35, 170., 70.);
+        iterate_at_P2(23.097162642785236, 10.790866338276762, 192.02265685974513, 63.92753077755059);
+        //calc_oval_det(23.097162642785236, 10.790866338276762, 192.02265685974513, 63.92753077755059);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -95,7 +97,7 @@ public class BSpline5
         // see Spiro2SVG Book 3, page 54 (applied to 5-point cubic B-Spline)
         // setup 4-variable Newton-Raphson iteration
 
-        final int MAXLOOP = 2000;
+        final int MAXLOOP = 500;
         double[] f_gx = new double[N+1];
         double[] f_gy = new double[N+1];
         double[] dfxdu = new double[N+1];
@@ -202,7 +204,7 @@ public class BSpline5
             //System.out.println("eigenvalue = " + eig[0] + ", " + eig[1] + ", " + eig[2] + ", " + eig[3]);
             System.out.println("dFdd = " + dFdd[0] + ", " + dFdd[1] + ", " + dFdd[2] + ", " + dFdd[3] + ", " + Jacdet);
             System.out.println("deld = " + deld[0] + ", " + deld[1] + ", " + deld[2] + ", " + deld[3]);
-            dump_Jac(Jac);
+            //dump_Jac(Jac);
 
             // perform a preliminary first-order recalculation of t2[i]
             // just for the purpose of improving the calc_error() result
@@ -233,7 +235,7 @@ public class BSpline5
             for (int j = 0; j < J.length; j++)
             {
                 if (j > 0) System.out.print(", ");
-                System.out.print(J[i][j]);
+                System.out.print(J[i][j]); // (float) J[i][j]);
             }
             System.out.print("]");
         }
@@ -453,8 +455,8 @@ public class BSpline5
         //}
         if (firstline.startsWith("root"))
             fitted = new epiTrochoidFxn(tempc);                           // set c value
-        d1 = 42;        // fix fix test code
-        d2 = 52;
+        d1 = 32;        // fix fix test code
+        d2 = 32;
         System.out.println("file data at theta c t d1 d2   = ," + theta + ", , " + tempc + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + fitted.getkappa(t1_start) + ", " + fitted.getkappa(t1_end));
 
         // calculate P2 for a B-Spline
@@ -570,7 +572,7 @@ public class BSpline5
             System.out.println("__start B-Spline5 at theta c t d1 d2 = , " + theta_start*180/Math.PI + ", " + theta_end*180/Math.PI + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2 + ", " + x2 + ", " + y2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + x2 + ", " + y2 + ", " + calc_error());
-        //fitted.gen_Bezier2(Bezx, Bezy);
+        fitted.gen_Bezier2(Bezx, Bezy);
         //System.out.println(Bezx[0][0] + "\t " + Bezy[0][0]);
         //System.out.println(Bezx[0][1] + "\t " + Bezy[0][1]);
         //System.out.println(Bezx[0][2] + "\t " + Bezy[0][2]);
@@ -598,7 +600,7 @@ public class BSpline5
             ||  (t2[i] < -TOL) || Double.isNaN(t2[i]))
             {
                 System.out.println("t2[i] abort at " + i + " : " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
-                scan_quintic_near_t2(i, seg, t2[i]);
+                //scan_quintic_near_t2(i, seg, t2[i]);
                 return Double.NaN;
             }
             t2dd[0][i] = calc_t2dxy(i, t2[i], "d1");
@@ -618,7 +620,8 @@ public class BSpline5
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 360;           // epiTrochoid (a = 240, b = 120)
         //double a_b = 1;             // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
@@ -638,7 +641,7 @@ public class BSpline5
             //System.out.println(i + ", " + seg + ", " + (t2_vs_t1.fn(Bezx[seg], t2[i] - seg) - fitted.getx(t1)) + ", " + (t2_vs_t1.fn(Bezy[seg], t2[i] - seg) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
-        return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
+        return Math.sqrt(t2_vs_t1.integrate(trap_in))/(fitted.a + fitted.b);
     }
 
     private static void solve_quintic_for_t2(int i, int seg)
@@ -808,6 +811,61 @@ public class BSpline5
                                  6*(u - 1)};
         else
             return null;
+    }
+
+    private static void calc_oval_det(double d1, double d2, double x2, double y2)
+    {
+        double[][] oval = new double[4][4];
+        double x0 = fitted.getx(t1_start);
+        double x4 = fitted.getx(t1_end);
+        double y0 = fitted.gety(t1_start);
+        double y4 = fitted.gety(t1_end);
+        double CS = Math.cos(theta_start);
+        double CE = Math.cos(theta_end);
+        double SS = Math.sin(theta_start);
+        double SE = Math.sin(theta_end);
+
+        oval[0][0] = 3*((y2 - y0)*CS - (x2 - x0)*SS);
+        oval[0][1] = 0;
+        oval[0][2] =  1.5*d1*SS;
+        oval[0][3] = -1.5*d1*CS;
+
+        oval[1][0] = 1.5*((y2 - y0)*CS - (x2 - x0)*SS) + 0.75*((y4 - y0)*CS - (x4 - x0)*SS) - 0.75*d2*Math.sin(theta_end - theta_start);
+        oval[1][1] = 0.25*d1*Math.sin(theta_end - theta_start);
+        oval[1][2] =  1.5*(y2 - y0) - d1*SS;
+        oval[1][3] = -1.5*(x2 - x0) + d1*CS;
+
+        oval[2][0] =  0.25*((y2 - y0)*CS - (x2 - x0)*SS) + 0.375*((y4 - y0)*CS - (x4 - x0)*SS) - 0.375*d2*Math.sin(theta_end - theta_start);
+        oval[2][1] = -0.25*((y2 - y0)*CE - (x2 - x0)*SE) - 0.25*d1*Math.sin(theta_end - theta_start);
+        oval[2][2] =  0.5*(y2 - y0 - d1*SS) + 0.375*(y4 - y0 - d1*SS - d2*SE);
+        oval[2][3] = -0.5*(x2 - x0 - d1*CS) - 0.375*(x4 - x0 - d1*CS - d2*CE);
+
+        oval[3][0] =  ((y4 - y0)*CS - (x4 - x0)*SS)/16 - d2*Math.sin(theta_end - theta_start)/16;
+        oval[3][1] = -((y4 - y0)*CE - (x4 - x0)*SE)/16 - d1*Math.sin(theta_end - theta_start)/16;
+        oval[3][2] =  0.125*(y4 - y0 - d1*SS - d2*SE);
+        oval[3][3] = -0.125*(x4 - x0 - d1*CS - d2*CE);
+        System.out.println("oval det 1 = " + detm(oval));
+
+        oval[0][0] = -d2*Math.sin(theta_end - theta_start)/16 + ((y4 - y0)*CS - (x4 - x0)*SS)/16;
+        oval[0][1] = -d1*Math.sin(theta_end - theta_start)/16 - ((y4 - y0)*CE - (x4 - x0)*SE)/16;
+        oval[0][2] =  0.125*(y4 - y0 - d1*SS - d2*SE);
+        oval[0][3] = -0.125*(x4 - x0 - d1*CS - d2*CE);
+
+        oval[1][0] =  0.25*((y4 - y2)*CS - (x4 - x2)*SS) - 0.25*d2*Math.sin(theta_end - theta_start);
+        oval[1][1] = -0.375*((y4 - y0)*CE - (x4 - x0)*SE) - 0.375*d1*Math.sin(theta_end - theta_start) - 0.25*((y4 - y2)*CE - (x4 - x2)*SE);
+        oval[1][2] =  0.375*(y4 - y0 - d1*SS - d2*SE) + 0.5*(y4 - y2 - d2*SE);
+        oval[1][3] = -0.375*(x4 - x0 - d1*CS - d2*CE) - 0.5*(x4 - x2 - d2*CE);
+
+        oval[2][0] =  0.25*d2*Math.sin(theta_end - theta_start);
+        oval[2][1] = -0.75*((y4 - y0)*CE - (x4 - x0)*SE) - 0.75*d1*Math.sin(theta_end - theta_start) + 1.5*((x4 - x2)*SE - (y4 - y2)*CE);
+        oval[2][2] =  1.5*(y4 - y2 - d2*SE) + 0.5*d2*SE;
+        oval[2][3] = -1.5*(x4 - x2 - d2*CE) - 0.5*d2*CE;
+
+        oval[3][0] = 0;
+        oval[3][1] = -3*((y4 - y2)*CE - (x4 - x2)*SE);
+        oval[3][2] =  1.5*d2*SE;
+        oval[3][3] = -1.5*d2*CE;
+        System.out.println("oval det 2 = " + detm(oval));
     }
 
     public static double multvv(double[] v1, double[] v2)

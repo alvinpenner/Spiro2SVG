@@ -16,7 +16,7 @@ import java.io.FileWriter;
 public class BezierCubic
 {
     public static double t1_start = 0;
-    public static final double t1_end = Math.PI/4; // Math.PI;
+    public static final double t1_end = Math.PI/6; // Math.PI/4; // Math.PI;
     public static final int N = 100;
     public static double[] Bezx;                // cubic Bezier, 4 points, x component
     public static double[] Bezy;                // cubic Bezier, 4 points, y component
@@ -40,8 +40,8 @@ public class BezierCubic
         //double tempc = Math.sqrt(1 - .75*Math.cos(phi*Math.PI/180)*Math.cos(phi*Math.PI/180));
         //t1_start = Math.acos((2*tempc*tempc - 1)/tempc);
         //fitted = new CycloidFxn(tempc);
-        fitted = new epiTrochoidFxn(3.5935);
-        //iterate_at_P2(59, 29);     // normal optimization
+        fitted = new epiTrochoidFxn(0);
+        iterate_at_P2(25, 43);     // normal optimization
         //iterate_at_P2(14, 38, 2);                     // area-constrained optimization
         //scan_streamline_at_P2(53.02173034981266, 39.359792006089855);
         //scan_streamline_at_P2(56.1, 34.56);
@@ -54,7 +54,7 @@ public class BezierCubic
         //iterate_at_P2(36.063996220825075, 63.23990306508096, 36.28674943705403, 62.840719240125544);    // linear-constrained optimization
         //fitted = new epiTrochoidFxn(3.59611);
         //iterate_at_P2(57.13628153609134, 31.41210991725839);
-        scan_streamline_at_P2(57.21007140978496, 31.274794790562517);
+        //scan_streamline_at_P2(57.21007140978496, 31.274794790562517);
         //fitted = new epiTrochoidFxn(3.5);
         //iterate_at_P2(57.6415663538542, 30.721902560475314);
         //fitted = new epiTrochoidFxn(3.5965);
@@ -340,13 +340,14 @@ public class BezierCubic
                 t2[i] -= t2dd[0][i]*deld[0] + t2dd[1][i]*deld[1];   // first-order response
                 // System.out.println("incrementing t2 array : " + i + ", " + (t1_start + i*(t1_end - t1_start)/N) + ", " + t2[i]);
             }
+            calc_alpha(d1, d2);                             // temporary code for testing
         } while ((loop < MAXLOOP) && !((Math.abs(deld[0]) < TOL) && (Math.abs(deld[1]) < TOL)));
         if (loop < MAXLOOP)
         {
             System.out.println("\n__converged in " + loop + " at new d1 d2 = , , , , , , " + d1 + ", " + d2 + ", " + fitted.getc() + ", " + Jac[0][0] + ", " + Jac[1][1] + ", " + Jac[0][1]);
             double rms = solve_at_P2(d1, d2, true);                          // final run just for good measure
             // calculate dddc[i]
-            double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
+            //double[] dt2dc = BSpline5.gaussj(Jac, d2Fdddc);
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (Math.cos(eigangle)*d2Fdddc[0] - Math.sin(eigangle)*d2Fdddc[1]) + ", " + (float) (Math.sin(eigangle)*d2Fdddc[0] + Math.cos(eigangle)*d2Fdddc[1]));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) (eigangle*180.0/Math.PI) + ", " + (float) (Math.atan(d2Fdddc[0]/d2Fdddc[1])*180.0/Math.PI));
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + (float) -dt2dc[0] + ", " + (float) -dt2dc[1] + ", " + (float) eig0 + ", " + (float) -d2Fdddc[0] + ", " + (float) -d2Fdddc[1]);
@@ -362,7 +363,7 @@ public class BezierCubic
             //System.out.println("\nfinal CubicBezier, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + eig0 + ", " + 180.0*eigangle/Math.PI);
             //System.out.println(  "collinearity test, , , " + fitted.getc() + ", " + d1 + ", " + d2 + ", " + Jac[1][0]/Jac[0][0] + ", " + Jac[1][1]/Jac[0][1] + ", " + d2Fdddc[1]/d2Fdddc[0]);
             //System.out.println("Jac ratio  = ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + d2Fdddc[0]/d2Fdddc[1] + ", " + Jac[0][0]/Jac[0][1] + ", " + Jac[1][0]/Jac[1][1]);
-            //calc_alpha(d1, d2);
+            calc_alpha(d1, d2);
             //scan_at_P2(d1, d2);             // scan 5 points to get F response function
         }
         else
@@ -377,7 +378,7 @@ public class BezierCubic
 
         theta_start = fitted.gettheta(t1_start);
         theta_end = fitted.gettheta(t1_end);
-        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 180;         // scale factor to make rms error dimensionless
 
         //d2 += 0.01;
         Bezx = new double[] {fitted.getx(t1_start),
@@ -390,7 +391,7 @@ public class BezierCubic
                              fitted.gety(t1_end)};
 
         if (t2[N] == 0)
-            ; //System.out.println("__start cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
+            System.out.println("__start cubic Bezier at theta c t d1 d2 = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + fitted.getc() + ", " + t1_start + ", " + t1_end + ", " + d1 + ", " + d2);
         else
             System.out.println("__solve at new d1 d2 rms = , , , , , , " + d1 + ", " + d2 + ", " + calc_error());
         if (d1 < 0 || d2 < 0)
@@ -426,8 +427,8 @@ public class BezierCubic
             }
         }
         double retVal = calc_error();
-        //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) (eigangle*180/Math.PI));
-        System.out.println("F = , , , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2 + ", " + eig0 + ", " + eigangle + ", " + dFdd[0] + ", " + dFdd[1]);
+        System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + ", " + ", " + d1 + ", " + d2 + ", " + retVal + ", " + (float) Jacdet + ", " + (float) eig0 + ", " + (float) eig1 + ", " + (float) (eigangle*180/Math.PI));
+        //System.out.println("F = , , , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2 + ", " + eig0 + ", " + eigangle + ", " + dFdd[0] + ", " + dFdd[1]);
         //System.out.println("F = , , , " + (float) fitted.getc() + ", " + d1 + ", " + d2 + ", " + a_b*a_b*retVal*retVal/2 + ", " + eig0 + ", " + eig1 + ", " + eigangle*180/Math.PI + ", " + dFdd[0] + ", " + dFdd[1]);
         return retVal;
     }
@@ -568,7 +569,8 @@ public class BezierCubic
         // calculate rms error function assuming the error is zero at the endpoints
         // and assuming t2[i] is known
 
-        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 180;         // hypoTrochoid scale factor to make rms error dimensionless
+        //double a_b = 360;           // epiTrochoid (a = 240, b = 120)
         //double a_b = 1;             // Cycloid only
         double t1 = t1_start;
         double[] trap_in = new double[N+1];
@@ -585,7 +587,7 @@ public class BezierCubic
             //System.out.println(i + ", " + ", " + (fn(Bezx, t2[i]) - fitted.getx(t1)) + ", " + (fn(Bezy, t2[i]) - fitted.gety(t1)) + ", " + Math.sqrt(trap_in[i]));
             t1 += (t1_end - t1_start)/N;
         }
-        return Math.sqrt(t2_vs_t1.integrate(trap_in))/a_b;
+        return Math.sqrt(t2_vs_t1.integrate(trap_in))/(fitted.a + fitted.b);
     }
 
     private static void calc_array()
@@ -595,12 +597,13 @@ public class BezierCubic
         // to be used by \APP\MATPLOTLIB\mycontour.py
 
         double d1, d2;
-        double a_b = 180;                               // header info
+        //double a_b = 180;                                 // header info
+        //double a_b = 360;                                   // epiTrochoid (a = 240, b = 120)
         double d1start = 57.8235, d2start = 30.1442;
         double d1end = 57.3829, d2end = 30.9519;
-        int steps = 64;                                 // number of length segments (even)
-        int buttsteps = 32;                              // +/- steps added on to length
-        double width = .0025;                           // dimensionless relative to length
+        int steps = 64;                                     // number of length segments (even)
+        int buttsteps = 32;                                 // +/- steps added on to length
+        double width = .0025;                               // dimensionless relative to length
 
         double length = Math.sqrt((d1end - d1start)*(d1end - d1start) + (d2end - d2start)*(d2end - d2start));
         double theta = Math.atan2(d2end - d2start, d1end - d1start);
@@ -609,7 +612,7 @@ public class BezierCubic
         {
             FileWriter out = new FileWriter("\\APP\\MATPLOTLIB\\CubicBezier\\scan_error.txt");
             java.text.DateFormat df = java.text.DateFormat.getInstance();
-            out.write(df.format(new java.util.Date()) + " : a-b, c = " + a_b + ", " + fitted.getc() + "\r\n");
+            out.write(df.format(new java.util.Date()) + " : a-b, c = " + (fitted.a + fitted.b) + ", " + fitted.getc() + "\r\n");
             out.write("extent = (, " + (-width/2) + ", " + (width/2) + ", " + (-(float)buttsteps/steps) + ", " + (1 + (float)buttsteps/steps) + ",) step size = " + 1./steps + ", width = " + width + "\r\n");
             out.write(String.format("(%f, %f)-(%f, %f) in %d", d1start, d2start, d1end, d2end, steps));
             out.write("\r\n");
@@ -764,7 +767,8 @@ public class BezierCubic
     private static double spiro_area()
     {
         // copied from BezierCubicOneDim.java
-        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 180;         // scale factor to make rms error dimensionless
+        double a_b = fitted.a + fitted.b;           // epiTrochoid (a = 240, b = 120)
         return a_b*a_b*(Math.PI/2 - Math.sqrt(2))/4                     // <1>
              - fitted.getc()*fitted.getc()*(3*Math.PI/2 - Math.sqrt(2))/4;
     }
@@ -772,7 +776,8 @@ public class BezierCubic
     private static double calc_d2(double d1)
     {
         // copied from BezierCubicOneDim.java
-        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 180;         // scale factor to make rms error dimensionless
+        double a_b = fitted.a + fitted.b;           // epiTrochoid (a = 240, b = 120)
         // satisfy area constraint
         double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
         double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
@@ -782,7 +787,8 @@ public class BezierCubic
     private static double calc_dd2dd1(double d1)
     {
         // copied from BezierCubicOneDim.java
-        double a_b = 180;         // scale factor to make rms error dimensionless
+        //double a_b = 180;         // scale factor to make rms error dimensionless
+        double a_b = fitted.a + fitted.b;           // epiTrochoid (a = 240, b = 120)
         // satisfy area constraint (first derivative)
         double l1 = a_b + fitted.getc();       // distance to start point (l1, 0)
         double l2 = a_b - fitted.getc();       // distance to end   point (l2/√2, l2/√2)
