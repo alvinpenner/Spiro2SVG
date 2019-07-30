@@ -29,47 +29,50 @@ public class BSplineNClosed
 
     public static void main (String[] args)
     {
-        //fitted = new epiTrochoidFxn(10.5);
-        double rad0 = 195.5;
-        double rad1 = 195;
-        double rad2 = 195.5;
+        fitted = new epiTrochoidFxn(8);
+        //double rad0 = 195.5;
+        //double rad1 = 195;
+        //double rad2 = 195.5;
         //double rad3 = 182;
         //double rad4 = 182;
         //double rad5 = 180;
         //double[] rad = new double[] {rad1, rad2, rad1, rad2, rad1, rad2, rad1, rad2};
         //double[] rad = new double[] {rad1, rad2, rad3, rad1, rad2, rad3, rad1, rad2, rad3, rad1, rad2, rad3};
         //double[] rad = new double[] {rad0, rad1, rad2, rad3, rad4, rad0, rad1, rad2, rad3, rad4, rad0, rad1, rad2, rad3, rad4, rad0, rad1, rad2, rad3, rad4};
-        double[] rad = new double[] {rad0, rad1, rad2, rad0, rad1, rad2, rad0, rad1, rad2, rad0, rad1, rad2};
+        //double[] rad = new double[] {rad0, rad1, rad2, rad0, rad1, rad2, rad0, rad1, rad2, rad0, rad1, rad2};
         //double[] rad = new double[] {rad0, rad1, rad2, rad3, rad4, rad5, rad0, rad1, rad2, rad3, rad4, rad5, rad0, rad1, rad2, rad3, rad4, rad5, rad0, rad1, rad2, rad3, rad4, rad5};
-        double[] rin = new double[] {199, 199};
-        double[] thin = new double[] {-45, -0};
+        double[] rin = new double[] {194, 206};
+        //double[] thin = new double[] {-59, -9};
+        double[] thin = new double[] {-84, -30};
         //double[] rin = new double[] {174.84395, 200.71751, 192.32411};
         //double[] thin = new double[] {-33.770927, -5.76914, 15.113813};
         //double[] rin = new double[] {195.9031, 202.15785, 195.9031, 178.2428, 160.45967, 178.2428};
         //double[] thin = new double[] {-7.6173887, 5.1160803E-12, 7.6173887, 19.259514, 45.0, 70.740486};
-        rad = new double[] {rin[0], rin[1], rin[0], rin[1], rin[0], rin[1], rin[0], rin[1]};
+        double[] rad = new double[] {rin[0], rin[1], rin[0], rin[1], rin[0], rin[1], rin[0], rin[1]};
         //rad = new double[] {rin[0], rin[1], rin[2], rin[0], rin[1], rin[2], rin[0], rin[1], rin[2], rin[0], rin[1], rin[2]};
         //rad = new double[] {rin[0], rin[1], rin[2], rin[3], rin[4], rin[0], rin[1], rin[2], rin[3], rin[4], rin[0], rin[1], rin[2], rin[3], rin[4], rin[0], rin[1], rin[2], rin[3], rin[4]};
         //rad = new double[] {rin[0], rin[1], rin[2], rin[3], rin[4], rin[5], rin[0], rin[1], rin[2], rin[3], rin[4], rin[5], rin[0], rin[1], rin[2], rin[3], rin[4], rin[5], rin[0], rin[1], rin[2], rin[3], rin[4], rin[5]};
-        double th0 =  -5.8;
-        double th1 =    0;
-        double th2 =   5.8;
-        double th3 =   20.5;
-        double th4 =   69.5;
-        double th5 =   60;
+        //double th0 =  -5.8;
+        //double th1 =    0;
+        //double th2 =   5.8;
+        //double th3 =   20.5;
+        //double th4 =   69.5;
+        //double th5 =   60;
         //double[] theta = new double[] {th1, th2, th1 + 90, th2 + 90, th1 + 180, th2 + 180, th1 + 270, th2 + 270};
         //double[] theta = new double[] {th1, th2, th3, th1 + 90, th2 + 90, th3 + 90, th1 + 180, th2 + 180, th3 + 180, th1 + 270, th2 + 270, th3 + 270};
         //double[] theta = new double[] {th0, th1, th2, th3, th4, th0 + 90, th1 + 90, th2 + 90, th3 + 90, th4 + 90, th0 + 180, th1 + 180, th2 + 180, th3 + 180, th4 + 180, th0 + 270, th1 + 270, th2 + 270, th3 + 270, th4 + 270};
-        double[] theta = new double[] {th0, th1, th2, th3, th4, th5, th0 + 90, th1 + 90, th2 + 90, th3 + 90, th4 + 90, th5 + 90, th0 + 180, th1 + 180, th2 + 180, th3 + 180, th4 + 180, th5 + 180, th0 + 270, th1 + 270, th2 + 270, th3 + 270, th4 + 270, th5 + 270};
-        theta = new double[] {thin[0], thin[1], thin[0] + 90, thin[1] + 90, thin[0] + 180, thin[1] + 180, thin[0] + 270, thin[1] + 270};
+        //double[] theta = new double[] {th0, th1, th2, th3, th4, th5, th0 + 90, th1 + 90, th2 + 90, th3 + 90, th4 + 90, th5 + 90, th0 + 180, th1 + 180, th2 + 180, th3 + 180, th4 + 180, th5 + 180, th0 + 270, th1 + 270, th2 + 270, th3 + 270, th4 + 270, th5 + 270};
+        double[] theta = new double[] {thin[0], thin[1], thin[0] + 90, thin[1] + 90, thin[0] + 180, thin[1] + 180, thin[0] + 270, thin[1] + 270};
         //theta = new double[] {thin[0], thin[1], thin[2], thin[0] + 90, thin[1] + 90, thin[2] + 90, thin[0] + 180, thin[1] + 180, thin[2] + 180, thin[0] + 270, thin[1] + 270, thin[2] + 270};
         //theta = new double[] {thin[0], thin[1], thin[2], thin[3], thin[4], thin[5], thin[0] + 90, thin[1] + 90, thin[2] + 90, thin[3] + 90, thin[4] + 90, thin[5] + 90, thin[0] + 180, thin[1] + 180, thin[2] + 180, thin[3] + 180, thin[4] + 180, thin[5] + 180, thin[0] + 270, thin[1] + 270, thin[2] + 270, thin[3] + 270, thin[4] + 270, thin[5] + 270};
         Splinex = new double[rad.length];
         Spliney = new double[rad.length];
-        //for (int i = 0; i < Splinex.length; i++)              // normally include these four lines
-        //    Splinex[i] = rad[i]*Math.cos(Math.PI*theta[i]/180 - 0.0*2*Math.PI/Splinex.length);
+        for (int i = 0; i < Splinex.length; i++)              // normally include these four lines
+            Splinex[i] = rad[i]*Math.cos(Math.PI*theta[i]/180 - 0.0*2*Math.PI/Splinex.length);
+        for (int i = 0; i < Splinex.length; i++)
+            Spliney[i] = rad[i]*Math.sin(Math.PI*theta[i]/180 - 0.0*2*Math.PI/Splinex.length);
         //for (int i = 0; i < Splinex.length; i++)
-        //    Spliney[i] = rad[i]*Math.sin(Math.PI*theta[i]/180 - 0.0*2*Math.PI/Splinex.length);
+        //    Spliney[i] += 5;                                    // fix fix tremporary code
         //double rad = 200; // 194.0*Math.sqrt(2);
         //Splinex = new double[] {131.49011, 213.08975, 131.49011, -2.5748248E-9, -131.49011, -213.08975, -131.49011, -1.5923756E-9};
         //Spliney = new double[] {-131.49011, 3.116379E-10, 131.49011, 213.08975, 131.49011, -6.7329753E-10, -131.49011, -213.08975};
@@ -83,10 +86,10 @@ public class BSplineNClosed
         //    Splinex[(i+1)%Splinex.length] = rad*Math.cos(i*Math.PI*2/Splinex.length - 0.0*Math.PI/4);
         //for (int i = 0; i < Spliney.length; i++)
         //    Spliney[(i+1)%Splinex.length] = rad*Math.sin(i*Math.PI*2/Spliney.length - 0.0*Math.PI/4);
-        //System.out.println("BSplineN iterate_at_x_y = " + iterate_at_x_y() + "\n");       // normally include this line
+        System.out.println("BSplineN iterate_at_x_y = " + iterate_at_x_y() + "\n");       // normally include this line
         //System.out.println("BSplineN solve_at_x_y = " + solve_at_x_y(true) + "\n");
         //System.out.println("BSplineN circle = ," + Splinex.length + ", " + rad + ", " + solve_at_x_y(true) + "\n");
-        read_BSplineN_data(133);
+        //read_BSplineN_data(133);
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -113,6 +116,7 @@ public class BSplineNClosed
         //Eigen.symmetricEigenvalues(d);
         //System.out.println(d);
         //System.out.println(Eigen.symmetricEigenvalues(d));
+        //solve_for_beta();
     }
 
     private static double iterate_at_x_y()
@@ -160,6 +164,7 @@ public class BSplineNClosed
                          + f_gx[i]*BSpline5.multvv(permute(Splinex, t2[i]), d2Ni3(t2[i] % 1))
                          + BSpline5.multvv(permute(Spliney, t2[i]), dNi3(t2[i] % 1))*BSpline5.multvv(permute(Spliney, t2[i]), dNi3(t2[i] % 1))
                          + f_gy[i]*BSpline5.multvv(permute(Spliney, t2[i]), d2Ni3(t2[i] % 1));
+                //System.out.println(i + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + denom[i]);
             }
 
             // calc dFda[j] at current (xi, yi)
@@ -267,11 +272,13 @@ public class BSplineNClosed
             System.out.println("dFdc = " + fitted.getc() + print_radial());     // this is just a header for dump_Jac file data
             BSpline5.dump_Jac(Jac);
             BSpline5.dump_Jac(Augment);
-            write_BSplineN_data(null);                      // use only for dumping to file from dump_Jac()
-            write_BSplineN_data(Jac);
-            write_BSplineN_data(Augment);
+            //write_BSplineN_data(null);                      // use only for dumping to file from dump_Jac()
+            //write_BSplineN_data(Jac);
+            //write_BSplineN_data(Augment);
+            //for (i = 0; i < N; i++)                         // test sum of t2ddx and t2ddy
+            //    System.out.println(i + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + denom[i]);
             double[][] dot_product = new double [N][8];     // test code just for oval test
-            j = 2;                                          // segment index (0 - Splinex.length)
+            j = 4;                                          // segment index (0 - Splinex.length)
             int l = 0;
             for (k = 0; k < N; k++)
                 if ((t2[k] > j) && (t2[k] < j + 1))
@@ -283,7 +290,9 @@ public class BSplineNClosed
                     }
                     l++;
                 }
-            //correlate_f_dfda(dot_product);                                  // end of test code
+            System.out.println("dot_product:");
+            BSpline5.dump_Jac(dot_product);
+            correlate_f_dfda(dot_product, j);                                  // end of test code
             return solve_at_x_y(true);                              // final run just for good measure
         }
         else
@@ -391,7 +400,7 @@ public class BSplineNClosed
         }
         //fitted.gen_BezierN(Splinex, Spliney);
 
-        if (print) System.out.println("\n , t1, t2, t2ddx1, t2ddx2, t2ddx3, t2ddx4, t2ddx5, t2ddx6");
+        if (print) System.out.println("\n , t1, t2, t2ddx0, t2ddx1, t2ddx2, t2ddx3, t2ddx4, t2ddx5, t2ddx6, t2ddx7");
         for (int i = 0; i <= N; i++)
         {
             solve_quintic_for_t2(i);
@@ -458,8 +467,9 @@ public class BSplineNClosed
         }
     }
 
-    private static void correlate_f_dfda(double[][] m)
+    private static void correlate_f_dfda(double[][] m, int seg)
     {
+        System.out.println("correlate_f_dfda: seg = " + seg);
         for (int k = 0; k < N; k++)
         {
             System.out.print("m = " + k);
@@ -485,20 +495,140 @@ public class BSplineNClosed
             }
             //System.out.println();
         }
+        System.out.println("\ncorr:");
         for (int i = 0; i < 8; i++)
         {
             for (int j = 0; j < 8; j++)
                 System.out.print((float) corr[i][j] + ", ");
             System.out.println();
         }
-        System.out.println("det corr = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + ", " + (float) BSpline5.detm(corr));
-        //BSpline5.dump_Jac(corr);
+        System.out.println("\nseg det corr = , " + seg + ", " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + ", " + (float) BSpline5.detm(corr));
+        BSpline5.dump_Jac(corr);
         //ret = BSpline5.gaussj(corr, vec);
         //retN[0] = 1;
         //for (int i = 1; i < 8; i++)
         //    retN[i] = -ret[i - 1];
         //System.out.println("correlate vec = " + print_coord(ret));
         //System.out.println("error     vec = " + print_coord(BSpline5.multmv(m, retN)));
+    }
+
+    private static void solve_for_beta()
+    {
+        int i, j;
+        double rad1 = 1.;
+        double rad2 = 1.123;
+        double[] rad  = new double[] {rad1, rad2, rad1, rad2, rad1, rad2, rad1, rad2};
+        double th1 = -40.;
+        double th2 = -30.;
+        double[] th = new double[] {th1, th2, th1 + 90, th2 + 90, th1 + 180, th2 + 180, th1 + 270, th2 + 270};
+        double[] x = new double[2*rad.length];
+        double[] y = new double[2*rad.length];
+
+        for (i = 0; i < rad.length; i++)
+        {
+            x[i] = rad[i]*Math.cos(Math.PI*th[i]/180);
+            x[i + rad.length] = x[i];                   // allow for cyclic permutations
+            y[i] = rad[i]*Math.sin(Math.PI*th[i]/180);
+            y[i + rad.length] = y[i];
+        }
+        System.out.print("x = ");
+        for (i = 0; i < rad.length; i++)
+            System.out.print(", " + x[i]);
+        System.out.println();
+        System.out.print("y = ");
+        for (i = 0; i < rad.length; i++)
+            System.out.print(", " + y[i]);
+        System.out.println();
+        double[][] sol = new double[8*rad.length][8*rad.length];
+
+        for (i = 0; i < rad.length; i++)
+        {
+            j = i + 4;
+            sol[i][8*i]     =     y[j + 2] - y[j];
+            sol[i][8*i + 1] =  4*(y[j + 2] - y[j]);
+            sol[i][8*i + 2] =     y[j + 2] - y[j];
+            sol[i][8*i + 4] =   -(x[j + 2] - x[j]);
+            sol[i][8*i + 5] = -4*(x[j + 2] - x[j]);
+            sol[i][8*i + 6] =   -(x[j + 2] - x[j]);
+        }
+
+        for (i = 0; i < rad.length; i++)
+        {
+            j = i + 4;
+            sol[rad.length + i][8*i]     =   4*(y[j + 2] - y[j + 1]);
+            sol[rad.length + i][8*i + 1] =  16*(y[j + 2] - y[j + 1]) + 12*(y[j + 2] - y[j]);
+            sol[rad.length + i][8*i + 2] =   4*(y[j + 2] - y[j + 1]) +  6*(y[j + 2] - y[j]);
+            sol[rad.length + i][8*i + 4] =  -4*(x[j + 2] - x[j + 1]);
+            sol[rad.length + i][8*i + 5] = -16*(x[j + 2] - x[j + 1]) - 12*(x[j + 2] - x[j]);
+            sol[rad.length + i][8*i + 6] =  -4*(x[j + 2] - x[j + 1]) -  6*(x[j + 2] - x[j]);
+        }
+
+        for (i = 0; i < rad.length; i++)
+        {
+            j = i + 4;
+            sol[2*rad.length + i][8*i]     =     y[j + 3] - y[j + 1];
+            sol[2*rad.length + i][8*i + 1] =  4*(y[j + 3] - y[j + 1]) + 48*(y[j + 2] - y[j + 1]) +  6*(y[j + 2] - y[j]);
+            sol[2*rad.length + i][8*i + 2] =     y[j + 3] - y[j + 1]  + 24*(y[j + 2] - y[j + 1]) + 12*(y[j + 2] - y[j]);
+            sol[2*rad.length + i][8*i + 4] =   -(x[j + 3] - x[j + 1]);
+            sol[2*rad.length + i][8*i + 5] = -4*(x[j + 3] - x[j + 1]) - 48*(x[j + 2] - x[j + 1]) -  6*(x[j + 2] - x[j]);
+            sol[2*rad.length + i][8*i + 6] =   -(x[j + 3] - x[j + 1]) - 24*(x[j + 2] - x[j + 1]) - 12*(x[j + 2] - x[j]);
+        }
+
+        for (i = 0; i < rad.length; i++)
+        {
+            j = i + 4;
+            sol[3*rad.length + i][8*i + 1] =  12*(y[j + 3] - y[j + 1]) + 24*(y[j + 2] - y[j + 1]) +    y[j + 2] - y[j];
+            sol[3*rad.length + i][8*i + 2] =   6*(y[j + 3] - y[j + 1]) + 48*(y[j + 2] - y[j + 1]) + 4*(y[j + 2] - y[j]);
+            sol[3*rad.length + i][8*i + 3] =                                                           y[j + 2] - y[j];
+            sol[3*rad.length + i][8*i + 5] = -12*(x[j + 3] - x[j + 1]) - 24*(x[j + 2] - x[j + 1]) -   (x[j + 2] - x[j]);
+            sol[3*rad.length + i][8*i + 6] =  -6*(x[j + 3] - x[j + 1]) - 48*(x[j + 2] - x[j + 1]) - 4*(x[j + 2] - x[j]);
+            sol[3*rad.length + i][8*i + 7] =                                                         -(x[j + 2] - x[j]);
+        }
+
+        for (i = 0; i < rad.length; i++)
+        {
+            j = i + 4;
+            sol[4*rad.length + i][8*i + 1] =   6*(y[j + 3] - y[j + 1]) +  4*(y[j + 2] - y[j + 1]);
+            sol[4*rad.length + i][8*i + 2] =  12*(y[j + 3] - y[j + 1]) + 16*(y[j + 2] - y[j + 1]);
+            sol[4*rad.length + i][8*i + 3] =                              4*(y[j + 2] - y[j + 1]);
+            sol[4*rad.length + i][8*i + 5] =  -6*(x[j + 3] - x[j + 1]) -  4*(x[j + 2] - x[j + 1]);
+            sol[4*rad.length + i][8*i + 6] = -12*(x[j + 3] - x[j + 1]) - 16*(x[j + 2] - x[j + 1]);
+            sol[4*rad.length + i][8*i + 7] =                             -4*(x[j + 2] - x[j + 1]);
+        }
+
+        for (i = 0; i < rad.length; i++)
+        {
+            j = i + 4;
+            sol[5*rad.length + i][8*i + 1] =     y[j + 3] - y[j + 1];
+            sol[5*rad.length + i][8*i + 2] =  4*(y[j + 3] - y[j + 1]);
+            sol[5*rad.length + i][8*i + 3] =     y[j + 3] - y[j + 1];
+            sol[5*rad.length + i][8*i + 5] =   -(x[j + 3] - x[j + 1]);
+            sol[5*rad.length + i][8*i + 6] = -4*(x[j + 3] - x[j + 1]);
+            sol[5*rad.length + i][8*i + 7] =   -(x[j + 3] - x[j + 1]);
+        }
+
+        for (i = 0; i < rad.length; i++)                // splice constraint on betaxi
+        {
+            sol[6*rad.length + i][8*i + 1] = 1;         // coeff of D50 segment i-1
+            sol[6*rad.length + i][8*i + 2] = 4;
+            sol[6*rad.length + i][8*i + 3] = 1;
+            sol[6*rad.length + i][(8*i + 0 + 8) % (8*rad.length)] = -1;    // coeff of D05 segment i
+            sol[6*rad.length + i][(8*i + 1 + 8) % (8*rad.length)] = -4;
+            sol[6*rad.length + i][(8*i + 2 + 8) % (8*rad.length)] = -1;
+        }
+
+        for (i = 0; i < rad.length; i++)                // normalize the betay0 (one per segment)
+            sol[7*rad.length + i][8*i] = 1;
+
+        System.out.println("c r0 r1 th0 th1 = , " + fitted.getc() + ", " + Math.sqrt(x[0]*x[0] + y[0]*y[0]) + ", " + Math.sqrt(x[1]*x[1] + y[1]*y[1])
+                                           + ", " + Math.atan(y[0]/x[0])*180/Math.PI + ", " + Math.atan(y[1]/x[1])*180/Math.PI);
+
+        double[] rhs = new double[8*rad.length];
+        for (i = 0; i < rad.length; i++)                // initiallize the betay0 = 1
+            rhs[7*rad.length + i] = 1;
+        double[] lhs = BSpline5.gaussj(sol, rhs);
+        for (i = 0; i < rad.length; i++)
+            System.out.println((float) lhs[8*i + 0] + ", " + (float) lhs[8*i + 1] + ", " + (float) lhs[8*i + 2] + ", " + (float) lhs[8*i + 3] + ", " + (float) lhs[8*i + 4] + ", " + (float) lhs[8*i + 5] + ", " + (float) lhs[8*i + 6] + ", " + (float) lhs[8*i + 7]);
     }
 
     private static void print_one_point(int i)
@@ -529,9 +659,9 @@ public class BSplineNClosed
     {
         String str = "";
         for (int i = 0; i < Splinex.length; i++)
-            str += ", " + (float) Math.sqrt(Splinex[i]*Splinex[i] + Spliney[i]*Spliney[i]);
+            str += ", " + (double) Math.sqrt(Splinex[i]*Splinex[i] + Spliney[i]*Spliney[i]);
         for (int i = 0; i < Splinex.length; i++)
-            str += ", " + (float) (Math.atan2(Spliney[i], Splinex[i])*180/Math.PI);
+            str += ", " + (double) (Math.atan2(Spliney[i], Splinex[i])*180/Math.PI);
         return str;
     }
 

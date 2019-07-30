@@ -232,7 +232,7 @@ public class BSpline5
         {
             if (i > 0) System.out.print(", ");
             System.out.print("[");
-            for (int j = 0; j < J.length; j++)
+            for (int j = 0; j < J[0].length; j++)
             {
                 if (j > 0) System.out.print(", ");
                 System.out.print(J[i][j]); // (float) J[i][j]);
