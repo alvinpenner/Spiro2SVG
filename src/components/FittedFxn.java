@@ -7,9 +7,9 @@ package components;
 
 public abstract class FittedFxn
 {
-    private final double origin_x = 400;             // just for svg output
-    private final double origin_y = 500; // 700;            // just for svg output
-    private final double scale = 2; // 1.5; // 2; // 200;               // just for svg output
+    private final double origin_x = 300;             // just for svg output
+    private final double origin_y = 350; // 500; // 700;            // just for svg output
+    private final double scale = 1; // 1.5; // 2; // 200;               // just for svg output
 
     protected abstract double getc();
     protected abstract double getx(double t);
@@ -146,7 +146,7 @@ class epiTrochoidFxn extends FittedFxn
     public epiTrochoidFxn(double m_c)
     {
         c = m_c;
-        //gen_points(0, 2*Math.PI, 360);
+        //gen_points(0, 2*Math.PI, 800);
     }
 
     protected double getc()

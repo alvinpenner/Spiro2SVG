@@ -21,15 +21,18 @@ public class BSplineNClosed
     public static double[] Splinex, Spliney;        // N-point spline
     private static epiTrochoidFxn fitted;
     private static double[] t2 = new double[N+1];
-    private static double[][] t2ddx;                 // partial of u wrt {xj}
-    private static double[][] t2ddy;                 // partial of u wrt {yj}
+    private static double[][] t2ddx;                // partial of u wrt {xj}
+    private static double[][] t2ddy;                // partial of u wrt {yj}
+    private static double[][] Jac;                  // defined here only so we can share it with 'scan_steepest'
+    private static double[] dFda;
     private static double Jacdet = Double.NaN;
     public static double theta_start, theta_end;
     private static final double TOL = 0.000000001;
 
     public static void main (String[] args)
     {
-        fitted = new epiTrochoidFxn(8);
+        //fitted = new epiTrochoidFxn(8.45);
+        fitted = new epiTrochoidFxn(7.7);
         //double rad0 = 195.5;
         //double rad1 = 195;
         //double rad2 = 195.5;
@@ -41,9 +44,9 @@ public class BSplineNClosed
         //double[] rad = new double[] {rad0, rad1, rad2, rad3, rad4, rad0, rad1, rad2, rad3, rad4, rad0, rad1, rad2, rad3, rad4, rad0, rad1, rad2, rad3, rad4};
         //double[] rad = new double[] {rad0, rad1, rad2, rad0, rad1, rad2, rad0, rad1, rad2, rad0, rad1, rad2};
         //double[] rad = new double[] {rad0, rad1, rad2, rad3, rad4, rad5, rad0, rad1, rad2, rad3, rad4, rad5, rad0, rad1, rad2, rad3, rad4, rad5, rad0, rad1, rad2, rad3, rad4, rad5};
-        double[] rin = new double[] {194, 206};
-        //double[] thin = new double[] {-59, -9};
-        double[] thin = new double[] {-84, -30};
+        double[] rin = new double[] {181.62039, 217.36208};
+        double[] thin = new double[] {-47.694225, -1.0211561};
+        //double[] thin = new double[] {-76.79729772, -17.43070974};
         //double[] rin = new double[] {174.84395, 200.71751, 192.32411};
         //double[] thin = new double[] {-33.770927, -5.76914, 15.113813};
         //double[] rin = new double[] {195.9031, 202.15785, 195.9031, 178.2428, 160.45967, 178.2428};
@@ -67,6 +70,8 @@ public class BSplineNClosed
         //theta = new double[] {thin[0], thin[1], thin[2], thin[3], thin[4], thin[5], thin[0] + 90, thin[1] + 90, thin[2] + 90, thin[3] + 90, thin[4] + 90, thin[5] + 90, thin[0] + 180, thin[1] + 180, thin[2] + 180, thin[3] + 180, thin[4] + 180, thin[5] + 180, thin[0] + 270, thin[1] + 270, thin[2] + 270, thin[3] + 270, thin[4] + 270, thin[5] + 270};
         Splinex = new double[rad.length];
         Spliney = new double[rad.length];
+        dFda = new double[2*Splinex.length];
+        Jac = new double[2*Splinex.length][2*Splinex.length];
         for (int i = 0; i < Splinex.length; i++)              // normally include these four lines
             Splinex[i] = rad[i]*Math.cos(Math.PI*theta[i]/180 - 0.0*2*Math.PI/Splinex.length);
         for (int i = 0; i < Splinex.length; i++)
@@ -78,16 +83,17 @@ public class BSplineNClosed
         //Spliney = new double[] {-131.49011, 3.116379E-10, 131.49011, 213.08975, 131.49011, -6.7329753E-10, -131.49011, -213.08975};
         //Splinex = new double[8];
         //Spliney = new double[8];
-        //Splinex = new double[] {10, 100, 125, 110, 20};     // fix fix override previous
-        //Spliney = new double[] {30,  40, 60, 110, 91};      // fix fix override previous
+        //Splinex = new double[] {96,200,190,120,174,-70,140,120};     // fix fix override previous
+        //Spliney = new double[] {95,90,30,230,186,20,160,20};      // fix fix override previous
         t2ddx = new double[Splinex.length][N+1];
         t2ddy = new double[Spliney.length][N+1];
         //for (int i = 0; i < Splinex.length; i++)
         //    Splinex[(i+1)%Splinex.length] = rad*Math.cos(i*Math.PI*2/Splinex.length - 0.0*Math.PI/4);
         //for (int i = 0; i < Spliney.length; i++)
         //    Spliney[(i+1)%Splinex.length] = rad*Math.sin(i*Math.PI*2/Spliney.length - 0.0*Math.PI/4);
-        System.out.println("BSplineN iterate_at_x_y = " + iterate_at_x_y() + "\n");       // normally include this line
-        //System.out.println("BSplineN solve_at_x_y = " + solve_at_x_y(true) + "\n");
+        //System.out.println("BSplineN iterate_at_x_y = " + iterate_at_x_y() + "\n");       // normally include this line
+        //scan_steepest();
+        System.out.println("BSplineN solve_at_x_y = " + solve_at_x_y(true) + "\n");
         //System.out.println("BSplineN circle = ," + Splinex.length + ", " + rad + ", " + solve_at_x_y(true) + "\n");
         //read_BSplineN_data(133);
         if (fitted == null)
@@ -99,7 +105,7 @@ public class BSplineNClosed
         //    System.out.println(i/100.0 + ", " + d2Ni3(i/100.0)[0] + ", " + d2Ni3(i/100.0)[1] + ", " + d2Ni3(i/100.0)[2] + ", " + d2Ni3(i/100.0)[3]);
         //double[] perm = permute(Splinex, 4.5);
         //System.out.println("permute = " + perm[0] + ", " + perm[1] + ", " + perm[2] + ", " + perm[3]);
-        //gen_spline_points(50);
+        //gen_spline_points(100);
         //for (int i = 0; i <= 60; i++)               // demo printout
         //{
         //    double d = i/90.0;
@@ -134,8 +140,8 @@ public class BSplineNClosed
         double[] denom = new double[N];                         // = E(u)
 
         double[] trap_in = new double[N];
-        double[][] Jac = new double[2*Splinex.length][2*Splinex.length];
-        double[] dFda = new double[2*Splinex.length];
+//        double[][] Jac = new double[2*Splinex.length][2*Splinex.length];
+//        double[] dFda = new double[2*Splinex.length];
         double[] d2Fdadc = new double[2*Splinex.length];        // augmented matrix
         double dFdc;
         double d2Fdcdc;                                         // augmented matrix
@@ -215,6 +221,7 @@ public class BSplineNClosed
                     }
                     Jac[i][j] = integrate(trap_in);
                 }
+            //if (true) return Double.NaN;                        // use only for scan_steepest()
             //int checki = 1;
             //int checkj = 7;
             //System.out.println("check M ," + checki + ", " + checkj + ", " + dFda[checki] + ", " + dFda[checkj] + ", " + Jac[checki][checkj]);
@@ -290,9 +297,9 @@ public class BSplineNClosed
                     }
                     l++;
                 }
-            System.out.println("dot_product:");
-            BSpline5.dump_Jac(dot_product);
-            correlate_f_dfda(dot_product, j);                                  // end of test code
+            //System.out.println("dot_product:");
+            //BSpline5.dump_Jac(dot_product);
+            //correlate_f_dfda(dot_product, j);                                  // end of test code
             return solve_at_x_y(true);                              // final run just for good measure
         }
         else
@@ -424,6 +431,42 @@ public class BSplineNClosed
         //System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_coord(Splinex) + print_coord(Spliney) + ", " + (fitted.a + fitted.b)*(fitted.a + fitted.b)*retVal*retVal/2);
         System.out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + ", " + (float) retVal + ", " + (float) Jacdet);
         return retVal;
+    }
+
+    private static void scan_steepest()
+    {
+        // calculate a streamline using steepest-descent starting at a saddle point
+        // use method of 'Chong and Zak', 'An Introduction to Optimization', p.121
+        // move in increments of 'steepest' in the direction of the gradient -dFda[]
+        // to run this, temporarily comment out lines 401, 430 and 431 to reduce the output
+        // to run this, temporarily enable line 223 to abort 'iterate_at_x_y()'
+        // see Book 9, page 42
+
+        final int Nstr = 50;
+        double steepest = Double.NaN;
+        double retVal;
+        double num, denom;
+
+        System.out.println("scan steepest, " + Nstr);
+        iterate_at_x_y();                                       // initiallize dFdd
+        retVal = calc_error();
+        System.out.println("scan = , , , " + (float) fitted.getc() + ", " + print_coord(Splinex) + print_coord(Spliney) + ", " + (fitted.a + fitted.b)*(fitted.a + fitted.b)*retVal*retVal/2 + ", " + steepest);
+
+        for (int i = 0; i < Nstr; i++)
+        {
+            t2[N] = 0;                                          // just to control the output
+            num = BSpline5.multvv(dFda, dFda);
+            denom = BSpline5.multvv(dFda, BSpline5.multmv(Jac, dFda));
+            steepest = num/denom;
+            for (int j = 0; j < Splinex.length; j++)
+            {
+                Splinex[j] -= steepest*dFda[j];
+                Spliney[j] -= steepest*dFda[j + Splinex.length];
+            }
+            iterate_at_x_y();                                   // re-calculate dFdd
+            retVal = calc_error();
+            System.out.println("scan = , , , " + (float) fitted.getc() + ", " + print_coord(Splinex) + print_coord(Spliney) + ", " + (fitted.a + fitted.b)*(fitted.a + fitted.b)*retVal*retVal/2 + ", " + steepest);
+        }
     }
 
     private static void confirm_LHS()
@@ -667,9 +710,9 @@ public class BSplineNClosed
 
     private static void gen_spline_points(double Npt)
     {
-        double origin_x = 50;
-        double origin_y = 600;
-        double scale = 16;
+        double origin_x = 0; // 50;
+        double origin_y = 0; // 600;
+        double scale = 1; // 16;
 
         System.out.printf("M");
         for (int i = 0; i <= Npt*Splinex.length; i++)
