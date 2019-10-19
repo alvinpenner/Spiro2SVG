@@ -7,8 +7,8 @@ package components;
 
 public abstract class FittedFxn
 {
-    private final double origin_x = 300;             // just for svg output
-    private final double origin_y = 350; // 500; // 700;            // just for svg output
+    private final double origin_x = 0;             // just for svg output
+    private final double origin_y = 250; // 500; // 700;            // just for svg output
     private final double scale = 1; // 1.5; // 2; // 200;               // just for svg output
 
     protected abstract double getc();
