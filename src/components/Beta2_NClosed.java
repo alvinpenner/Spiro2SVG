@@ -1,6 +1,8 @@
 
 package components;
 
+import java.io.*;
+
 // consider a parametric curve, g, either cycloid or trochoid, with parameter t1
 // fit a closed N-point Beta2-Spline (P0 -> PN-1) to it, using parameter 0 < t2 < N, where N = 8.
 // express the beta2 spline as N Beziers with no constraints on the N Bezier endpoints
@@ -41,9 +43,11 @@ public class Beta2_NClosed
     public static void main (String[] args)
     {
         //fitted = new epiTrochoidFxn(-5.5);
-        get_Bezier_endpoints_from_Beta_Spline();
-        System.out.println("Beta2_Spline8 iterate_at_x_y = " + iterate_at_x_y() + "\n");       // normally include this line
+        //scan_fourfold_symmetry();
+        //get_Bezier_endpoints_from_Beta_Spline();
+        //System.out.println("Beta2_Spline8 iterate_at_x_y = " + iterate_at_x_y(null) + "\n");       // normally include this line
         //System.out.println("Beta2_Spline8 solve_at_x_y = " + solve_at_x_y(true) + "\n");
+        write_Beta2_SplineN_data();                              // generate eigenvalue data
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -54,13 +58,13 @@ public class Beta2_NClosed
         //    System.out.println(i + ", " + Bi3(i/100.0)[3] + ", " + dBi3(i/100.0)[3] + ", " + d2Bi3(i/100.0)[3] + ", " + d3Bi3(i/100.0)[3]);
     }
 
-    private static double iterate_at_x_y()
+    private static double iterate_at_x_y(PrintWriter out)
     {
         // calculate a new estimate of (xi, yi, betai) by setting dF = 0
         // setup 3N-variable Newton-Raphson iteration
 
         final double gain = 1;                                  // factor to reduce gain
-        final int MAXLOOP = 200;
+        final int MAXLOOP = 1000;
         double[] f_gx = new double[N];
         double[] f_gy = new double[N];
         double[] dfxdu = new double[N];
@@ -104,13 +108,13 @@ public class Beta2_NClosed
                     if (i < ax.length)                  // ax variable
                         trap_in[k] = f_gx[k]*calc_dfdai(i, t2[k])                       // original code
                                    + (f_gx[k]*dfxdu[k] + f_gy[k]*dfydu[k])*t2ddx[i][k];
-                        //trap_in[k] = f_gx[k]*calc_dfdai(t2[k], i);                    // new code
+                        //trap_in[k] = f_gx[k]*calc_dfdai(i, t2[k]);                    // new code
                     else if (i < 2*ax.length)           // ay variable
-                        trap_in[k] = f_gy[k]*calc_dfdai(i - ax.length, t2[k])      // original code
+                        trap_in[k] = f_gy[k]*calc_dfdai(i - ax.length, t2[k])           // original code
                                    + (f_gx[k]*dfxdu[k] + f_gy[k]*dfydu[k])*t2ddy[i - ax.length][k];
-                        //trap_in[k] = f_gy[k]*calc_dfdai(t2[k], i - Splinex.length);   // new code
+                        //trap_in[k] = f_gy[k]*calc_dfdai(i - ax.length, t2[k]);        // new code
                     else                                // abeta variable
-                        trap_in[k] = f_gx[k]*calc_dfdbetai(ddxdbeta, i - 2*ax.length, t2[k])      // original code
+                        trap_in[k] = f_gx[k]*calc_dfdbetai(ddxdbeta, i - 2*ax.length, t2[k])    // original code
                                    + f_gy[k]*calc_dfdbetai(ddydbeta, i - 2*ax.length, t2[k])
                                    + (f_gx[k]*dfxdu[k] + f_gy[k]*dfydu[k])*t2ddbeta[i - 2*ax.length][k];
                 dFda[i] = integrate(trap_in);
@@ -160,10 +164,12 @@ public class Beta2_NClosed
                         else
                             if (j < ax.length)
                                 trap_in[k] = calc_dfdbetai(ddxdbeta, i - 2*ax.length, t2[k])*calc_dfdai(j, t2[k])
-                                           - denom[k]*t2ddbeta[i - 2*ax.length][k]*t2ddx[j][k];
+                                           - denom[k]*t2ddbeta[i - 2*ax.length][k]*t2ddx[j][k]
+                                           + f_gx[k]*calc_d2fdaidbetaj(j, i - 2*ax.length, t2[k]);
                             else if (j < 2*ax.length)
                                 trap_in[k] = calc_dfdbetai(ddydbeta, i - 2*ax.length, t2[k])*calc_dfdai(j - ax.length, t2[k])
-                                           - denom[k]*t2ddbeta[i - 2*ax.length][k]*t2ddy[j - ax.length][k];
+                                           - denom[k]*t2ddbeta[i - 2*ax.length][k]*t2ddy[j - ax.length][k]
+                                           + f_gy[k]*calc_d2fdaidbetaj(j - ax.length, i - 2*ax.length, t2[k]);
                             else
                                 trap_in[k] = calc_dfdbetai(ddxdbeta, i - 2*ax.length, t2[k])*calc_dfdbetai(ddxdbeta, j - 2*ax.length, t2[k])
                                            + calc_dfdbetai(ddydbeta, i - 2*ax.length, t2[k])*calc_dfdbetai(ddydbeta, j - 2*ax.length, t2[k])
@@ -204,7 +210,18 @@ public class Beta2_NClosed
             Augment[3*ax.length][3*ax.length] = d2Fdcdc;
             //System.out.println("dFdc = " + fitted.getc() + print_coord(ax) + print_coord(ay) + print_coord(abeta) + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
 
-            dela = BSpline5.gaussj(Jac, dFda);          // this is actually the negative of Δa
+            if (loop == -1)  // perform one iteration of steepest descent as a special initialization
+            {
+                BSpline5.dump_Jac(Jac);
+                System.out.println("loop == 1");
+                dela = new double[dFda.length];
+                double steepnum = BSpline5.multvv(dFda, dFda);
+                double steepdenom = BSpline5.multvv(dFda, BSpline5.multmv(Jac, dFda));
+                for (j = 0; j < dFda.length; j++)
+                    dela[j] = gain*dFda[j]*steepnum/steepdenom;
+            }
+            else
+                dela = BSpline5.gaussj(Jac, dFda);          // this is actually the negative of Δa
             for (i = 0; i < ax.length; i++)
             {
                 ax[i] -= dela[i]/gain;             // gain is just a fudge factor to 'improve' convergence
@@ -232,9 +249,27 @@ public class Beta2_NClosed
             }
             System.out.println("\n__converged in " + loop + " at new xi yi betai = , , , , , , " + print_coord(ax) + print_coord(ay) + print_coord(abeta));
             //Jacdet = BSpline5.detm(Jac);
-            System.out.println("dFdc = " + fitted.getc() + print_radial());     // this is just a header for dump_Jac file data
+            System.out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
             BSpline5.dump_Jac(Jac);
-            BSpline5.dump_Jac(Augment);
+            //BSpline5.dump_Jac(Augment);
+            if (out != null)                                            // dump Jac to a file
+            {
+                out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
+                out.print("a = np.array([");
+                for (i = 0; i < Jac.length; i++)
+                {
+                    if (i > 0) out.print(", ");
+                    out.print("[");
+                    for (j = 0; j < Jac.length; j++)
+                    {
+                        if (j > 0) out.print(", ");
+                        out.print(Jac[i][j]);
+                    }
+                    out.print("]");
+                }
+                out.println("])");
+                out.println();
+            }
             double origin_y = 250;                                                  // used only for N-point Bezier
             System.out.print("M " + Bezx[0] + ", " + (origin_y + Bezy[0]) + " C");  // dump N-point Bezier
             for (i = 1; i < 3*ax.length; i++)
@@ -261,10 +296,17 @@ public class Beta2_NClosed
             //System.out.println("dot_product:");
             //BSpline5.dump_Jac(dot_product);
             //correlate_f_dfda(dot_product, j);                                  // end of test code
-            return solve_at_x_y(true);                              // final run just for good measure
+            double retVal = solve_at_x_y(false);                // final run just for good measure
+            //if (out != null)                                    // use only for replicating file 'betarun8.csv'
+            //    out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + print_coord(abeta) + ", " + (float) retVal + ", " + (float) Jacdet);
+            return retVal;
         }
         else
+        {
+            if (out != null)                                    // use only for replicating file 'betarun8.csv'
+                out.println("convergence failed at c = " + fitted.getc());
             System.out.println("\nNOT converged after " + loop + " loops! (" + print_coord(dela) + ")");
+        }
         return Double.NaN;
     }
 
@@ -315,14 +357,31 @@ public class Beta2_NClosed
 
     private static void get_Bezier_endpoints_from_Beta_Spline()
     {
-        fitted = new epiTrochoidFxn(3.5947);              // fix fix temporary location
+        fitted = new epiTrochoidFxn(6.27);              // fix fix temporary location
+        //String str = "gauss t2[] @ , 90.0, 90.0, 17.1, 800, , 181.11768, 191.3406, 168.46349, 191.3981, 181.11768, 191.3406, 168.46349, 191.3981, -73.178055, -8.765734, 29.248032, 81.26961, 106.821945, 171.23427, -150.75197, -98.73039, 4.3080115, 1.7127049, 0.0033888216, 1.1912025, 4.3080115, 1.7127049, 0.0033888216, 1.1912025, 6.869E-4, NaN";
         // convert a 8-point Beta-Spline to 8 spliced cubic Beziers (endpoints only)
-        double[] beta_in = new double[] {176.41026, 183.60059, 176.41026, 183.60059, 176.41026, 183.60059, 176.41026, 183.60059, -45.0, -1.1409932E-13, 45.0, 90.0, 135.0, -180.0, -135.0, -90.0, 3.7506723, -0.83850354, 3.7506723, -0.83850354, 3.7506723, -0.83850354, 3.7506723, -0.83850354};
+        double[] beta_in = new double[] {
+//185.39139, 193.71384, 169.07936, 193.46742, 185.39139, 193.71384, 169.07936, 193.46742, -76.67592, -7.854524, 25.704296, 81.88335, 103.32408, 172.14548, -154.2957, -98.11665, 9.370194, 3.2129233, 1.2039822, 2.505883, 9.370194, 3.2129233, 1.2039822, 2.505883
+//175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, -45.0, -6.140414E-11, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124
+//176.4047, 183.60616, 176.4047, 183.60616, 176.4047, 183.60616, 176.4047, 183.60616, -45.0, -2.6008996E-13, 45.0, 90.0, 135.0, -180.0, -135.0, -90.0, 3.6070511, -0.8296387, 3.6070511, -0.8296387, 3.6070511, -0.8296387, 3.6070511, -0.8296387
+//175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, -45.0, -6.140414E-11, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124
+//187.07251, 187.07251, 187.07251, 187.07251, 187.07251, 187.07251, 187.07251, 187.07251, -77.75456, -12.245439, 12.245439, 77.75456, 102.24544, 167.75456, -167.75456, -102.24544, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343
+//168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, -63.464863, -4.8974257, 26.535137, 85.10258, 116.53513, 175.10257, -153.46486, -94.89742, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758
+174.02264, 186.3201, 174.02264, 186.29512, 174.02264, 186.3201, 174.02264, 186.29512, -50.11968, 1.6953382E-13, 50.11968, 90.0, 129.88033, 180.0, -129.88033, -90.0, 2.1633155, -0.38572678, 2.1633155, -0.35647652, 2.1633155, -0.38572678, 2.1633155, -0.35647652
+//179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, -62.850533, -17.501976, 27.149467, 72.498024, 117.14947, 162.49802, -152.85052, -107.501976, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837
+//159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, -45.0, -1.5553355E-14, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523
+        };
         if (beta_in.length != 24)
         {
             System.out.println("convert_beta_to_Bezier: incorrect length = " + beta_in.length);
             return;
         }
+        //double mix = 0;                                               // use only for interpolation
+        //double[] rad_in1 = new double[] {180.1914, 180.1914, 180.1914, 180.1914, 180.1914, 180.1914, 180.1914, 180.1914, -69.35823, -20.641771, 20.641771, 69.35823, 110.64177, 159.35823, -159.35823, -110.64177, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702};
+        //double[] rad_in1 = new double[] {175.49046, 184.52057, 175.49046, 184.52057, 175.49046, 184.52057, 175.49046, 184.52057, -45.0, -2.737488E-13, 45.0, 90.0, 135.0, -180.0, -135.0, -90.0, 3.0205624, -0.6741331, 3.0205624, -0.6741331, 3.0205624, -0.6741331, 3.0205624, -0.6741331};
+        //double[] rad_in2 = new double[] {175.4421, 184.44278, 175.4421, 184.44278, 175.4421, 184.44278, 175.4421, 184.44278, -45.0, -2.2157824E-13, 45.0, 90.0, 135.0, -180.0, -135.0, -90.0, -2.3263218, 22.012825, -2.3263218, 22.012825, -2.3263218, 22.012825, -2.3263218, 22.012825};
+        //for (int i = 0; i < beta_in.length; i++)
+        //    beta_in[i] = mix*rad_in1[i] + (1 - mix)*rad_in2[i];
         System.out.println("convert_Beta_Spline_to_Bezier radial at c = ," + fitted.getc() + print_coord(beta_in));
         abeta = new double[8];
         ax = new double[8];
@@ -332,6 +391,39 @@ public class Beta2_NClosed
             ax[i] = beta_in[i]*Math.cos(beta_in[i + ax.length]*Math.PI/180);
             ay[i] = beta_in[i]*Math.sin(beta_in[i + ax.length]*Math.PI/180);
             abeta[i] = beta_in[i + 2*ax.length];
+        }
+        double incr = 0; //20; // magic factor = 72;
+        //double theta = 120;
+        //double[] eig_vec_angular0 = new double[] {0.27658725,0.21717687,-0.21717687,-0.27658725,-0.27658725,-0.21717687,0.21717687,0.27658725,0.21717687,0.27658725,0.27658725,0.21717687,-0.21717687,-0.27658725,-0.27658725,-0.21717687,0.03651984,-0.03651984,0.03651984,-0.03651984,0.03651984,-0.03651984,0.03651984,-0.03651984};
+        //double[] eig_vec_angular1 = new double[] {0.19880945,0.23317641,-0.26448369,0.2548129,0.19880945,0.23317641,-0.26448369,0.2548129,0.15533342,0.29835982,0.33826469,-0.19927081,0.15533342,0.29835982,0.33826469,-0.19927081,0.04314422,-0.03735079,-0.01050166,-0.02401306,-0.04314422,0.03735079,0.01050166,0.02401306};
+        //double[] eig_vec_angular2 = new double[] {0.33826469,-0.19927081,0.15533342,0.29835982,0.33826469,-0.19927081,0.15533342,0.29835982,0.26448369,-0.2548129,-0.19880945,-0.23317641,0.26448369,-0.2548129,-0.19880945,-0.23317641,-0.01050166,-0.02401306,-0.04314422,0.03735079,0.01050166,0.02401306,0.04314422,-0.03735079};
+        double[] eig_vec_angular = new double[] {-0.35355294812152965 , 0.0004545543395921281 , -0.35355294800178955 , 1.9828270188954056e-10 , 0.3535529486267195 , -0.0004545543401452256 , 0.3535529488062767 , 2.40356135602221e-10 , -0.3535529481219878 , -4.71939709534297e-11 , 0.35355294800200066 , -0.00045455433982321885 , 0.3535529486263335 , -6.760268430119898e-11 , -0.35355294880602967 , 0.00045455433992618727 , -4.4906411922340794e-11 , -0.0006471098200360459 , -3.340369647553132e-11 , 0.0006471098235461131 , 4.2019007739403647e-11 , -0.0006471098275880648 , 2.6353145360369368e-11 , 0.0006471098249856699};
+        //double[] eig_vec_radial  = new double[] {0.31665681,0.15725157,-0.15725157,-0.31665681,-0.31665681,-0.15725157,0.15725157,0.31665681,0.15725157,0.31665681,0.31665681,0.15725157,-0.15725157,-0.31665681,-0.31665681,-0.15725157,0.00063766,-0.00063766,0.00063766,-0.00063766,0.00063766,-0.00063766,0.00063766,-0.00063766};
+        for (int i = 0; i < ax.length; i++)                     // increment along the lowest eigenvector
+        {
+            //ax[i] += incr*(Math.cos(theta*Math.PI/180)*eig_vec_angular2[i] + Math.sin(theta*Math.PI/180)*eig_vec_angular1[i]);
+            //ay[i] += incr*(Math.cos(theta*Math.PI/180)*eig_vec_angular2[i + ax.length] + Math.sin(theta*Math.PI/180)*eig_vec_angular1[i + ax.length]);
+            //abeta[i] += incr*(Math.cos(theta*Math.PI/180)*eig_vec_angular2[i + 2*ax.length] + Math.sin(theta*Math.PI/180)*eig_vec_angular1[i + 2*ax.length]);
+            ax[i] += incr*eig_vec_angular[i];
+            ay[i] += incr*eig_vec_angular[i + ax.length];
+            abeta[i] += incr*eig_vec_angular[i + 2*ax.length];
+        }
+        //double[] cart_in1 = new double[] {63.521793, 168.62363, 168.62363, 63.521793, -63.521793, -168.62363, -168.62363, -63.521793, -168.62363, -63.521793, 63.521793, 168.62363, 168.62363, 63.521793, -63.521793, -168.62363, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702};
+        //double[] cart_in2 = new double[] {124.05629, 184.44278, 124.05629, -2.2495281E-13, -124.05629, -184.44278, -124.05629, -1.8626032E-13, -124.05629, -7.1329E-13, 124.05629, 184.44278, 124.05629, -3.3561272E-13, -124.05629, -184.44278, -2.3263218, 22.012825, -2.3263218, 22.012825, -2.3263218, 22.012825, -2.3263218, 22.012825};
+        //double[] cart_in = new double[] {42.725063, 191.89647, 152.34802, 27.31546, -42.725063, -191.89647, -152.34802, -27.31546, -180.40105, -26.47261, 73.33422, 191.52939, 180.40105, 26.47261, -73.33422, -191.52939, 9.370194, 3.2129233, 1.2039822, 2.505883, 9.370194, 3.2129233, 1.2039822, 2.505883};
+        //double[] cart_in = new double[] {159.231966,186.29883,159.231966,-1.30592E-12,-159.231966,-186.29883,-159.231966,1.05438E-12,-85.74218,3.75189E-12,85.74218,186.37727,85.74218,2.85274E-12,-85.74218,-186.37727,2.2298417,-0.31485569,2.2298417,-0.4207099,2.2298417,-0.31485569,2.2298417,-0.4207099};
+        //double[] cart_in = new double[] {26.47261,180.40105,191.52939,73.33422,-26.47261,-180.40105,-191.52939,-73.33422,-191.89647,-42.725063,27.31546,152.34802,191.89647,42.725063,-27.31546,-152.34802,3.2129233,9.370194,2.505883,1.2039822,3.2129233,9.370194,2.505883,1.2039822};
+        //double mix = 1.;                                               // use only for interpolation
+        for (int i = 0; i < ax.length; i++)                             // interpolate between 2 initial estimates
+        {
+        //    int j = (i + ax.length) % ax.length;
+        //    int k = (i + ax.length) % ax.length;
+            //ax[i] = mix*cart_in1[j] + (1 - mix)*cart_in2[k];
+            //ay[i] = mix*cart_in1[j + ax.length] + (1 - mix)*cart_in2[k + ax.length];
+            //abeta[i] = mix*cart_in1[j + 2*ax.length] + (1 - mix)*cart_in2[k + 2*ax.length];
+            //ax[i] = cart_in[i];
+            //ay[i] = cart_in[i + ax.length];
+            //abeta[i] = cart_in[i + 2*ax.length];
         }
         //ax[6] += 0.01;                                                  // increment for dFdai calculation
         //ay[6] += 0.01;                                                  // increment for dFdai calculation
@@ -540,6 +632,118 @@ public class Beta2_NClosed
         //}
     }
 
+    private static void write_Beta2_SplineN_data()
+    {
+        // generate a file consisting of Jacobian matrices for egenvalue calculation
+        try
+        {
+            //FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\eig_augment_raw_8.txt", false);
+            FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\eig_augment_temp.txt", false);
+            //FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\betarun8.csv", false);
+            PrintWriter out = new PrintWriter(fw);
+            read_Beta2_SplineN_data(out);
+            out.close();
+        }
+        catch (java.io.IOException e)
+            {System.out.println("read_Beta2_SplineN_data() save error = " + e);}
+    }
+
+    private static void read_Beta2_SplineN_data(PrintWriter out)
+    {
+        // read Beta2_SplineN data (c, ri, thetai, betai) from a file
+        // generate Jacobian matrix for egenvalue calculation
+        String str_in = "";
+        String[] str_split;
+        double[] beta_in = new double[24];
+        int line_in = 0;
+        abeta = new double[8];
+        ax = new double[8];
+        ay = new double[8];
+
+        try
+        {
+            BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\betarun8.csv"));
+            try
+            {
+                while (instr.ready()) // && line_in < 50)
+                {
+                    line_in++;
+                    str_in = instr.readLine();
+                    if (line_in >= 1505 && line_in <= 2000)
+                    {
+                        if (str_in.isEmpty())
+                            out.println("....................");
+                        else if (str_in.startsWith("gauss t2[] @ ,"))
+                        {
+                            str_split = str_in.split(",");
+                            //out.println("line_in = " + line_in + ", " + str_split[3] + ", " + str_in);
+                            fitted = new epiTrochoidFxn(Double.parseDouble(str_split[3]));  // read c value
+                            for (int i = 0; i < beta_in.length; i++)                        // read input parameters
+                                beta_in[i] = Double.parseDouble(str_split[i + 6]);
+                            for (int i = 0; i < ax.length; i++)
+                            {
+                                ax[i] = beta_in[i]*Math.cos(beta_in[i + ax.length]*Math.PI/180);
+                                ay[i] = beta_in[i]*Math.sin(beta_in[i + ax.length]*Math.PI/180);
+                                abeta[i] = beta_in[i + 2*ax.length];
+                            }
+                            out.print(line_in + " - ");
+                            System.out.println("Beta2_Spline8 iterate_at_x_y = " + iterate_at_x_y(out) + "\n");
+                        }
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                System.out.println("read input error : " + e.getMessage());
+                return;
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            System.out.println("input file not found : " + e.getMessage());
+            return;
+        }
+    }
+
+    private static void scan_fourfold_symmetry()
+    {
+        fitted = new epiTrochoidFxn(4.43);                       // fix fix temporary location
+        double[] r_in_org = new double[] {175.51227, 184.37256};
+        double[] th_in_org = new double[] {-45, 0};
+        double[] beta_in_org = new double[] {-2.3176925, 22.393124};
+        double del_r = 0;
+        double del_th = 0;
+        double del_beta = .5;
+        double[] r_in = new double[2];
+        double[] th_in = new double[2];
+        double[] beta_in = new double[2];
+
+        abeta = new double[8];
+        ax = new double[8];
+        ay = new double[8];
+        for (int i = -1; i < 2; i += 2)
+        for (int j = -1; j < 2; j += 2)
+        for (int k = -1; k < 2; k += 2)
+        for (int l = -1; l < 2; l += 2)
+        for (int m = -1; m < 2; m += 2)
+        for (int n = -1; n < 2; n += 2)
+        {
+            r_in[0] = r_in_org[0] + del_r*i;
+            r_in[1] = r_in_org[1] + del_r*j;
+            th_in[0] = th_in_org[0] + del_th*k;
+            th_in[1] = th_in_org[1] + del_th*l;
+            beta_in[0] = beta_in_org[0] + del_beta*m;
+            beta_in[1] = beta_in_org[1] + del_beta*n;
+            for (int p = 0; p < ax.length; p++)
+            {
+                ax[p] = r_in[p % 2]*Math.cos(((p/2)*90 + th_in[p % 2])*Math.PI/180);
+                ay[p] = r_in[p % 2]*Math.sin(((p/2)*90 + th_in[p % 2])*Math.PI/180);
+                abeta[p] = beta_in[p % 2];
+            }
+            System.out.println("final = " + i + ", " + j + ", " + k + ", " + l + ", " + m + ", " + n + ", " + iterate_at_x_y(null) + ", " + print_radial() + "\n");
+        }
+    }
+
     private static void gen_spline_points()
     {
         double Npt = 800;
@@ -643,7 +847,7 @@ public class Beta2_NClosed
         else
         {
             del_t = (-fprime + Math.sqrt(fprime*fprime - 2*f*f2prime))/f2prime;
-            if (del_t < -5000*TOL || del_t > 3)
+            if (del_t < -500000000*TOL || del_t > 3)
             {
                 System.out.println("\nBad init1 at i t1 t2 =, " + i + ", " + t1 + ", " + t + ", " + f + ", " + fprime + ", " + f2prime + ", " + del_t + ", " + -5000*TOL);
                 del_t = (-fprime - Math.sqrt(fprime*fprime - 2*f*f2prime))/f2prime;
