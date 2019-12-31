@@ -44,10 +44,10 @@ public class Beta2_NClosed
     {
         //fitted = new epiTrochoidFxn(-5.5);
         //scan_fourfold_symmetry();
-        //get_Bezier_endpoints_from_Beta_Spline();
-        //System.out.println("Beta2_Spline8 iterate_at_x_y = " + iterate_at_x_y(null) + "\n");       // normally include this line
+        get_Bezier_endpoints_from_Beta_Spline();
+        System.out.println("Beta2_Spline8 iterate_at_x_y = " + iterate_at_x_y(null) + "\n");       // normally include this line
         //System.out.println("Beta2_Spline8 solve_at_x_y = " + solve_at_x_y(true) + "\n");
-        write_Beta2_SplineN_data();                              // generate eigenvalue data
+        //write_Beta2_SplineN_data();                              // generate eigenvalue data
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -74,7 +74,7 @@ public class Beta2_NClosed
         double[][] Jac = new double[3*ax.length][3*ax.length];
         double[] dFda = new double[3*ax.length];
         double[] d2Fdadc = new double[3*ax.length];             // augmented matrix
-        double dFdc;
+        //double dFdc;
         double d2Fdcdc;                                         // augmented matrix
         double[][] Augment = new double[3*ax.length + 1][3*ax.length + 1];
         double[] dela;                                          // (-Δxi, -Δyi)
@@ -98,6 +98,32 @@ public class Beta2_NClosed
                 dfxdu[i] = multvv(Bezx, (int) t2[i], dBi3(t2[i] % 1));
                 dfydu[i] = multvv(Bezy, (int) t2[i], dBi3(t2[i] % 1));
                 //System.out.println(i + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + denom[i]);
+                double[] testf = new double[3*ax.length];               // test for oval branch
+                double testtheta;
+                //for (j = 0; j < ax.length; j++)                         // use xi, yi, betai as independent variables
+                //{
+                //    testf[j] = calc_dfdai(j, t2[i])*f_gx[i];
+                //    testf[j + ax.length] = calc_dfdai(j, t2[i])*f_gy[i];
+                //    testf[j + 2*ax.length] = calc_dfdbetai(ddxdbeta, j, t2[i])*f_gx[i]
+                //                           + calc_dfdbetai(ddydbeta, j, t2[i])*f_gy[i];
+                //}
+                for (j = 0; j < ax.length; j++)                         // use xi, yi, di as independent variables
+                {                                                       // assuming angular symmetry (-45, 0)
+                    testtheta = Math.PI*(1 + j)/4;
+                    testf[j] = calc_dfdai_at_di(j, t2[i])*f_gx[i];
+                    testf[j + ax.length] = calc_dfdai_at_di(j, t2[i])*f_gy[i];
+                    testf[j + 2*ax.length] = calc_dfddi_at_betai(j, t2[i])*f_gx[i]*Math.cos(testtheta)
+                                           + calc_dfddi_at_betai(j, t2[i])*f_gy[i]*Math.sin(testtheta);
+                }
+                System.out.println("testf = ," + i + print_coord(testf));
+                //System.out.print(t2[i] % 8);
+                //for (j = 0; j < ax.length; j++)
+                //    System.out.print(", " + calc_dfdai(j, t2[i]));
+                //for (j = 0; j < ax.length; j++)
+                //    System.out.print(", " + calc_dfdbetai(ddxdbeta, j, t2[i]));
+                //for (j = 0; j < ax.length; j++)
+                //    System.out.print(", " + calc_dfdbetai(ddydbeta, j, t2[i]));
+                //System.out.println();
             }
 
             // calc dFda[j] at current (xi, yi, betai)
@@ -191,14 +217,15 @@ public class Beta2_NClosed
             //}
             for (k = 0; k < N; k++)
                 trap_in[k] = -f_gx[k]*fitted.getdxdc(t1_start + k*(t1_end - t1_start)/N) - f_gy[k]*fitted.getdydc(t1_start + k*(t1_end - t1_start)/N);
-            dFdc = integrate(trap_in);
-            //System.out.println("check Aug ," + "c" + ", " + checkj + ", " + dFdc + ", " + dFda[checkj] + ", " + d2Fdadc[checkj]);
+            //dFdc = integrate(trap_in);
+            //int checkj = 21;
+            //System.out.println("check Aug ," + fitted.getc() + ", " + checkj + ", " + dFdc + ", " + dFda[checkj] + ", " + d2Fdadc[checkj]);
             for (k = 0; k < N; k++)
                 trap_in[k] = fitted.getdxdc(t1_start + k*(t1_end - t1_start)/N)*fitted.getdxdc(t1_start + k*(t1_end - t1_start)/N)
                            + fitted.getdydc(t1_start + k*(t1_end - t1_start)/N)*fitted.getdydc(t1_start + k*(t1_end - t1_start)/N)
                            - denom[k]*calc_t2dd(Integer.MAX_VALUE, k, t2[k], "c")*calc_t2dd(Integer.MAX_VALUE, k, t2[k], "c");
             d2Fdcdc = integrate(trap_in);
-            //System.out.println("check d2Fdc2 , " + ", " + dFdc + ", " + d2Fdcdc);
+            //System.out.println("check d2Fdc2 , " + fitted.getc() + ", " + dFdc + ", " + d2Fdcdc);
             for (i = 0; i < 3*ax.length; i++)
                 for (j = 0; j < 3*ax.length; j++)
                     Augment[i][j] = Jac[i][j];
@@ -210,7 +237,7 @@ public class Beta2_NClosed
             Augment[3*ax.length][3*ax.length] = d2Fdcdc;
             //System.out.println("dFdc = " + fitted.getc() + print_coord(ax) + print_coord(ay) + print_coord(abeta) + ", , " + (float) dFdc + ", " + (float) d2Fdcdc);
 
-            if (loop == -1)  // perform one iteration of steepest descent as a special initialization
+            if (loop == 1)  // perform one iteration of steepest descent as a special initialization
             {
                 BSpline5.dump_Jac(Jac);
                 System.out.println("loop == 1");
@@ -236,7 +263,7 @@ public class Beta2_NClosed
             for (k = 0; k < dela.length; k++)
                 if (Math.abs(dela[k]) > TOL)
                     outside = true;
-            //outside = false;                            // force convergence
+            //outside = false;                              // force convergence
         } while ((loop < MAXLOOP) && outside);
         if (loop < MAXLOOP)
         {
@@ -252,7 +279,14 @@ public class Beta2_NClosed
             System.out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
             BSpline5.dump_Jac(Jac);
             //BSpline5.dump_Jac(Augment);
-            if (out != null)                                            // dump Jac to a file
+            if (out != null && false)                                            // dump d0 - d3 to a file
+            {
+                out.print("d1d2 = ," + fitted.getc());
+                for (i = 0; i < 4; i++)
+                    out.print(", " + Math.sqrt((Bezx[3*i + 1] - Bezx[3*i])*(Bezx[3*i + 1] - Bezx[3*i]) + (Bezy[3*i + 1] - Bezy[3*i])*(Bezy[3*i + 1] - Bezy[3*i])));
+                out.println();
+            }
+            if (out != null && true)                                            // dump Jac to a file
             {
                 out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
                 out.print("a = np.array([");
@@ -297,6 +331,9 @@ public class Beta2_NClosed
             //BSpline5.dump_Jac(dot_product);
             //correlate_f_dfda(dot_product, j);                                  // end of test code
             double retVal = solve_at_x_y(false);                // final run just for good measure
+            //System.out.println("d2Fdadc    = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_coord(d2Fdadc));
+            //double[] dadc = BSpline5.gaussj(Jac, d2Fdadc);     // -response to change in c
+            //System.out.println("dadc       = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_coord(dadc));
             //if (out != null)                                    // use only for replicating file 'betarun8.csv'
             //    out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + print_coord(abeta) + ", " + (float) retVal + ", " + (float) Jacdet);
             return retVal;
@@ -357,17 +394,15 @@ public class Beta2_NClosed
 
     private static void get_Bezier_endpoints_from_Beta_Spline()
     {
-        fitted = new epiTrochoidFxn(6.27);              // fix fix temporary location
+        fitted = new epiTrochoidFxn(2);              // fix fix temporary location
         //String str = "gauss t2[] @ , 90.0, 90.0, 17.1, 800, , 181.11768, 191.3406, 168.46349, 191.3981, 181.11768, 191.3406, 168.46349, 191.3981, -73.178055, -8.765734, 29.248032, 81.26961, 106.821945, 171.23427, -150.75197, -98.73039, 4.3080115, 1.7127049, 0.0033888216, 1.1912025, 4.3080115, 1.7127049, 0.0033888216, 1.1912025, 6.869E-4, NaN";
         // convert a 8-point Beta-Spline to 8 spliced cubic Beziers (endpoints only)
         double[] beta_in = new double[] {
-//185.39139, 193.71384, 169.07936, 193.46742, 185.39139, 193.71384, 169.07936, 193.46742, -76.67592, -7.854524, 25.704296, 81.88335, 103.32408, 172.14548, -154.2957, -98.11665, 9.370194, 3.2129233, 1.2039822, 2.505883, 9.370194, 3.2129233, 1.2039822, 2.505883
-//175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, -45.0, -6.140414E-11, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124
-//176.4047, 183.60616, 176.4047, 183.60616, 176.4047, 183.60616, 176.4047, 183.60616, -45.0, -2.6008996E-13, 45.0, 90.0, 135.0, -180.0, -135.0, -90.0, 3.6070511, -0.8296387, 3.6070511, -0.8296387, 3.6070511, -0.8296387, 3.6070511, -0.8296387
-//175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, 175.51227, 184.37256, -45.0, -6.140414E-11, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124, -2.3176925, 22.393124
-//187.07251, 187.07251, 187.07251, 187.07251, 187.07251, 187.07251, 187.07251, 187.07251, -77.75456, -12.245439, 12.245439, 77.75456, 102.24544, 167.75456, -167.75456, -102.24544, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343, 4.0902343
 //168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, -63.464863, -4.8974257, 26.535137, 85.10258, 116.53513, 175.10257, -153.46486, -94.89742, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758
-174.02264, 186.3201, 174.02264, 186.29512, 174.02264, 186.3201, 174.02264, 186.29512, -50.11968, 1.6953382E-13, 50.11968, 90.0, 129.88033, 180.0, -129.88033, -90.0, 2.1633155, -0.38572678, 2.1633155, -0.35647652, 2.1633155, -0.38572678, 2.1633155, -0.35647652
+//168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, -63.464863, -4.8974257, 26.535137, 85.10258, 116.53513, 175.10257, -153.46486, -94.89742, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758
+//172.97676, 187.03522, 172.97676, 187.03522, 172.97676, 187.03522, 172.97676, 187.03522, -46.46174, -0.96474224, 43.53826, 89.035255, 133.53827, 179.03526, -136.46173, -90.964745, 0.68979716, -0.1626248, 0.68979716, -0.1626248, 0.68979716, -0.1626248, 0.68979716, -0.1626248
+178.00116, 182.00084, 178.00116, 182.00084, 178.00116, 182.00084, 178.00116, 182.00084, -45.0, -3.1467656E-13, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, 0.5175597, -0.5106123, 0.5175597, -0.5106123, 0.5175597, -0.5106123, 0.5175597, -0.5106123
+//179.80605, 181.36041, 180.14049, 182.09087, 179.5185, 184.15178, 170.6738, 188.99484, -69.78527, -17.851955, 19.662558, 73.21765, 110.6087, 166.3585, -138.03001, -93.310196, -0.03717412, 0.085394986, 0.21248694, 0.22758241, 0.4741566, 0.3797251, -2.5248592, 7.7442045
 //179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, -62.850533, -17.501976, 27.149467, 72.498024, 117.14947, 162.49802, -152.85052, -107.501976, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837
 //159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, -45.0, -1.5553355E-14, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523
         };
@@ -392,13 +427,14 @@ public class Beta2_NClosed
             ay[i] = beta_in[i]*Math.sin(beta_in[i + ax.length]*Math.PI/180);
             abeta[i] = beta_in[i + 2*ax.length];
         }
-        double incr = 0; //20; // magic factor = 72;
-        //double theta = 120;
+        double incr = 0; //-4.68; //20; // magic factor = 72;
+        //double theta = 30;
         //double[] eig_vec_angular0 = new double[] {0.27658725,0.21717687,-0.21717687,-0.27658725,-0.27658725,-0.21717687,0.21717687,0.27658725,0.21717687,0.27658725,0.27658725,0.21717687,-0.21717687,-0.27658725,-0.27658725,-0.21717687,0.03651984,-0.03651984,0.03651984,-0.03651984,0.03651984,-0.03651984,0.03651984,-0.03651984};
         //double[] eig_vec_angular1 = new double[] {0.19880945,0.23317641,-0.26448369,0.2548129,0.19880945,0.23317641,-0.26448369,0.2548129,0.15533342,0.29835982,0.33826469,-0.19927081,0.15533342,0.29835982,0.33826469,-0.19927081,0.04314422,-0.03735079,-0.01050166,-0.02401306,-0.04314422,0.03735079,0.01050166,0.02401306};
         //double[] eig_vec_angular2 = new double[] {0.33826469,-0.19927081,0.15533342,0.29835982,0.33826469,-0.19927081,0.15533342,0.29835982,0.26448369,-0.2548129,-0.19880945,-0.23317641,0.26448369,-0.2548129,-0.19880945,-0.23317641,-0.01050166,-0.02401306,-0.04314422,0.03735079,0.01050166,0.02401306,0.04314422,-0.03735079};
-        double[] eig_vec_angular = new double[] {-0.35355294812152965 , 0.0004545543395921281 , -0.35355294800178955 , 1.9828270188954056e-10 , 0.3535529486267195 , -0.0004545543401452256 , 0.3535529488062767 , 2.40356135602221e-10 , -0.3535529481219878 , -4.71939709534297e-11 , 0.35355294800200066 , -0.00045455433982321885 , 0.3535529486263335 , -6.760268430119898e-11 , -0.35355294880602967 , 0.00045455433992618727 , -4.4906411922340794e-11 , -0.0006471098200360459 , -3.340369647553132e-11 , 0.0006471098235461131 , 4.2019007739403647e-11 , -0.0006471098275880648 , 2.6353145360369368e-11 , 0.0006471098249856699};
-        //double[] eig_vec_radial  = new double[] {0.31665681,0.15725157,-0.15725157,-0.31665681,-0.31665681,-0.15725157,0.15725157,0.31665681,0.15725157,0.31665681,0.31665681,0.15725157,-0.15725157,-0.31665681,-0.31665681,-0.15725157,0.00063766,-0.00063766,0.00063766,-0.00063766,0.00063766,-0.00063766,0.00063766,-0.00063766};
+        //double[] eig_vec_angular1 = new double[] {0.2548468501217222 , -0.0005358546507131523 , -0.2501227493954531 , -0.3496846604956383 , -0.25484685019326037 , 0.0005358546505479047 , 0.2501227492800065 , 0.34968466021419686 , 0.25484685012201974 , 0.3496846604329374 , 0.25012274939535156 , 0.000535854650730883 , -0.25484685019313963 , -0.349684660360145 , -0.2501227492801641 , -0.0005358546502497118 , -1.3171685964152857e-12 , 0.014561744013351984 , -3.8062955565187906e-13 , -0.014561743954782047 , 8.22205476445903e-13 , 0.014561743856429827 , 8.22830356368015e-13 , -0.01456174388611318};
+        //double[] eig_vec_angular2 = new double[] {-0.25012274943127843 , -0.0005358546505758871 , 0.25484684997240187 , 0.34968465988587116 , 0.25012274924104877 , 0.0005358546508734316 , -0.25484685034491217 , -0.34968466072136284 , -0.2501227494308299 , -0.3496846603134654 , -0.2548468499729285 , 0.00053585464990715 , 0.2501227492419466 , 0.349684660581498 , 0.25484685034472954 , -0.0005358546510560035 , -2.4388269181940814e-12 , 0.014561744160439887 , -2.5197240127727838e-12 , -0.014561743978799007 , 3.997952197163507e-12 , 0.014561743744442983 , 8.377652683990572e-13 , -0.014561743860631209};
+        double[] eig_vec_angular  = new double[] {-0.27184146350169014 , -0.034173435117495404 , -0.257788393174275 , -0.3253400420019655 , 0.2718414637499141 , 0.03417343513591919 , 0.2577883933220464 , 0.3253400422050827 , -0.25778839291489763 , -0.3253400418220821 , 0.2718414637775523 , 0.03417343513649845 , 0.2577883931486816 , 0.3253400419977016 , -0.2718414639333287 , -0.034173435157982116 , 0.0513104315242166 , 0.0007974750346652418 , -0.051310431539833376 , -0.0007974750352416037 , 0.05131043154661342 , 0.0007974750360131653 , -0.05131043156597185 , -0.0007974750327244921};
         for (int i = 0; i < ax.length; i++)                     // increment along the lowest eigenvector
         {
             //ax[i] += incr*(Math.cos(theta*Math.PI/180)*eig_vec_angular2[i] + Math.sin(theta*Math.PI/180)*eig_vec_angular1[i]);
@@ -411,8 +447,8 @@ public class Beta2_NClosed
         //double[] cart_in1 = new double[] {63.521793, 168.62363, 168.62363, 63.521793, -63.521793, -168.62363, -168.62363, -63.521793, -168.62363, -63.521793, 63.521793, 168.62363, 168.62363, 63.521793, -63.521793, -168.62363, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702, -0.08902702};
         //double[] cart_in2 = new double[] {124.05629, 184.44278, 124.05629, -2.2495281E-13, -124.05629, -184.44278, -124.05629, -1.8626032E-13, -124.05629, -7.1329E-13, 124.05629, 184.44278, 124.05629, -3.3561272E-13, -124.05629, -184.44278, -2.3263218, 22.012825, -2.3263218, 22.012825, -2.3263218, 22.012825, -2.3263218, 22.012825};
         //double[] cart_in = new double[] {42.725063, 191.89647, 152.34802, 27.31546, -42.725063, -191.89647, -152.34802, -27.31546, -180.40105, -26.47261, 73.33422, 191.52939, 180.40105, 26.47261, -73.33422, -191.52939, 9.370194, 3.2129233, 1.2039822, 2.505883, 9.370194, 3.2129233, 1.2039822, 2.505883};
-        //double[] cart_in = new double[] {159.231966,186.29883,159.231966,-1.30592E-12,-159.231966,-186.29883,-159.231966,1.05438E-12,-85.74218,3.75189E-12,85.74218,186.37727,85.74218,2.85274E-12,-85.74218,-186.37727,2.2298417,-0.31485569,2.2298417,-0.4207099,2.2298417,-0.31485569,2.2298417,-0.4207099};
-        //double[] cart_in = new double[] {26.47261,180.40105,191.52939,73.33422,-26.47261,-180.40105,-191.52939,-73.33422,-191.89647,-42.725063,27.31546,152.34802,191.89647,42.725063,-27.31546,-152.34802,3.2129233,9.370194,2.505883,1.2039822,3.2129233,9.370194,2.505883,1.2039822};
+        //double[] cart_in = new double[] {127.330395,179.85931,127.54462,0.30967167,-127.329524,-179.85948,-127.114946,0.31372904,-127.330395,-0.31372904,127.114946,179.85948,127.329524,-0.30967167,-127.54462,-179.85931,-1.629431,28.549601,-1.632839,28.682253,-1.6361683,28.682253,-1.632839,28.549601};
+        //double[] cart_in = new double[] {111.85255, 189.1338, 129.06856, 7.77517, -111.85255, -189.1338, -129.06856, -7.77517, -129.06856, -7.77517, 111.85255, 189.1338, 129.06856, 7.77517, -111.85255, -189.1338, 0.13475613, 0.11126946, 0.13475613, 0.11126946, 0.13475613, 0.11126946, 0.13475613, 0.11126946};
         //double mix = 1.;                                               // use only for interpolation
         for (int i = 0; i < ax.length; i++)                             // interpolate between 2 initial estimates
         {
@@ -425,9 +461,9 @@ public class Beta2_NClosed
             //ay[i] = cart_in[i + ax.length];
             //abeta[i] = cart_in[i + 2*ax.length];
         }
-        //ax[6] += 0.01;                                                  // increment for dFdai calculation
-        //ay[6] += 0.01;                                                  // increment for dFdai calculation
-        //abeta[1] += 0.001;                                               // increment for dFdai calculation
+        //ax[3] += 0.01;                                                  // increment for dFdai calculation
+        //ay[4] += 0.01;                                                  // increment for dFdai calculation
+        //abeta[5] += 0.001;                                               // increment for dFdai calculation
         //abeta[6] += 0.01;                                               // increment for dFdai calculation
         System.out.println("Bezier endpoints at c = ," + fitted.getc() + print_coord(ax) + print_coord(ay) + print_coord(abeta));
         System.out.println("Bezier endpoints at c = ," + fitted.getc() + print_radial() + print_coord(abeta));
@@ -639,6 +675,7 @@ public class Beta2_NClosed
         {
             //FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\eig_augment_raw_8.txt", false);
             FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\eig_augment_temp.txt", false);
+            //FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\eig_d1d2_temp.txt", false);
             //FileWriter fw = new FileWriter("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\betarun8.csv", false);
             PrintWriter out = new PrintWriter(fw);
             read_Beta2_SplineN_data(out);
@@ -669,7 +706,7 @@ public class Beta2_NClosed
                 {
                     line_in++;
                     str_in = instr.readLine();
-                    if (line_in >= 1505 && line_in <= 2000)
+                    if (line_in >= 0 && line_in <= 3000)
                     {
                         if (str_in.isEmpty())
                             out.println("....................");
@@ -941,6 +978,7 @@ public class Beta2_NClosed
             ret = Bi3(u % 1)[2] + Bi3(u % 1)[3];
         ret += dddx[ui][i]*Bi3(u % 1)[1];
         ret -= dddx[(ui + 1) % 8][i]*Bi3(u % 1)[2];
+        //System.out.println(i + ", " + u + ", " + ret + ", " + dddx[ui][i] + ", " + dddx[(ui + 1) % 8][i]);
         return ret;
     }
 
@@ -1065,5 +1103,42 @@ public class Beta2_NClosed
         for (int i = 0; i < v2.length; i++)
             retVal += v1[(3*v1Pos + i) % v1.length]*v2[i];
         return retVal;
+    }
+
+    private static double calc_dfdai_at_di(int i, double u)
+    {
+        // this works for both calc_dfdaxi and calc_dfdayi
+        // this is a simplified calc of dfxdaxi, or dfydayi, holding di constant
+        // normally we would hold betai fixed, which would introduce coupling due to changing dxi or dyi
+
+        double ret = 0;
+        if (u < t2[0]) return Double.NaN;
+        if (u > t2[0] + 8) return Double.NaN;
+        int ui = (int) u;
+        ui = ui % 8;
+        if (ui == i)
+            ret = Bi3(u % 1)[0] + Bi3(u % 1)[1];
+        else if ((ui + 1) % 8 == i)
+            ret = Bi3(u % 1)[2] + Bi3(u % 1)[3];
+        //ret += dddx[ui][i]*Bi3(u % 1)[1];
+        //ret -= dddx[(ui + 1) % 8][i]*Bi3(u % 1)[2];
+        //System.out.println(i + ", " + u + ", " + ret + ", " + dddx[ui][i] + ", " + dddx[(ui + 1) % 8][i]);
+        return ret;
+    }
+
+    private static double calc_dfddi_at_betai(int i, double u)
+    {
+        // this is a simplified calc of dfxddi, holding betai constant
+        // it returns the response to the scalar magnitude of di, must subsequently decompose into x, y, components
+        double ret = 0;
+        if (u < t2[0]) return Double.NaN;
+        if (u > t2[0] + 8) return Double.NaN;
+        int ui = (int) u;
+        ui = ui % 8;
+        if (ui == i)
+            ret = Bi3(u % 1)[1];
+        else if ((ui + 1) % 8 == i)
+            ret = -Bi3(u % 1)[2];
+        return ret;
     }
 }
