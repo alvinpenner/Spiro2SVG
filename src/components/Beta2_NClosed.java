@@ -98,24 +98,34 @@ public class Beta2_NClosed
                 dfxdu[i] = multvv(Bezx, (int) t2[i], dBi3(t2[i] % 1));
                 dfydu[i] = multvv(Bezy, (int) t2[i], dBi3(t2[i] % 1));
                 //System.out.println(i + ", " + dfxdu[i] + ", " + dfydu[i] + ", " + denom[i]);
-                double[] testf = new double[3*ax.length];               // test for oval branch
-                double testtheta;
+                //double[] testf = new double[3*ax.length];               // test for oval branch
+                //double testtheta;
                 //for (j = 0; j < ax.length; j++)                         // use xi, yi, betai as independent variables
-                //{
+                //{                                                       // This is the wrong way to do it.
                 //    testf[j] = calc_dfdai(j, t2[i])*f_gx[i];
                 //    testf[j + ax.length] = calc_dfdai(j, t2[i])*f_gy[i];
                 //    testf[j + 2*ax.length] = calc_dfdbetai(ddxdbeta, j, t2[i])*f_gx[i]
                 //                           + calc_dfdbetai(ddydbeta, j, t2[i])*f_gy[i];
                 //}
+/*                                                                     // temporary code for testing for submanifold
                 for (j = 0; j < ax.length; j++)                         // use xi, yi, di as independent variables
-                {                                                       // assuming angular symmetry (-45, 0)
-                    testtheta = Math.PI*(1 + j)/4;
-                    testf[j] = calc_dfdai_at_di(j, t2[i])*f_gx[i];
-                    testf[j + ax.length] = calc_dfdai_at_di(j, t2[i])*f_gy[i];
-                    testf[j + 2*ax.length] = calc_dfddi_at_betai(j, t2[i])*f_gx[i]*Math.cos(testtheta)
-                                           + calc_dfddi_at_betai(j, t2[i])*f_gy[i]*Math.sin(testtheta);
+                {                                                       // This is the right way to do it
+                    testtheta = Math.PI*(1 + j)/4;                      // assuming angular symmetry (-45, 0)
+                    //testf[j] = calc_dfdai_at_di(j, t2[i])*f_gx[i];        // estimate betai
+                    //testf[j + ax.length] = calc_dfdai_at_di(j, t2[i])*f_gy[i];
+                    //testf[j + 2*ax.length] = calc_dfddi_at_betai(j, t2[i])*f_gx[i]*Math.cos(testtheta)
+                    //                       + calc_dfddi_at_betai(j, t2[i])*f_gy[i]*Math.sin(testtheta);
+                    testf[j] = calc_d2fdudai_at_di(j, t2[i])*f_gx[i];       // estimete gammai
+                    testf[j + ax.length] = calc_d2fdudai_at_di(j, t2[i])*f_gy[i];
+                    testf[j + 2*ax.length] = calc_d2fduddi_at_betai(j, t2[i])*f_gx[i]*Math.cos(testtheta)
+                                           + calc_d2fduddi_at_betai(j, t2[i])*f_gy[i]*Math.sin(testtheta);
+                    //testf[j] = calc_dfdai_at_di(j, t2[i]);      // temporary code only
+                    //testf[j + ax.length] = calc_dfdai_at_di(j, t2[i]);
+                    //testf[j + 2*ax.length] = calc_dfddi_at_betai(j, t2[i]);
                 }
                 System.out.println("testf = ," + i + print_coord(testf));
+*/
+                //System.out.println("testf = ," + (t2[i]%8) + print_coord(testf));
                 //System.out.print(t2[i] % 8);
                 //for (j = 0; j < ax.length; j++)
                 //    System.out.print(", " + calc_dfdai(j, t2[i]));
@@ -268,6 +278,7 @@ public class Beta2_NClosed
         if (loop < MAXLOOP)
         {
             System.out.println("\nt2 = [" + t2[0] + ", " + t2[N] + "]");
+            //System.out.println("oval det =  ," + fitted.getc() + ", " + calc_oval_det());
             if (Math.abs(t2[N] - t2[0] - ax.length) > TOL
             ||  t2[0] < -TOL)
             {
@@ -279,6 +290,8 @@ public class Beta2_NClosed
             System.out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
             BSpline5.dump_Jac(Jac);
             //BSpline5.dump_Jac(Augment);
+            if (out != null && true)                                             // dump oval_det to a file
+                out.println("oval det =  ," + fitted.getc() + print_radial() + print_coord(abeta) + ", " + calc_oval_det(null));
             if (out != null && false)                                            // dump d0 - d3 to a file
             {
                 out.print("d1d2 = ," + fitted.getc());
@@ -286,7 +299,7 @@ public class Beta2_NClosed
                     out.print(", " + Math.sqrt((Bezx[3*i + 1] - Bezx[3*i])*(Bezx[3*i + 1] - Bezx[3*i]) + (Bezy[3*i + 1] - Bezy[3*i])*(Bezy[3*i + 1] - Bezy[3*i])));
                 out.println();
             }
-            if (out != null && true)                                            // dump Jac to a file
+            if (out != null && false)                                            // dump Jac to a file
             {
                 out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
                 out.print("a = np.array([");
@@ -336,6 +349,7 @@ public class Beta2_NClosed
             //System.out.println("dadc       = , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_coord(dadc));
             //if (out != null)                                    // use only for replicating file 'betarun8.csv'
             //    out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + print_coord(abeta) + ", " + (float) retVal + ", " + (float) Jacdet);
+            //System.out.println("det = ," + calc_oval_det(d2Fdadc));
             return retVal;
         }
         else
@@ -401,7 +415,7 @@ public class Beta2_NClosed
 //168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, -63.464863, -4.8974257, 26.535137, 85.10258, 116.53513, 175.10257, -153.46486, -94.89742, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758
 //168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, -63.464863, -4.8974257, 26.535137, 85.10258, 116.53513, 175.10257, -153.46486, -94.89742, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758
 //172.97676, 187.03522, 172.97676, 187.03522, 172.97676, 187.03522, 172.97676, 187.03522, -46.46174, -0.96474224, 43.53826, 89.035255, 133.53827, 179.03526, -136.46173, -90.964745, 0.68979716, -0.1626248, 0.68979716, -0.1626248, 0.68979716, -0.1626248, 0.68979716, -0.1626248
-178.00116, 182.00084, 178.00116, 182.00084, 178.00116, 182.00084, 178.00116, 182.00084, -45.0, -3.1467656E-13, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, 0.5175597, -0.5106123, 0.5175597, -0.5106123, 0.5175597, -0.5106123, 0.5175597, -0.5106123
+177.93533, 182.06131, 177.93533, 182.06131, 177.93533, 182.06131, 177.93533, 182.06131, -45.0, 4.1272086E-13, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -1.6347035856605983, 4.399814095896288, -1.6347035856605623, 4.399814095896014, -1.6347035856605703, 4.399814095896593, -1.6347035856606187, 4.399814095896557
 //179.80605, 181.36041, 180.14049, 182.09087, 179.5185, 184.15178, 170.6738, 188.99484, -69.78527, -17.851955, 19.662558, 73.21765, 110.6087, 166.3585, -138.03001, -93.310196, -0.03717412, 0.085394986, 0.21248694, 0.22758241, 0.4741566, 0.3797251, -2.5248592, 7.7442045
 //179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, -62.850533, -17.501976, 27.149467, 72.498024, 117.14947, 162.49802, -152.85052, -107.501976, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837
 //159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, -45.0, -1.5553355E-14, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523
@@ -668,6 +682,34 @@ public class Beta2_NClosed
         //}
     }
 
+    private static double calc_oval_det(double[] d2Fdadc0)
+    {
+        // see Spiro2SVG Book 10, p.11
+        double d1 = Math.sqrt((Bezx[1] - Bezx[0])*(Bezx[1] - Bezx[0]) + (Bezy[1] - Bezy[0])*(Bezy[1] - Bezy[0]));
+        double d2 = Math.sqrt((Bezx[3] - Bezx[2])*(Bezx[3] - Bezx[2]) + (Bezy[3] - Bezy[2])*(Bezy[3] - Bezy[2]));
+        double theta_s = Math.PI/4;
+        double theta_e = Math.PI/2;
+        double[][] oval = new double[][] {{2*(Bezy[3] - Bezy[0])*Math.cos(theta_s) - 2*(Bezx[3] - Bezx[0])*Math.sin(theta_s) - 2*d2*Math.sin(theta_e - theta_s), d1*Math.sin(theta_e - theta_s)},
+                                          {d2*Math.sin(theta_e - theta_s), -2*(Bezy[3] - Bezy[0])*Math.cos(theta_e) + 2*(Bezx[3] - Bezx[0])*Math.sin(theta_e) - 2*d1*Math.sin(theta_e - theta_s)}};
+        //System.out.println("oval det =  ," + fitted.getc() + ", " + d1 + ", " + d2 + ", " + BSpline5.detm(oval));
+        //System.out.println("calc_oval_det = " + oval[0][0] + ", " + oval[0][1] + ", " + oval[1][0] + ", " + oval[1][1]);
+        System.out.println("beta , " + -oval[0][1]/Math.sqrt(oval[0][0]*oval[0][0] + oval[0][1]*oval[0][1]) + ", " + oval[0][0]/Math.sqrt(oval[0][0]*oval[0][0] + oval[0][1]*oval[0][1]));
+/*
+        System.out.println("d2Fdadc," + d2Fdadc0[16] + ", " + d2Fdadc0[17] + ", " + d2Fdadc0[18] + ", " + d2Fdadc0[19] + ", " + d2Fdadc0[20] + ", " + d2Fdadc0[21] + ", " + d2Fdadc0[22] + ", " + d2Fdadc0[23]);
+        double[] dx = new double[8];
+        double[] dy = new double[8];
+        for (int i = 0; i < dx.length; i++)
+        {
+            dx[i] = Bezx[3*i + 1] - Bezx[3*i];
+            dy[i] = Bezy[3*i + 1] - Bezy[3*i];
+        }
+        System.out.println("beta   " + print_coord(abeta));
+        System.out.println("dx     " + print_coord(dx));
+        System.out.println("dy     " + print_coord(dy));
+*/
+        return BSpline5.detm(oval);
+    }
+
     private static void write_Beta2_SplineN_data()
     {
         // generate a file consisting of Jacobian matrices for egenvalue calculation
@@ -803,7 +845,7 @@ public class Beta2_NClosed
     {
         String str = "";
         for (double c: coord)
-            str += ", " + (float) c;
+            str += ", " + c; // (float) 
         return str;
     }
 
@@ -1139,6 +1181,40 @@ public class Beta2_NClosed
             ret = Bi3(u % 1)[1];
         else if ((ui + 1) % 8 == i)
             ret = -Bi3(u % 1)[2];
+        return ret;
+    }
+
+    private static double calc_d2fdudai_at_di(int i, double u)
+    {
+        // this works for both calc_dfdaxi and calc_dfdayi
+        // this is a simplified calc of d2fxdudaxi, or d2fydudayi, holding di constant
+        // normally we would hold betai fixed, which would introduce coupling due to changing dxi or dyi
+
+        double ret = 0;
+        if (u < t2[0]) return Double.NaN;
+        if (u > t2[0] + 8) return Double.NaN;
+        int ui = (int) u;
+        ui = ui % 8;
+        if (ui == i)
+            ret = dBi3(u % 1)[0] + dBi3(u % 1)[1];
+        else if ((ui + 1) % 8 == i)
+            ret = dBi3(u % 1)[2] + dBi3(u % 1)[3];
+        return ret;
+    }
+
+    private static double calc_d2fduddi_at_betai(int i, double u)
+    {
+        // this is a simplified calc of d2fxduddi, holding betai constant
+        // it returns the response to the scalar magnitude of di, must subsequently decompose into x, y, components
+        double ret = 0;
+        if (u < t2[0]) return Double.NaN;
+        if (u > t2[0] + 8) return Double.NaN;
+        int ui = (int) u;
+        ui = ui % 8;
+        if (ui == i)
+            ret = dBi3(u % 1)[1];
+        else if ((ui + 1) % 8 == i)
+            ret = -dBi3(u % 1)[2];
         return ret;
     }
 }
