@@ -7,7 +7,7 @@ package components;
 
 public abstract class FittedFxn
 {
-    private final double origin_x = 0;             // just for svg output
+    private final double origin_x = 250;             // just for svg output
     private final double origin_y = 250; // 500; // 700;            // just for svg output
     private final double scale = 1; // 1.5; // 2; // 200;               // just for svg output
 
@@ -139,8 +139,8 @@ class epiTrochoidFxn extends FittedFxn
     //  x = (a + b) cos(t) + c cos((a/b + 1)t)
     //  y = (a + b) sin(t) + c sin((a/b + 1)t)
 
-    protected final double a = 240;
-    protected final double b = -60; // 120; // -60;
+    protected final double a = 120;     // 90;  // 240;
+    protected final double b =  60;    // 90;  // -60;
     private static double c;
 
     public epiTrochoidFxn(double m_c)
@@ -227,5 +227,88 @@ class CircleFxn extends FittedFxn
     protected double getkappa(double t)
     {
         return 1.0/c;
+    }
+}
+
+class HippopedeFxn extends FittedFxn
+{
+    // see : J. D. Lawrence, p. 145
+    // our c = b/a: 0 < c < 0.5
+    // define 4*a*b = 180*180
+    // x = 2 cos(t) sqrt(a*b - b*b*sin(t)*sin(t))
+    // y = 2 sin(t) sqrt(a*b - b*b*sin(t)*sin(t))
+
+    protected double a;
+    protected double b;
+    private double c;
+
+    public HippopedeFxn(double m_c)
+    {
+        c = m_c;
+        a = 90/Math.sqrt(c);
+        b = 90*Math.sqrt(c);
+        System.out.println("HippopedeFxn: " + a + ", " + b + ", " + c);
+        //gen_points(0, 2*Math.PI, 800);
+        //for (int i = 0; i <= 800; i++)
+        //    System.out.printf("%d, %f, %f, %f, %f, %f\n", i, getx(i*2*Math.PI/800), gety(i*2*Math.PI/800), getdxdc(i*2*Math.PI/800), getdydc(i*2*Math.PI/800), gettheta(i*2*Math.PI/800));
+        //for (int i = 0; i <= 800; i++)
+        //    System.out.println(i + ", " + getx(i*2*Math.PI/800) + ", " + gety(i*2*Math.PI/800) + ", " + getdxdc(i*2*Math.PI/800) + ", " + getdydc(i*2*Math.PI/800) + ", " + getd2xdc2(i*2*Math.PI/800) + ", " + getd2ydc2(i*2*Math.PI/800) + ", " + gettheta(i*2*Math.PI/800));
+    }
+
+    protected double getc()
+    {
+        return c;
+    }
+
+    protected double getx(double t)
+    {
+        return 2*Math.cos(t)*Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t));
+    }
+
+    protected double gety(double t)
+    {
+        return 2*Math.sin(t)*Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t));
+    }
+
+    protected double getdxdc(double t)
+    {
+        return -Math.cos(t)*a*b*Math.sin(t)*Math.sin(t)/Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t));
+    }
+
+    protected double getdydc(double t)
+    {
+        return -Math.sin(t)*a*b*Math.sin(t)*Math.sin(t)/Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t));
+    }
+
+    protected double getd2xdc2(double t)
+    {
+        return a*b*Math.sin(t)*Math.sin(t)/2/(a*b - b*b*Math.sin(t)*Math.sin(t))*getdxdc(t);
+    }
+
+    protected double getd2ydc2(double t)
+    {
+        return a*b*Math.sin(t)*Math.sin(t)/2/(a*b - b*b*Math.sin(t)*Math.sin(t))*getdydc(t);
+    }
+
+    protected double getdxdt(double t)
+    {
+        return -2*Math.sin(t)*Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t))
+               - Math.cos(t)*b*b*Math.sin(2*t)/Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t));
+    }
+
+    protected double getdydt(double t)
+    {
+        return 2*Math.cos(t)*Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t))
+               - Math.sin(t)*b*b*Math.sin(2*t)/Math.sqrt(a*b - b*b*Math.sin(t)*Math.sin(t));
+    }
+
+    protected double gettheta(double t)
+    {
+        return Math.atan2(getdydt(t), getdxdt(t));
+    }
+
+    protected double getkappa(double t)
+    {
+        return Double.NaN;
     }
 }
