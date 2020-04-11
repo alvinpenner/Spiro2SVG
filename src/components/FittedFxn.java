@@ -312,3 +312,95 @@ class HippopedeFxn extends FittedFxn
         return Double.NaN;
     }
 }
+
+class SuperEllipse extends FittedFxn
+{
+    // see : S. J. Ahn - Orthogonal distance fitting of implicit curves and surfaces
+    // https://doi.org/10.1109/34.1000237
+    // (x/a)^(2/c) + (y/a)^(2/c) = 1
+    // x/a = cos(t)^c
+    // y/a = sin(t)^c
+
+    protected final double a = 180;
+    protected final double b = 0;
+    private double c;
+
+    public SuperEllipse(double m_c)
+    {
+        c = m_c;
+        System.out.println("SuperEllipse: " + a + ", " + c);
+        //gen_points(0, 2*Math.PI, 800);
+        //for (int i = 0; i <= 800; i++)
+        //    System.out.printf("%d, %f, %f, %f, %f, %f\n", i, getx(i*2*Math.PI/800), gety(i*2*Math.PI/800), getdxdt(i*2*Math.PI/800), getdydt(i*2*Math.PI/800), gettheta(i*2*Math.PI/800));
+        //for (int i = 0; i <= 800; i++)
+        //    System.out.println(i + ", " + getx(i*2*Math.PI/800) + ", " + gety(i*2*Math.PI/800) + ", " + getdxdc(i*2*Math.PI/800) + ", " + getdydc(i*2*Math.PI/800) + ", " + getd2xdc2(i*2*Math.PI/800) + ", " + getd2ydc2(i*2*Math.PI/800) + ", " + gettheta(i*2*Math.PI/800));
+        //for (int i = -5; i <= 5; i++)
+        //{
+        //    double th = i*Math.PI/180;
+        //    System.out.println(th + ", " + getdxdt(th) + ", " + getdydt(th) + ", " + gettheta(th));
+        //    th += 2*Math.PI;
+        //    System.out.println(th + ", " + getdxdt(th) + ", " + getdydt(th) + ", " + gettheta(th));
+        //}
+    }
+
+    protected double getc()
+    {
+        return c;
+    }
+
+    protected double getx(double t)
+    {
+        return Math.signum(Math.cos(t))*a*Math.pow(Math.abs(Math.cos(t)), c);
+    }
+
+    protected double gety(double t)
+    {
+        return Math.signum(Math.sin(t))*a*Math.pow(Math.abs(Math.sin(t)), c);
+    }
+
+    protected double getdxdc(double t)
+    {
+        return Double.NaN;
+    }
+
+    protected double getdydc(double t)
+    {
+        return Double.NaN;
+    }
+
+    protected double getd2xdc2(double t)
+    {
+        return Double.NaN;
+    }
+
+    protected double getd2ydc2(double t)
+    {
+        return Double.NaN;
+    }
+
+    protected double getdxdt(double t)
+    {
+        return -a*c*Math.pow(Math.abs(Math.cos(t)), c - 1)*Math.sin(t);
+    }
+
+    protected double getdydt(double t)
+    {
+        return a*c*Math.pow(Math.abs(Math.sin(t)), c - 1)*Math.cos(t);
+    }
+
+    protected double gettheta(double t)
+    {
+        //System.out.println("gettheta = " + t + ", " + getdxdt(t) + ", " + getdydt(t));
+        if (t == 0)
+            return Math.PI/2;
+        else if (t == 2*Math.PI)
+            return Math.PI/2;
+        else
+            return Math.atan2(getdydt(t), getdxdt(t));
+    }
+
+    protected double getkappa(double t)
+    {
+        return Double.NaN;
+    }
+}
