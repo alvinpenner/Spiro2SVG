@@ -328,9 +328,11 @@ class SuperEllipse extends FittedFxn
     public SuperEllipse(double m_c)
     {
         c = m_c;
-        System.out.println("SuperEllipse: " + a + ", " + c);
+        System.out.println("SuperEllipse: ," + a + ", " + c);
         //gen_points(0, 2*Math.PI, 800);
+        //System.out.println("i, getx, gety, getdxdt, getdydt, gettheta");
         //for (int i = 0; i <= 800; i++)
+        //    System.out.printf("%d, %f, %f, %f, %f, %f, %f\n", i, getx(i*2*Math.PI/800), gety(i*2*Math.PI/800), getdxdc(i*2*Math.PI/800), getdydc(i*2*Math.PI/800), getd2xdc2(i*2*Math.PI/800), getd2ydc2(i*2*Math.PI/800));
         //    System.out.printf("%d, %f, %f, %f, %f, %f\n", i, getx(i*2*Math.PI/800), gety(i*2*Math.PI/800), getdxdt(i*2*Math.PI/800), getdydt(i*2*Math.PI/800), gettheta(i*2*Math.PI/800));
         //for (int i = 0; i <= 800; i++)
         //    System.out.println(i + ", " + getx(i*2*Math.PI/800) + ", " + gety(i*2*Math.PI/800) + ", " + getdxdc(i*2*Math.PI/800) + ", " + getdydc(i*2*Math.PI/800) + ", " + getd2xdc2(i*2*Math.PI/800) + ", " + getd2ydc2(i*2*Math.PI/800) + ", " + gettheta(i*2*Math.PI/800));
@@ -360,22 +362,34 @@ class SuperEllipse extends FittedFxn
 
     protected double getdxdc(double t)
     {
-        return Double.NaN;
+        if (Math.cos(t) == 0)
+            return 0;
+        else
+            return getx(t)*Math.log(Math.abs(Math.cos(t)));
     }
 
     protected double getdydc(double t)
     {
-        return Double.NaN;
+        if (Math.sin(t) == 0)
+            return 0;
+        else
+            return gety(t)*Math.log(Math.abs(Math.sin(t)));
     }
 
     protected double getd2xdc2(double t)
     {
-        return Double.NaN;
+        if (Math.cos(t) == 0)
+            return 0;
+        else
+            return getx(t)*Math.log(Math.abs(Math.cos(t)))*Math.log(Math.abs(Math.cos(t)));
     }
 
     protected double getd2ydc2(double t)
     {
-        return Double.NaN;
+        if (Math.sin(t) == 0)
+            return 0;
+        else
+            return gety(t)*Math.log(Math.abs(Math.sin(t)))*Math.log(Math.abs(Math.sin(t)));
     }
 
     protected double getdxdt(double t)
