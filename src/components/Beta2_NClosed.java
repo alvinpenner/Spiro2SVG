@@ -18,7 +18,7 @@ public class Beta2_NClosed
 {
     public static final double t1_start = 0;
     public static final double t1_end = 2*Math.PI;
-    public static final int N = 800;                // normally 100*number of segments
+    public static final int N = 2*800;                // normally 100*number of segments
     private static double[] ax;                     // x coord of Bezier endpoints
     private static double[] ay;                     // y coord of Bezier endpoints
     private static double[] abeta;                  // beta2 values at Bezier endpoints
@@ -46,17 +46,22 @@ public class Beta2_NClosed
 
     public static void main (String[] args)
     {
+        //SuperEllipse test = new SuperEllipse(1.5);
+        //epiTrochoidFxn test = new epiTrochoidFxn(-20);
+        //System.out.println("eps = ," + test.getc());
+        //for (int i = 0; i < 91; i++)
+        //    System.out.println(i + ", " + 180*test.getkappa(i*Math.PI/180));                                       // initiallize using previous data
         //fitted = new epiTrochoidFxn(-5.5);
         //fitted = new HippopedeFxn(0.5);
         //fitted = new SuperEllipse(0.75);
         //scan_fourfold_symmetry();
-        //scan_steepest();
         get_Bezier_endpoints_from_Beta_Spline();
         System.out.println("Beta2_Spline8 iterate_at_x_y = " + iterate_at_x_y(null) + "\n");       // normally include this line
         //System.out.println("Beta2_Spline8 solve_at_x_y = " + solve_at_x_y(true) + "\n");
+        //scan_steepest();
         //write_Beta2_SplineN_data();                              // generate eigenvalue data
-        //for (int i = 0; i < 10; i++)
-        //    read_one_line(0.0005);                                       // initiallize using previous data
+        //for (int i = 0; i < 150; i++)
+        //    read_one_line(0.0002);                                       // initiallize using previous data
         if (fitted == null)
         {
             System.out.println("class 'fitted' is not defined, abort");
@@ -314,14 +319,14 @@ public class Beta2_NClosed
             //BSpline5.dump_Jac(Augment);
             if (out != null && false)                                             // dump oval_det to a file
                 out.println("oval det =  ," + fitted.getc() + print_radial() + print_coord(abeta) + ", " + calc_oval_det(null));
-            if (out != null && false)                                            // dump d0 - d3 to a file
+            if (out != null && true)                                            // dump d0 - d3 to a file
             {
                 out.print("d1d2 = ," + fitted.getc());
                 for (i = 0; i < 4; i++)
                     out.print(", " + Math.sqrt((Bezx[3*i + 1] - Bezx[3*i])*(Bezx[3*i + 1] - Bezx[3*i]) + (Bezy[3*i + 1] - Bezy[3*i])*(Bezy[3*i + 1] - Bezy[3*i])));
                 out.println();
             }
-            if (out != null && true)                                            // dump Jac to a file
+            if (out != null && false)                                            // dump Jac to a file
             {
                 out.println("dFdc = " + fitted.getc() + print_radial() + print_coord(abeta));     // this is just a header for dump_Jac file data
                 out.print("a = np.array([");
@@ -372,7 +377,7 @@ public class Beta2_NClosed
             //if (out != null)                                    // use only for replicating file 'betarun8.csv'
             //    out.println("gauss t2[] @ , " + (float) (theta_start*180/Math.PI) + ", " + (float) (theta_end*180/Math.PI) + ", " + (float) fitted.getc() + ", " + N + ", " + print_radial() + print_coord(abeta) + ", " + (float) retVal + ", " + (float) Jacdet);
             //System.out.println("oval det = ," + calc_oval_det(d2Fdadc));
-            //write_one_line(retVal);                                   // if success, write output to file
+            write_one_line(retVal);                                   // if success, write output to file
             return retVal;
         }
         else
@@ -437,8 +442,8 @@ public class Beta2_NClosed
         // starting at a midpoint between a saddle point and a minimum
         // use method of 'Chong and Zak', 'An Introduction to Optimization', p.121
         // move in increments of 'steepest' in the direction of the gradient -dFda[]
-        // to run this, temporarily comment out lines 380, 408 and 410 to reduce the output
-        // also       , temporarily enable line 222 to abort 'iterate_at_x_y()'
+        // to run this, temporarily comment out lines 399, 429 and 430 to reduce the output
+        // also       , temporarily enable line 237 to abort 'iterate_at_x_y()'
         // see Book 9, page 42
 
         final int Nstr = 30;
@@ -470,7 +475,7 @@ public class Beta2_NClosed
     private static void get_Bezier_endpoints_from_Beta_Spline()
     {
         //fitted = new epiTrochoidFxn(5.4);              // fix fix temporary location
-        fitted = new SuperEllipse(0.6);
+        fitted = new SuperEllipse(0.91);
         //String str = "gauss t2[] @ , 90.0, 90.0, 17.1, 800, , 181.11768, 191.3406, 168.46349, 191.3981, 181.11768, 191.3406, 168.46349, 191.3981, -73.178055, -8.765734, 29.248032, 81.26961, 106.821945, 171.23427, -150.75197, -98.73039, 4.3080115, 1.7127049, 0.0033888216, 1.1912025, 4.3080115, 1.7127049, 0.0033888216, 1.1912025, 6.869E-4, NaN";
         // convert a 8-point Beta-Spline to 8 spliced cubic Beziers (endpoints only)
         double[] beta_in = new double[] {
@@ -478,7 +483,7 @@ public class Beta2_NClosed
 //168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, 168.08003, 197.48953, -63.464863, -4.8974257, 26.535137, 85.10258, 116.53513, 175.10257, -153.46486, -94.89742, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758, 4.023081, 2.4261758
 //172.97676, 187.03522, 172.97676, 187.03522, 172.97676, 187.03522, 172.97676, 187.03522, -46.46174, -0.96474224, 43.53826, 89.035255, 133.53827, 179.03526, -136.46173, -90.964745, 0.68979716, -0.1626248, 0.68979716, -0.1626248, 0.68979716, -0.1626248, 0.68979716, -0.1626248
 //170.5169, 180.04228, 170.5169, 150.57526, 170.5169, 180.04228, 170.5169, 150.57526, -35.763977, 2.3606814E-13, 35.763977, 90.0, 144.23602, 180.0, -144.23602, -90.0, -0.69682413, 2.4031181, -0.69682413, -0.46950108, -0.69682413, 2.4031181, -0.69682413, -0.46950108
-197.27856, 197.27856, 197.27856, 197.27856, 197.27856, 197.27856, 197.27856, 197.27856, -61.70551, -28.294493, 28.294493, 61.70551, 118.294495, 151.7055, -151.7055, -118.294495, 2.0943215, 2.0943215, 2.0943215, 2.0943215, 2.0943215, 2.0943215, 2.0943215, 2.0943215
+185.65617, 180.11084, 185.65617, 180.11084, 185.65617, 180.11084, 185.65617, 180.11084, -45.0, -9.3604506E-14, 45.0, 90.0, 135.0, -180.0, -135.0, -90.0, -0.13514297, -0.9833556, -0.13514297, -0.9833556, -0.13514297, -0.9833556, -0.13514297, -0.9833556
 //179.80605, 181.36041, 180.14049, 182.09087, 179.5185, 184.15178, 170.6738, 188.99484, -69.78527, -17.851955, 19.662558, 73.21765, 110.6087, 166.3585, -138.03001, -93.310196, -0.03717412, 0.085394986, 0.21248694, 0.22758241, 0.4741566, 0.3797251, -2.5248592, 7.7442045
 //179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, 179.85231, 180.1501, -62.850533, -17.501976, 27.149467, 72.498024, 117.14947, 162.49802, -152.85052, -107.501976, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837, -0.13609967, -0.18932837
 //159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, 159.98505, 199.99086, -45.0, -1.5553355E-14, 45.0, 90.0, 135.0, 180.0, -135.0, -90.0, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523, -2.1210384, -0.12768523
@@ -527,7 +532,7 @@ public class Beta2_NClosed
         //double[] cart_in2 = new double[] {80.00713, 170.17616, 170.17616, 80.00713, -80.00713, -170.17616, -170.17616, -80.00713, -170.17616, -80.00713, 80.00713, 170.17616, 170.17616, 80.00713, -80.00713, -170.17616, 0.8425953, 0.8425953, 0.8425953, 0.8425953, 0.8425953, 0.8425953, 0.8425953, 0.8425953};
         //double[] cart_in = new double[] {42.725063, 191.89647, 152.34802, 27.31546, -42.725063, -191.89647, -152.34802, -27.31546, -180.40105, -26.47261, 73.33422, 191.52939, 180.40105, 26.47261, -73.33422, -191.52939, 9.370194, 3.2129233, 1.2039822, 2.505883, 9.370194, 3.2129233, 1.2039822, 2.505883};
         //double[] cart_in = new double[] {127.330395,179.85931,127.54462,0.30967167,-127.329524,-179.85948,-127.114946,0.31372904,-127.330395,-0.31372904,127.114946,179.85948,127.329524,-0.30967167,-127.54462,-179.85931,-1.629431,28.549601,-1.632839,28.682253,-1.6361683,28.682253,-1.632839,28.549601};
-        //double[] cart_in = new double[] {0.24955349614120534, 2.525618603144153e-13, -0.24955349645907934, -0.3541837167371339, -0.24955349653841474, 1.4833658390153714e-13, 0.24955349622672435, 0.3541837158297176, 0.24955349614180025, 0.354183716300502, 0.24955349645853617, 3.8379903096776025e-14, -0.2495534965381732, -0.3541837165327917, -0.24955349622760684, 1.5901082534020006e-13, -2.5132951275708137e-12, 8.885081581068432e-11, -2.31567369446406e-12, 2.1507161977458826e-11, 1.1066279186414119e-12, -1.042401041684651e-10, 3.716425333710055e-12, -3.867472965143892e-12};
+        //double[] cart_in = new double[] {45.042733,155.16001,174.66689,93.48564,-45.042733,-155.16001,-174.66689,-93.48564,-174.66689,-93.48564,45.042733,155.16001,174.66689,93.48564,-45.042733,-155.16001,-1.6573692,19.24924,-1.6573692,19.24924,-1.6573692,19.24924,-1.6573692,19.24924};
         //double mix = 0.55;                                               // use only for interpolation
         for (int i = 0; i < ax.length; i++)                             // interpolate between 2 initial estimates
         {
@@ -915,7 +920,7 @@ public class Beta2_NClosed
         {
             //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\betarun8.csv"));
             //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\flip_to_minus_c.csv"));
-            //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Spline8\\steepest\\5_points_final_edited.csv"));
+            //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_SuperEllipse\\steepest\\5_points_final_edited.csv"));
             //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Limacon8\\Limacon8.csv"));
             //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Epi_C2v\\Epi_C2v.csv"));
             //BufferedReader instr = new BufferedReader(new FileReader("\\APP\\Java\\SpiroGraph\\Beta2_Hippopede\\Hippo_run.csv"));
@@ -1096,6 +1101,7 @@ public class Beta2_NClosed
 
         //if (i == 0) t = 0;                                // original clamped Bezier default
         if (i == 0) t = 1;                                  // Oct 18, 2019, use this for the -45 degree sol'n for beta2-spline
+        //if (i == 0) t = 1.7;                                  // May 9, 2020, use this for the Bridge solution only (SuperEllipse)
         else t = t2[i-1];
         f = (multvv(Bezx, (int) t, Bi3(t % 1)) - X)*multvv(Bezx, (int) t, dBi3(t % 1))
           + (multvv(Bezy, (int) t, Bi3(t % 1)) - Y)*multvv(Bezy, (int) t, dBi3(t % 1));

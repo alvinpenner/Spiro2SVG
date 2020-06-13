@@ -139,8 +139,8 @@ class epiTrochoidFxn extends FittedFxn
     //  x = (a + b) cos(t) + c cos((a/b + 1)t)
     //  y = (a + b) sin(t) + c sin((a/b + 1)t)
 
-    protected final double a = 120;     // 90;  // 240;
-    protected final double b =  60;    // 90;  // -60;
+    protected final double a = 240; // 120;     // 90;  // 240;
+    protected final double b = -60; // 60;    // 90;  // -60;
     private static double c;
 
     public epiTrochoidFxn(double m_c)
@@ -413,8 +413,19 @@ class SuperEllipse extends FittedFxn
             return Math.atan2(getdydt(t), getdxdt(t));
     }
 
-    protected double getkappa(double t)
+    protected double getkappa(double t)                 // fix fix bug bug
     {
-        return Double.NaN;
+        double xdot  = -a*c*Math.pow(Math.abs(Math.cos(t)), c - 1)*Math.sin(t);
+        double ydot  =  a*c*Math.pow(Math.abs(Math.sin(t)), c - 1)*Math.cos(t);
+        double x2dot =  a*c*(c - 1)*Math.pow(Math.abs(Math.cos(t)), c - 2)*Math.sin(t)*Math.sin(t)
+                     -  a*c*Math.pow(Math.abs(Math.cos(t)), c);
+        double y2dot =  a*c*(c - 1)*Math.pow(Math.abs(Math.sin(t)), c - 2)*Math.cos(t)*Math.cos(t)
+                     -  a*c*Math.pow(Math.abs(Math.sin(t)), c);
+        double v2 = xdot*xdot + ydot*ydot;
+        //System.out.print(a*Math.pow(Math.abs(Math.cos(t)), c) + ", " + xdot + ", " + x2dot + ", ");
+        //System.out.print(a*Math.pow(Math.abs(Math.sin(t)), c) + ", " + ydot + ", " + y2dot + ", ");
+        if (v2 > 0)
+            return (xdot*y2dot - ydot*x2dot)/Math.pow(v2, 1.5);
+        return Double.POSITIVE_INFINITY;
     }
 }
