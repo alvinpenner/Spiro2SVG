@@ -1,6 +1,8 @@
 
 package zeeman;
 
+// plot y versus x
+// plot theta versus x
 // see : C:\APP\Java\CoreJava\v1_Edition7\v1ch8\Sketch
 
 import java.awt.*;
@@ -11,39 +13,48 @@ import java.util.ArrayList;
 //import java.awt.image.BufferedImage;
 import javax.swing.*;
 
-public class PlotDialog extends JDialog
+public class Plot_y_Dialog extends JDialog
 {
     //private static final BufferedImage img = new BufferedImage(300, 300, BufferedImage.TYPE_3BYTE_BGR);
     //private static final Graphics2D DC = img.createGraphics();
+    private JButton btnClear = new JButton("Clear");
 
-    public PlotDialog(int width, int height, Image img, double xorg, double yorg)
+    public Plot_y_Dialog(int width, int height, Image img, double xorg, double yorg)
     {
-        //System.out.println("PlotDialog " + xorg + ", " + yorg + ", " + thetaorg + ", " + height);
-        //addWindowListener(new WindowAdapter() {
-        //    @Override public void windowClosing(WindowEvent ev) {
-        //        System.out.println("PlotDialog closing");
-        //    }
-        //});
-        setTitle(" Plot Static Zeeman Data");
+        setTitle(" Plot Static Zeeman Data - (y, theta) vs. x");
         setIconImage(img);
         setSize(width, height);
         setLocationByPlatform(true);
         setVisible(true);
-        staticComponent.pltpnl = new PlotPanel(xorg, yorg);
-        add(staticComponent.pltpnl);
+        staticComponent.plt_y_pnl = new Plot_y_Panel(xorg, yorg);
+        btnClear.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)          // btnOK
+            {
+                staticComponent.plt_y_pnl.linesth.clear();
+                staticComponent.plt_y_pnl.linesy.clear();
+                repaint();
+            }
+        });
+        JPanel pnl = new JPanel();
+        pnl.add(btnClear);
+        pnl.setMaximumSize(new Dimension(5000, 10));
+        getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        getContentPane().add(pnl);
+        getContentPane().add(staticComponent.plt_y_pnl);
     }
 }
 
-class PlotPanel extends JPanel implements MouseListener, MouseMotionListener, KeyListener
+class Plot_y_Panel extends JPanel implements MouseListener, MouseMotionListener, KeyListener
 {
     protected int cursor;
-    protected double theta;
-    private ArrayList<Line2D> linesy = new ArrayList<Line2D>();
-    private ArrayList<Line2D> linesth = new ArrayList<Line2D>();
+    protected double theta, x, y;
+    protected ArrayList<Line2D> linesy = new ArrayList<Line2D>();
+    protected ArrayList<Line2D> linesth = new ArrayList<Line2D>();
     private Point2D lasty;
     private Point2D lastth;
 
-    public PlotPanel(double xorg, double yorg)
+    public Plot_y_Panel(double xorg, double yorg)
     {
         lasty = new Point2D.Double(xorg, yorg);
     }
@@ -58,44 +69,25 @@ class PlotPanel extends JPanel implements MouseListener, MouseMotionListener, Ke
         //System.out.println("pressed  " + e.getX() + ", " + e.getY() + ", " + cursor);
     }
 
-    public void mouseReleased(MouseEvent e)
-    {
-        //System.out.println("released " + e.getX() + ", " + e.getY() + ", " + cursor);
-    }
-
+    public void mouseReleased(MouseEvent e) {}
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
     public void mouseClicked(MouseEvent e) {}
-
     public void mouseMoved(MouseEvent e) {}
 
     public void mouseDragged(MouseEvent e)
     {
         //System.out.println("dragged  " + e.getX() + ", " + e.getY() + ", " + cursor + ", " + 180*theta/Math.PI);
-        if (cursor == Cursor.CROSSHAIR_CURSOR)
+        if (cursor == Cursor.CROSSHAIR_CURSOR && isShowing())
             add(e.getX(), e.getY());
     }
 
     public void keyPressed(KeyEvent e)
     {
+        if (!isShowing()) return;
         if (lastth == null)
             lastth = new Point2D.Double(lasty.getX(), theta);
-        //System.out.println("PlotDialog keyPressed = " + e.getKeyCode() + ", " + lasty.getX());
-        switch (e.getKeyCode())
-        {
-        case KeyEvent.VK_LEFT:
-            add((int) lasty.getX() - 1, (int) lasty.getY());
-        break;
-        case KeyEvent.VK_RIGHT:
-            add((int) lasty.getX() + 1, (int) lasty.getY());
-        break;
-        case KeyEvent.VK_UP:
-            add((int) lasty.getX(), (int) lasty.getY() - 1);
-        break;
-        case KeyEvent.VK_DOWN:
-            add((int) lasty.getX(), (int) lasty.getY() + 1);
-        break;
-        }
+        add ((int) x, (int) y);
     }
 
     public void keyReleased(KeyEvent e) {}

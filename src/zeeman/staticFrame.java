@@ -15,9 +15,12 @@ public class staticFrame extends JFrame
     protected static PrintWriter out = null;
     protected static boolean bBoundary = true;
     private static Properties pgmProp = new Properties();
-    private final JCheckBoxMenuItem plotData = new JCheckBoxMenuItem("Plot Data");
+//    private final JCheckBoxMenuItem ploty = new JCheckBoxMenuItem("Plot (y, theta)");
+//    private final JCheckBoxMenuItem plotF = new JCheckBoxMenuItem("Plot F");
+    private final JCheckBoxMenuItem writeData = new JCheckBoxMenuItem("Write to file");
     private staticComponent component = new staticComponent();
     private static JRadioButtonMenuItem[] distanceA = new JRadioButtonMenuItem[4];
+    private static JRadioButtonMenuItem[] keyspeed = new JRadioButtonMenuItem[5];
 
     public staticFrame()
     {
@@ -36,7 +39,7 @@ public class staticFrame extends JFrame
         JMenu configMenu = new JMenu("   Configure");
         configMenu.setMnemonic('C');
         JMenu distanceHdr = new JMenu("Fixed Distance ");
-        ButtonGroup group = new ButtonGroup();
+        ButtonGroup distanceGroup = new ButtonGroup();
         for (int i = 0; i < distanceA.length; i++)
         {
             distanceA[i] = new JRadioButtonMenuItem("" + (i + 3));
@@ -49,35 +52,73 @@ public class staticFrame extends JFrame
                     //System.out.println(component.A);
                 }
             });
-            group.add(distanceA[i]);
+            distanceGroup.add(distanceA[i]);
             distanceHdr.add(distanceA[i]);
         }
+        JMenu speedHdr = new JMenu("Key Speed ");
+        ButtonGroup speedGroup = new ButtonGroup();
+        for (int i = 0; i < keyspeed.length; i++)
+        {
+            keyspeed[i] = new JRadioButtonMenuItem("" + (i + 1));
+            keyspeed[i].addActionListener(new AbstractAction()
+            {
+                public void actionPerformed(ActionEvent event)
+                {
+                    staticComponent.keyincr = Double.parseDouble(event.getActionCommand());
+                }
+            });
+            speedGroup.add(keyspeed[i]);
+            speedHdr.add(keyspeed[i]);
+        }
         configMenu.add(distanceHdr);
+        configMenu.add(speedHdr);
 
         JMenu prefsMenu = new JMenu("   Preferences");
         prefsMenu.setMnemonic('P');
-//        final JCheckBoxMenuItem plotData = new JCheckBoxMenuItem("Plot Data");
-        plotData.addActionListener(new AbstractAction()
+        final JCheckBoxMenuItem ploty = new JCheckBoxMenuItem("Plot (y, theta)");
+        ploty.addActionListener(new AbstractAction()
         {
             public void actionPerformed(ActionEvent event)
             {
-                if (plotData.isSelected())
+                if (ploty.isSelected())
                 {
-                    staticComponent.pltdlg = new PlotDialog(getWidth(), getHeight(), Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), staticComponent.x, staticComponent.y);
-                    component.addMouseListener(staticComponent.pltpnl);
-                    component.addMouseMotionListener(staticComponent.pltpnl);
-                    component.addKeyListener(staticComponent.pltpnl);
-                    staticComponent.pltdlg.addWindowListener(new WindowAdapter() {
+                    staticComponent.plt_y_dlg = new Plot_y_Dialog(getWidth(), getHeight(), Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), staticComponent.x, staticComponent.y);
+                    component.addMouseListener(staticComponent.plt_y_pnl);
+                    component.addMouseMotionListener(staticComponent.plt_y_pnl);
+                    component.addKeyListener(staticComponent.plt_y_pnl);
+                    staticComponent.plt_y_dlg.addWindowListener(new WindowAdapter() {
                         @Override public void windowClosing(WindowEvent ev)
-                            {plotData.setSelected(!plotData.isSelected());}
+                            {ploty.setSelected(!ploty.isSelected());}
                     });
                 }
                 else
-                    staticComponent.pltdlg.dispose();
+                    staticComponent.plt_y_dlg.dispose();
             }
         });
-        plotData.setAccelerator(KeyStroke.getKeyStroke("ctrl P"));
-        final JCheckBoxMenuItem writeData = new JCheckBoxMenuItem("Write to file");
+        ploty.setAccelerator(KeyStroke.getKeyStroke("ctrl P"));
+
+        final JCheckBoxMenuItem plotF = new JCheckBoxMenuItem("Plot F");
+        plotF.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                if (plotF.isSelected())
+                {
+                    staticComponent.plt_F_dlg = new Plot_F_Dialog(Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), staticComponent.theta, staticComponent.A, (staticComponent.x - component.getWidth()/2)*staticComponent.A/0.4/component.getHeight(), (staticComponent.y - 0.4*component.getHeight())*staticComponent.A/0.4/component.getHeight());
+                    component.addMouseListener(staticComponent.plt_F_pnl);
+                    component.addMouseMotionListener(staticComponent.plt_F_pnl);
+                    component.addKeyListener(staticComponent.plt_F_pnl);
+                    staticComponent.plt_F_dlg.addWindowListener(new WindowAdapter() {
+                        @Override public void windowClosing(WindowEvent ev)
+                            {plotF.setSelected(!plotF.isSelected());}
+                    });
+                }
+                else
+                    staticComponent.plt_F_dlg.dispose();
+            }
+        });
+        plotF.setAccelerator(KeyStroke.getKeyStroke("ctrl F"));
+
         writeData.addActionListener(new AbstractAction()
         {
             public void actionPerformed(ActionEvent event)
@@ -98,10 +139,32 @@ public class staticFrame extends JFrame
                 repaint();
             }
         });
-        prefsMenu.add(plotData);
+        final JCheckBoxMenuItem dynamic = new JCheckBoxMenuItem("Phase Space");
+        dynamic.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                if (dynamic.isSelected())
+                {
+                    staticComponent.phase_dlg = new PhaseSpace(Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), (staticComponent.x - component.getWidth()/2)*staticComponent.A/0.4/component.getHeight(), (staticComponent.y - 0.4*component.getHeight())*staticComponent.A/0.4/component.getHeight());
+                    staticComponent.phase_dlg.addWindowListener(new WindowAdapter() {
+                        @Override public void windowClosing(WindowEvent ev)
+                            {dynamic.setSelected(!dynamic.isSelected());}
+                    });
+                }
+                else
+                    staticComponent.phase_dlg.dispose();
+            }
+        });
+        prefsMenu.add(ploty);
+        prefsMenu.add(plotF);
+        prefsMenu.addSeparator();
         prefsMenu.add(writeData);
+        prefsMenu.addSeparator();
         prefsMenu.add(showBoundary);
         showBoundary.setSelected(bBoundary);
+        prefsMenu.addSeparator();
+        prefsMenu.add(dynamic);
 
         JMenu helpMenu = new JMenu("   Help");
         helpMenu.setMnemonic('H');
@@ -150,22 +213,51 @@ public class staticFrame extends JFrame
                 staticComponent.A = Double.parseDouble(pgmProp.getProperty("initA", "4"));
                 staticComponent.x = Double.parseDouble(pgmProp.getProperty("initx", "200"));
                 staticComponent.y = Double.parseDouble(pgmProp.getProperty("inity", "400"));
+                staticComponent.keyincr = Double.parseDouble(pgmProp.getProperty("keyincr", "1"));
+                PhaseSpace.c = Double.parseDouble(pgmProp.getProperty("c", "1"));
+                PhaseSpace.x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
+                PhaseSpace.w0 = Double.parseDouble(pgmProp.getProperty("w0", "0"));
+                PhaseSpace.Tx = Double.parseDouble(pgmProp.getProperty("Tx", "1"));
+                PhaseSpace.phi0 = Double.parseDouble(pgmProp.getProperty("phi0", "0"));
+                PhaseSpace.NLimit = Integer.parseInt(pgmProp.getProperty("NLimit", "0"));
             }
             else
             {
                 staticComponent.A = 4;
                 staticComponent.x = getWidth()/2;
                 staticComponent.y = 8.5*getHeight()/10;
+                staticComponent.keyincr = 1;
+                PhaseSpace.c = 1;
+                PhaseSpace.x0 = 0;
+                PhaseSpace.w0 = 0;
+                PhaseSpace.Tx = 1;
+                PhaseSpace.phi0 = 0;
+                PhaseSpace.NLimit = 0;
             }
         }
         catch (IOException e)
             {System.out.println("error reading ZCMPrefs.ini : " + e);}
         distanceA[(int) staticComponent.A - 3].setSelected(true);
+        keyspeed[(int) staticComponent.keyincr - 1].setSelected(true);
     }
 
-    private static void write_static_data()
+    private void write_static_data()
     {
         // generate a file consisting of (x, y, theta)
+        if (new File(System.getProperty("user.home"), "ZCM_Output.csv").exists())
+        {
+            if (JOptionPane.showConfirmDialog(staticFrame.this, "The data file '" + System.getProperty("user.home") + System.getProperty("file.separator") + "ZCM_Output.csv' already exists. \n Do you wish to overwrite it ?", " Write to File ", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION)
+            {
+                writeData.setSelected(false);
+                return;
+            }
+        }
+        else
+            if (JOptionPane.showConfirmDialog(staticFrame.this, "This will create the data file '" + System.getProperty("user.home") + System.getProperty("file.separator") + "ZCM_Output.csv' \n Continue ?", " Write to File ", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION)
+            {
+                writeData.setSelected(false);
+                return;
+            }
         try
         {
             FileWriter fw = new FileWriter(System.getProperty("user.home") + System.getProperty("file.separator") + "ZCM_Output.csv", false);
@@ -177,11 +269,26 @@ public class staticFrame extends JFrame
             {System.out.println("ZCM_Output.csv save error = " + e);}
     }
 
-    private static void save_prefs()
+    private void save_prefs()
     {
         pgmProp.setProperty("initA", "" + staticComponent.A);
-        pgmProp.setProperty("initx", "" + staticComponent.x);
-        pgmProp.setProperty("inity", "" + staticComponent.y);
+        if (staticComponent.phase_dlg != null && PhaseSpace.xa != 0 && PhaseSpace.y0 != 0)
+        {
+            pgmProp.setProperty("initx", "" + (0.4*component.getHeight()*PhaseSpace.xa/staticComponent.A + component.getWidth()/2));
+            pgmProp.setProperty("inity", "" + 0.4*component.getHeight()*(1 + PhaseSpace.y0/staticComponent.A));
+        }
+        else
+        {
+            pgmProp.setProperty("initx", "" + staticComponent.x);
+            pgmProp.setProperty("inity", "" + staticComponent.y);
+        }
+        pgmProp.setProperty("keyincr", "" + staticComponent.keyincr);
+        pgmProp.setProperty("c", "" + PhaseSpace.c);
+        pgmProp.setProperty("x0", "" + PhaseSpace.x0);
+        pgmProp.setProperty("w0", "" + PhaseSpace.w0);
+        pgmProp.setProperty("Tx", "" + PhaseSpace.Tx);
+        pgmProp.setProperty("phi0", "" + PhaseSpace.phi0);
+        pgmProp.setProperty("NLimit", "" + PhaseSpace.NLimit);
         try
             {pgmProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "ZCMPrefs.ini"), "Zeeman Catastrophe Machine v" + main.VERSION_NO + " Prefs");}
         catch (IOException e)
@@ -194,9 +301,13 @@ public class staticFrame extends JFrame
 class staticComponent extends JComponent
 {
     protected static double A;                                     // fixed point A
-    protected static PlotDialog pltdlg;
-    protected static PlotPanel pltpnl;
+    protected static Plot_y_Dialog plt_y_dlg;
+    protected static Plot_y_Panel plt_y_pnl;
+    protected static Plot_F_Dialog plt_F_dlg;
+    protected static Plot_F_Panel plt_F_pnl;
+    protected static PhaseSpace phase_dlg;
     protected static double x, y, theta = Math.PI;
+    protected static double keyincr;
     private double width, height = Double.NaN;
     private double radius;
     private int x1, x2, y1, y2;
@@ -214,12 +325,12 @@ class staticComponent extends JComponent
                     x = e.getX();
                     y = e.getY();
                     theta = main.solve_for_critical(theta, A, (x - width/2)/radius, (y - 0.4*height)/radius);
-                    if (pltpnl != null)
+                    if (plt_y_pnl != null)
                     {
-                        pltpnl.theta = 180*theta/Math.PI - 90;
-                        if (pltpnl.theta > 180)
-                            pltpnl.theta -= 360;
-                        pltpnl.theta += 180; //pltpnl.getHeight()/2;
+                        plt_y_pnl.theta = 180*theta/Math.PI - 90;
+                        if (plt_y_pnl.theta > 180)
+                            plt_y_pnl.theta -= 360;
+                        plt_y_pnl.theta += 180; //pltpnl.getHeight()/2;
                     }
                     //System.out.println(width + ", " + height + ", " + radius + ", " + A + ", " + x + ", " + y + ", " + 180*theta/Math.PI);
                     repaint();
@@ -228,8 +339,10 @@ class staticComponent extends JComponent
             @Override public void mouseReleased(MouseEvent e)
             {
                 setCursor(Cursor.getDefaultCursor());
-                if (pltpnl != null)
-                    pltpnl.cursor = Cursor.DEFAULT_CURSOR;
+                if (plt_y_pnl != null)
+                    plt_y_pnl.cursor = Cursor.DEFAULT_CURSOR;
+                if (plt_F_pnl != null)
+                    plt_F_pnl.cursor = Cursor.DEFAULT_CURSOR;
             }
         });
 
@@ -240,14 +353,18 @@ class staticComponent extends JComponent
                 if (drag.contains(new Point2D.Double(e.getX(), e.getY())))
                 {
                     setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-                    if (pltpnl != null)
-                        pltpnl.cursor = Cursor.CROSSHAIR_CURSOR;
+                    if (plt_y_pnl != null)
+                        plt_y_pnl.cursor = Cursor.CROSSHAIR_CURSOR;
+                    if (plt_F_pnl != null)
+                        plt_F_pnl.cursor = Cursor.CROSSHAIR_CURSOR;
                 }
                 else
                 {
                     setCursor(Cursor.getDefaultCursor());
-                    if (pltpnl != null)
-                        pltpnl.cursor = Cursor.DEFAULT_CURSOR;
+                    if (plt_y_pnl != null)
+                        plt_y_pnl.cursor = Cursor.DEFAULT_CURSOR;
+                    if (plt_F_pnl != null)
+                        plt_F_pnl.cursor = Cursor.DEFAULT_CURSOR;
                 }
             }
 
@@ -258,13 +375,19 @@ class staticComponent extends JComponent
                     x = e.getX();
                     y = e.getY();
                     theta = main.solve_for_critical(theta, A, (x - width/2)/radius, (y - 0.4*height)/radius);
-                    if (pltpnl != null)
+                    if (plt_y_pnl != null && plt_y_pnl.isShowing())
                     {
-                        pltpnl.theta = 180*theta/Math.PI - 90;
-                        if (pltpnl.theta > 180)
-                            pltpnl.theta -= 360;
-                        pltpnl.theta += 180; //pltpnl.getHeight()/2;
+                        plt_y_pnl.theta = 180*theta/Math.PI - 90;
+                        if (plt_y_pnl.theta > 180)
+                            plt_y_pnl.theta -= 360;
+                        plt_y_pnl.theta += 180; //pltpnl.getHeight()/2;
                         //System.out.println("dragged height = " + pltpnl.getSize().height);
+                    }
+                    if (plt_F_pnl != null && plt_F_pnl.isShowing())
+                    {
+                        plt_F_pnl.x = (x - width/2)/radius;
+                        plt_F_pnl.y = (y - 0.4*height)/radius;
+                        plt_F_pnl.theta = theta;
                     }
                     repaint();
                 }
@@ -278,25 +401,33 @@ class staticComponent extends JComponent
                 switch (e.getKeyCode())
                 {
                 case KeyEvent.VK_LEFT:
-                    x--;
+                    x -= keyincr;
                 break;
                 case KeyEvent.VK_RIGHT:
-                    x++;
+                    x += keyincr;
                 break;
                 case KeyEvent.VK_UP:
-                    y--;
+                    y -= keyincr;
                 break;
                 case KeyEvent.VK_DOWN:
-                    y++;
+                    y += keyincr;
                 break;
                 }
                 theta = main.solve_for_critical(theta, A, (x - width/2)/radius, (y - 0.4*height)/radius);
-                if (pltpnl != null)
+                if (plt_y_pnl != null && plt_y_pnl.isShowing())
                 {
-                    pltpnl.theta = 180*theta/Math.PI - 90;
-                    if (pltpnl.theta > 180)
-                        pltpnl.theta -= 360;
-                    pltpnl.theta += 180; //pltpnl.getHeight()/2;
+                    plt_y_pnl.x = x;
+                    plt_y_pnl.y = y;
+                    plt_y_pnl.theta = 180*theta/Math.PI - 90;
+                    if (plt_y_pnl.theta > 180)
+                        plt_y_pnl.theta -= 360;
+                    plt_y_pnl.theta += 180; //pltpnl.getHeight()/2;
+                }
+                if (plt_F_pnl != null && plt_F_pnl.isShowing())
+                {
+                    plt_F_pnl.x = (x - width/2)/radius;
+                    plt_F_pnl.y = (y - 0.4*height)/radius;
+                    plt_F_pnl.theta = theta;
                 }
                 repaint();
             }

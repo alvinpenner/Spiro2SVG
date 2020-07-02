@@ -37,7 +37,7 @@ public class main
         //double th = 5.04;
         //for (int i = 5780; i <= 5800; i += 4)
         //    th = solve_for_boundary(th, 6, 1.36, i*0.001);
-    }
+   }
 
     protected static String getInfo()
     {
@@ -203,12 +203,12 @@ public class main
         return (Math.sin(th) - d2edth2(th, x, y)*dedx(th, x, y) - 2*dedth(th, x, y)*d2edthdx(th, x, y))/e(th, x, y);
     }
 
-    private static double calc_F(double th, double A, double x, double y)
+    protected static double calc_F(double th, double A, double x, double y)
     {
         return 0.5*(e(th, 0, -A) - A/2)*(e(th, 0, -A) - A/2) + 0.5*(e(th, x, y) - A/2)*(e(th, x, y) - A/2);
     }
 
-    private static double calc_dFdth(double th, double A, double x, double y)
+    protected static double calc_dFdth(double th, double A, double x, double y)
     {
         return (e(th, 0, -A) - A/2)*dedth(th, 0, -A) + (e(th, x, y) - A/2)*dedth(th, x, y);
     }
