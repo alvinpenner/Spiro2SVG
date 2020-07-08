@@ -139,21 +139,38 @@ public class staticFrame extends JFrame
                 repaint();
             }
         });
-        final JCheckBoxMenuItem dynamic = new JCheckBoxMenuItem("Phase Space");
-        dynamic.addActionListener(new AbstractAction()
+        final JCheckBoxMenuItem phase = new JCheckBoxMenuItem("Phase Space");
+        phase.addActionListener(new AbstractAction()
         {
             public void actionPerformed(ActionEvent event)
             {
-                if (dynamic.isSelected())
+                if (phase.isSelected())
                 {
                     staticComponent.phase_dlg = new PhaseSpace(Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), (staticComponent.x - component.getWidth()/2)*staticComponent.A/0.4/component.getHeight(), (staticComponent.y - 0.4*component.getHeight())*staticComponent.A/0.4/component.getHeight());
                     staticComponent.phase_dlg.addWindowListener(new WindowAdapter() {
                         @Override public void windowClosing(WindowEvent ev)
-                            {dynamic.setSelected(!dynamic.isSelected());}
+                            {phase.setSelected(!phase.isSelected());}
                     });
                 }
                 else
                     staticComponent.phase_dlg.dispose();
+            }
+        });
+        final JCheckBoxMenuItem bifurcate = new JCheckBoxMenuItem("Bifurcate Diagram");
+        bifurcate.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                if (bifurcate.isSelected())
+                {
+                    staticComponent.bifurcate_dlg = new Bifurcate(Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), (staticComponent.x - component.getWidth()/2)*staticComponent.A/0.4/component.getHeight());
+                    staticComponent.bifurcate_dlg.addWindowListener(new WindowAdapter() {
+                        @Override public void windowClosing(WindowEvent ev)
+                            {bifurcate.setSelected(!bifurcate.isSelected());}
+                    });
+                }
+                else
+                    staticComponent.bifurcate_dlg.dispose();
             }
         });
         prefsMenu.add(ploty);
@@ -164,7 +181,8 @@ public class staticFrame extends JFrame
         prefsMenu.add(showBoundary);
         showBoundary.setSelected(bBoundary);
         prefsMenu.addSeparator();
-        prefsMenu.add(dynamic);
+        prefsMenu.add(phase);
+        prefsMenu.add(bifurcate);
 
         JMenu helpMenu = new JMenu("   Help");
         helpMenu.setMnemonic('H');
@@ -220,6 +238,13 @@ public class staticFrame extends JFrame
                 PhaseSpace.Tx = Double.parseDouble(pgmProp.getProperty("Tx", "1"));
                 PhaseSpace.phi0 = Double.parseDouble(pgmProp.getProperty("phi0", "0"));
                 PhaseSpace.NLimit = Integer.parseInt(pgmProp.getProperty("NLimit", "0"));
+                Bifurcate.c = Double.parseDouble(pgmProp.getProperty("c", "1"));
+                Bifurcate.x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
+                Bifurcate.ymin = Double.parseDouble(pgmProp.getProperty("ymin", "0"));
+                Bifurcate.ymax = Double.parseDouble(pgmProp.getProperty("ymax", "2"));
+                Bifurcate.w0 = Double.parseDouble(pgmProp.getProperty("w0", "0"));
+                Bifurcate.Tx = Double.parseDouble(pgmProp.getProperty("Tx", "1"));
+                Bifurcate.phi0 = Double.parseDouble(pgmProp.getProperty("phi0", "0"));
             }
             else
             {
@@ -233,6 +258,13 @@ public class staticFrame extends JFrame
                 PhaseSpace.Tx = 1;
                 PhaseSpace.phi0 = 0;
                 PhaseSpace.NLimit = 0;
+                Bifurcate.c = 1;
+                Bifurcate.x0 = 0;
+                Bifurcate.ymin = 0;
+                Bifurcate.ymax = 2;
+                Bifurcate.w0 = 0;
+                Bifurcate.Tx = 1;
+                Bifurcate.phi0 = 0;
             }
         }
         catch (IOException e)
@@ -277,6 +309,11 @@ public class staticFrame extends JFrame
             pgmProp.setProperty("initx", "" + (0.4*component.getHeight()*PhaseSpace.xa/staticComponent.A + component.getWidth()/2));
             pgmProp.setProperty("inity", "" + 0.4*component.getHeight()*(1 + PhaseSpace.y0/staticComponent.A));
         }
+        else if (staticComponent.bifurcate_dlg != null && Bifurcate.xa != 0 && Bifurcate.ymin != 0 && Bifurcate.ymax != 0)
+        {
+            pgmProp.setProperty("ymin", "" + Bifurcate.ymin);
+            pgmProp.setProperty("ymax", "" + Bifurcate.ymax);
+        }
         else
         {
             pgmProp.setProperty("initx", "" + staticComponent.x);
@@ -306,6 +343,7 @@ class staticComponent extends JComponent
     protected static Plot_F_Dialog plt_F_dlg;
     protected static Plot_F_Panel plt_F_pnl;
     protected static PhaseSpace phase_dlg;
+    protected static Bifurcate bifurcate_dlg;
     protected static double x, y, theta = Math.PI;
     protected static double keyincr;
     private double width, height = Double.NaN;

@@ -15,7 +15,7 @@ import java.util.GregorianCalendar;
 
 public class PhaseSpace extends JDialog
 {
-    private final static int N = 21000;                 // total # of iterations
+    private final static int N = 20000;                 // total # of iterations
     private final static int Nper = 100;                // # of iterations per Tx
     protected static int NLimit;                        // # of Tx per limit cycle (to be determined)
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
@@ -239,11 +239,11 @@ public class PhaseSpace extends JDialog
         path1.reset();              // transient path
         path2.reset();              // limit cycle
         path1.moveTo(pt.x, pt.y);
-        System.out.println(" , , " + y0);
+        //System.out.println(" , , " + y0);
         for (int i = 0; i < N; i++)
         {
-            if ((i/Nper)*Nper == i)
-                System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + pt.x + ", " + pt.y);
+            //if ((i/Nper)*Nper == i)
+            //    System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + pt.x + ", " + pt.y);
             pt = runge_kutta(i*delt, pt.x, pt.y, delt);
             if (i == N - NLimit*Nper - 1)
             {
