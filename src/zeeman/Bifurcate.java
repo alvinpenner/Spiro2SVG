@@ -9,12 +9,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.List;
 import javax.swing.*;
 
 public class Bifurcate extends JDialog
 {
     protected static final BufferedImage image = new BufferedImage(600, 400, BufferedImage.TYPE_3BYTE_BGR);
     private static final Graphics2D DC = image.createGraphics();
+    protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JPanel bifurcatePanel = new JPanel();
     private static JPanel parmsPanel = new JPanel();
     private static JTextField txtA = new JTextField();
@@ -24,10 +26,12 @@ public class Bifurcate extends JDialog
     private static JTextField txtxa = new JTextField();
     private static JTextField txtymin = new JTextField();
     private static JTextField txtymax = new JTextField();
-    private static double theta0;                           // static variables
+    protected static JButton btnRun = new JButton("Run");
+    protected static JButton btnClear = new JButton("Clr");
+    protected static double theta0;                         // static variables
     protected static double xa, ymin, ymax;                 // static variables
     protected static double c, x0, w0, Tx, phi0;            // dynamic variables
-    private double thmin = 1.5, thmax = 4.8;
+    protected static double thmin = 1.5, thmax = 4.8;
 
     public Bifurcate(Image img, double xorg)
     {
@@ -36,7 +40,6 @@ public class Bifurcate extends JDialog
         final JTextField txtc = new JTextField();
         final JTextField txtTx = new JTextField();
         final JTextField txtphi0 = new JTextField();
-        JButton btnRun = new JButton("Run ");
 
         setTitle(" Dynamic Zeeman - Bifurcate diagram");
         setIconImage(img);
@@ -59,7 +62,6 @@ public class Bifurcate extends JDialog
         lblTheta0.setPreferredSize(new Dimension(40, 18));
         theta0Panel.add(lblTheta0);
         txtTheta0.setPreferredSize(new Dimension(45, 18));
-        //txtTheta0.setText(String.format("%.2f", staticComponent.theta*180/Math.PI));
         txtTheta0.setText("0.0");
         theta0Panel.add(txtTheta0);
 
@@ -171,16 +173,16 @@ public class Bifurcate extends JDialog
         parmsPanel.add(phi0Panel);
         parmsPanel.add(spacerPanel2);
         parmsPanel.add(btnRun);
+        parmsPanel.add(btnClear);
         parmsPanel.add(thrangePanel);
         parmsPanel.add(posnPanel);
-        parmsPanel.setMaximumSize(new Dimension(120, 3000));
-        parmsPanel.setPreferredSize(new Dimension(120, 3000));
+        parmsPanel.setMaximumSize(new Dimension(125, 3000));
+        parmsPanel.setPreferredSize(new Dimension(125, 3000));
         parmsPanel.setBorder(BorderFactory.createEtchedBorder());
 
         DC.setBackground(Color.white);
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
 
-        final JLabel lblImage = new JLabel(new ImageIcon(image));
         lblImage.setBorder(BorderFactory.createEtchedBorder());
         lblImage.addMouseMotionListener(new MouseMotionAdapter()
         {
@@ -209,49 +211,22 @@ public class Bifurcate extends JDialog
                 c = Double.parseDouble(txtc.getText());                         // moment of inertia
                 Tx = Double.parseDouble(txtTx.getText());                       // period of x motion
                 phi0 = Math.PI*Double.parseDouble(txtphi0.getText())/180;       // radians
-                plot_bifurcate();
+                btnRun.setEnabled(false);
+                SimulatedActivity activity = new SimulatedActivity(theta0, w0);
+                activity.execute();
+            }
+        });
+        btnClear.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                DC.clearRect(0, 0, image.getWidth(), image.getHeight());
+                lblImage.repaint();
             }
         });
     }
 
-    private void plot_bifurcate()
-    {
-        final int Nper = 100;                        // # of iterations per Tx
-        final int NCycle = 128;                       // # of Tx cycles to execute
-        final double delt = Tx/Nper;
-        Point2D.Double pt = new Point2D.Double(theta0, w0);
-        Color clr = new Color(40, 40, 136);
-        double tempmin = 7, tempmax = -1;
-        double y;
-        double t = 0;
-
-        //DC.clearRect(0, 0, image.getWidth(), image.getHeight());
-        for (int i = 0; i < image.getWidth(); i++)
-        {
-            y = ymin + i*(ymax - ymin)/image.getWidth();
-            //System.out.println(i + ", " + y);
-            for (int j = 0; j < NCycle; j++)
-            {
-                //System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + y + ", " + pt.x + ", " + pt.y);
-                for (int k = 0; k < Nper; k++)
-                {
-                    pt = runge_kutta(t, pt.x, pt.y, delt, y);
-                    t += delt;
-                }
-                if (pt.x > thmin && pt.x < thmax)
-                    if (ymax > ymin)
-                        image.setRGB(i, (int) (image.getHeight()*(pt.x - thmin)/(thmax - thmin)), clr.getRGB());
-                    else                                // plot in reverse
-                        image.setRGB(image.getWidth() - 1 - i, (int) (image.getHeight()*(pt.x - thmin)/(thmax - thmin)), clr.getRGB());
-                if (pt.x > tempmax) tempmax = pt.x;
-                if (pt.x < tempmin) tempmin = pt.x;
-            }
-            bifurcatePanel.repaint();
-        }
-        System.out.println("min-max = " + tempmin + ", " + tempmax);
-    }
-
-    private static Point2D.Double runge_kutta(double t, double th, double w, double delt, double y)
+    protected static Point2D.Double runge_kutta(double t, double th, double w, double delt, double y)
     {
         double x;
         double k1, k2, k3, k4;
@@ -273,5 +248,62 @@ public class Bifurcate extends JDialog
         l4 = delt*(-c*main.calc_dFdth(th + k3, staticComponent.A, x, y) -(w + l3));
 
         return new Point2D.Double(th + (k1 + 2*k2 + 2*k3 + k4)/6, w + (l1 + 2*l2 + 2*l3 + l4)/6);
+    }
+}
+
+class SimulatedActivity extends SwingWorker<Void, Point>
+{
+    final int Nper = 100;                       // # of iterations per Tx
+    final int NCycle = 256;                     // # of Tx cycles to execute per y
+    final double delt = Bifurcate.Tx/Nper;
+    final Color clr = new Color(40, 40, 136);
+    double tempmin = 7, tempmax = -1;           // range of theta
+    Point2D.Double pt;                          // phase-space point (theta, w)
+    double y;                                   // distance to forcing function
+    double t = 0;
+
+    public SimulatedActivity(double passtheta0, double passw0)
+    {
+        pt = new Point2D.Double(passtheta0, passw0);
+    }
+
+    protected Void doInBackground() throws Exception
+    {
+        for (int i = 0; i < Bifurcate.image.getWidth(); i++)
+        {
+            y = Bifurcate.ymin + i*(Bifurcate.ymax - Bifurcate.ymin)/Bifurcate.image.getWidth();
+            for (int j = 0; j < NCycle; j++)
+            {
+                //System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + y + ", " + pt.x + ", " + pt.y);
+                for (int k = 0; k < Nper; k++)
+                {
+                    pt = Bifurcate.runge_kutta(t, pt.x, pt.y, delt, y);
+                    t += delt;
+                }
+                if (pt.x > Bifurcate.thmin && pt.x < Bifurcate.thmax)
+                    publish(new Point(i, (int) (Bifurcate.image.getHeight()*(pt.x - Bifurcate.thmin)/(Bifurcate.thmax - Bifurcate.thmin))));
+                if (pt.x > tempmax) tempmax = pt.x;
+                if (pt.x < tempmin) tempmin = pt.x;
+            }
+            Bifurcate.lblImage.repaint();
+        }
+        System.out.println("min->max = " + tempmin + ", " + tempmax);
+        return null;
+    }
+
+    @Override protected void process(List<Point> points)
+    {
+        for (Point listpt : points)
+        {
+            if (Bifurcate.ymax > Bifurcate.ymin)
+                Bifurcate.image.setRGB(listpt.x, listpt.y, clr.getRGB());
+            else                                // plot in reverse
+                Bifurcate.image.setRGB(Bifurcate.image.getWidth() - 1 - listpt.x, listpt.y, clr.getRGB());
+        }
+    }
+
+    @Override protected void done()
+    {
+        Bifurcate.btnRun.setEnabled(true);
     }
 }
