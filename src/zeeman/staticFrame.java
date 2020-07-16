@@ -173,6 +173,23 @@ public class staticFrame extends JFrame
                     staticComponent.bifurcate_dlg.dispose();
             }
         });
+        final JCheckBoxMenuItem lyapunov = new JCheckBoxMenuItem("Lyapunov Exponent");
+        lyapunov.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                if (lyapunov.isSelected())
+                {
+                    staticComponent.lyapunov_dlg = new Lyapunov(Toolkit.getDefaultToolkit().getImage(main.class.getResource("images/icon.gif")), (staticComponent.x - component.getWidth()/2)*staticComponent.A/0.4/component.getHeight());
+                    staticComponent.lyapunov_dlg.addWindowListener(new WindowAdapter() {
+                        @Override public void windowClosing(WindowEvent ev)
+                            {lyapunov.setSelected(!lyapunov.isSelected());}
+                    });
+                }
+                else
+                    staticComponent.lyapunov_dlg.dispose();
+            }
+        });
         prefsMenu.add(ploty);
         prefsMenu.add(plotF);
         prefsMenu.addSeparator();
@@ -183,6 +200,7 @@ public class staticFrame extends JFrame
         prefsMenu.addSeparator();
         prefsMenu.add(phase);
         prefsMenu.add(bifurcate);
+        prefsMenu.add(lyapunov);
 
         JMenu helpMenu = new JMenu("   Help");
         helpMenu.setMnemonic('H');
@@ -245,6 +263,13 @@ public class staticFrame extends JFrame
                 Bifurcate.w0 = Double.parseDouble(pgmProp.getProperty("w0", "0"));
                 Bifurcate.Tx = Double.parseDouble(pgmProp.getProperty("Tx", "1"));
                 Bifurcate.phi0 = Double.parseDouble(pgmProp.getProperty("phi0", "0"));
+                Lyapunov.c = Double.parseDouble(pgmProp.getProperty("c", "1"));
+                Lyapunov.x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
+                Lyapunov.ymin = Double.parseDouble(pgmProp.getProperty("ymin", "0"));
+                Lyapunov.ymax = Double.parseDouble(pgmProp.getProperty("ymax", "2"));
+                Lyapunov.w0 = Double.parseDouble(pgmProp.getProperty("w0", "0"));
+                Lyapunov.Tx = Double.parseDouble(pgmProp.getProperty("Tx", "1"));
+                Lyapunov.phi0 = Double.parseDouble(pgmProp.getProperty("phi0", "0"));
             }
             else
             {
@@ -265,6 +290,13 @@ public class staticFrame extends JFrame
                 Bifurcate.w0 = 0;
                 Bifurcate.Tx = 1;
                 Bifurcate.phi0 = 0;
+                Lyapunov.c = 1;
+                Lyapunov.x0 = 0;
+                Lyapunov.ymin = 0;
+                Lyapunov.ymax = 2;
+                Lyapunov.w0 = 0;
+                Lyapunov.Tx = 1;
+                Lyapunov.phi0 = 0;
             }
         }
         catch (IOException e)
@@ -314,6 +346,11 @@ public class staticFrame extends JFrame
             pgmProp.setProperty("ymin", "" + Bifurcate.ymin);
             pgmProp.setProperty("ymax", "" + Bifurcate.ymax);
         }
+        else if (staticComponent.lyapunov_dlg != null && Lyapunov.xa != 0 && Lyapunov.ymin != 0 && Lyapunov.ymax != 0)
+        {
+            pgmProp.setProperty("ymin", "" + Lyapunov.ymin);
+            pgmProp.setProperty("ymax", "" + Lyapunov.ymax);
+        }
         else
         {
             pgmProp.setProperty("initx", "" + staticComponent.x);
@@ -344,6 +381,7 @@ class staticComponent extends JComponent
     protected static Plot_F_Panel plt_F_pnl;
     protected static PhaseSpace phase_dlg;
     protected static Bifurcate bifurcate_dlg;
+    protected static Lyapunov lyapunov_dlg;
     protected static double x, y, theta = Math.PI;
     protected static double keyincr;
     private double width, height = Double.NaN;

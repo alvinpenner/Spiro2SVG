@@ -1,23 +1,25 @@
 
 package zeeman;
 
-// plot a bifurcation diagram of theta as fxn of y0
-// implement Runge-Kutta: see Froberg page 269
-// for animation, see CoreJava v2ch06, ProgressBarTest.java
+// calculate the largest Lyapunov exponent as fxn of y0
+// at each y0, run NCycle cycles of length Tx to initiallize
+// then perturb both theta and w
+// then run NPerturb cycles of length Tx to determine response
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.swing.*;
 
-public class Bifurcate extends JDialog
+public class Lyapunov extends JDialog
 {
     protected static final BufferedImage image = new BufferedImage(600, 400, BufferedImage.TYPE_3BYTE_BGR);
     private static final Graphics2D DC = image.createGraphics();
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
-    protected static JPanel bifurcatePanel = new JPanel();
+    protected static JPanel lyapunovPanel = new JPanel();
     private static JPanel parmsPanel = new JPanel();
     private static JTextField txtA = new JTextField();
     private static JTextField txtTheta0 = new JTextField();
@@ -27,13 +29,12 @@ public class Bifurcate extends JDialog
     private static JTextField txtymin = new JTextField();
     private static JTextField txtymax = new JTextField();
     protected static JButton btnRun = new JButton("Run");
-    protected static JButton btnClear = new JButton("Clr");
     protected static double theta0;                         // static variables
     protected static double xa, ymin, ymax;                 // static variables
     protected static double c, x0, w0, Tx, phi0;            // dynamic variables
-    protected static double thmin = 1.5, thmax = 4.8;
+    protected static double lymin = -.4, lymax = .2;
 
-    public Bifurcate(Image img, double xorg)
+    public Lyapunov(Image img, double xorg)
     {
         JPanel spacerPanel1 = new JPanel();
         JPanel spacerPanel2 = new JPanel();
@@ -41,7 +42,7 @@ public class Bifurcate extends JDialog
         final JTextField txtTx = new JTextField();
         final JTextField txtphi0 = new JTextField();
 
-        setTitle(" Dynamic Zeeman - Bifurcate diagram");
+        setTitle(" Dynamic Zeeman - Lyapunov Exponent");
         setIconImage(img);
         setSize(755, 500);
         setLocationByPlatform(true);
@@ -145,11 +146,11 @@ public class Bifurcate extends JDialog
         spacerPanel2.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.DARK_GRAY));
         spacerPanel2.setOpaque(false);
 
-        JPanel thrangePanel = new JPanel();
-        thrangePanel.setOpaque(false);
-        JLabel lblthrange = new JLabel("θ = " + thmin + " - " + thmax);
-        lblthrange.setPreferredSize(new Dimension(85, 20));
-        thrangePanel.add(lblthrange);
+        JPanel lyrangePanel = new JPanel();
+        lyrangePanel.setOpaque(false);
+        JLabel lbllyrange = new JLabel("ly = " + lymin + " - " + lymax);
+        lbllyrange.setPreferredSize(new Dimension(85, 20));
+        lyrangePanel.add(lbllyrange);
 
         JPanel posnPanel = new JPanel();
         posnPanel.setOpaque(false);
@@ -173,32 +174,33 @@ public class Bifurcate extends JDialog
         parmsPanel.add(phi0Panel);
         parmsPanel.add(spacerPanel2);
         parmsPanel.add(btnRun);
-        parmsPanel.add(btnClear);
-        parmsPanel.add(thrangePanel);
+        parmsPanel.add(lyrangePanel);
         parmsPanel.add(posnPanel);
         parmsPanel.setMaximumSize(new Dimension(125, 3000));
         parmsPanel.setPreferredSize(new Dimension(125, 3000));
         parmsPanel.setBorder(BorderFactory.createEtchedBorder());
 
         DC.setBackground(Color.white);
+        DC.setPaint(Color.black);
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
-
+        DC.draw(new Line2D.Double(0, image.getHeight()*(0 - lymax)/(lymin - lymax),
+                   image.getWidth(), image.getHeight()*(0 - lymax)/(lymin - lymax)));
         lblImage.setBorder(BorderFactory.createEtchedBorder());
         lblImage.addMouseMotionListener(new MouseMotionAdapter()
         {
             @Override public void mouseMoved(MouseEvent e)
             {
                 if (ymax > ymin)
-                    lblposn.setText(String.format(" %.4f", ymin + e.getX()*(ymax - ymin)/image.getWidth()) + ", " + String.format("%.3f", thmin + e.getY()*(thmax - thmin)/image.getHeight()));
+                    lblposn.setText(String.format(" %.4f", ymin + e.getX()*(ymax - ymin)/image.getWidth()) + ", " + String.format("%.3f", lymax + e.getY()*(lymin - lymax)/image.getHeight()));
                 else
-                    lblposn.setText(String.format(" %.4f", ymax + e.getX()*(ymin - ymax)/image.getWidth()) + ", " + String.format("%.3f", thmin + e.getY()*(thmax - thmin)/image.getHeight()));
+                    lblposn.setText(String.format(" %.4f", ymax + e.getX()*(ymin - ymax)/image.getWidth()) + ", " + String.format("%.3f", lymax + e.getY()*(lymin - lymax)/image.getHeight()));
             }
         });
-        bifurcatePanel.add(lblImage);
+        lyapunovPanel.add(lblImage);
 
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(parmsPanel, BorderLayout.WEST);
-        getContentPane().add(bifurcatePanel, BorderLayout.EAST);
+        getContentPane().add(lyapunovPanel, BorderLayout.EAST);
         setVisible(true);
 
         btnRun.addActionListener(new AbstractAction()
@@ -215,16 +217,8 @@ public class Bifurcate extends JDialog
                 Tx = Double.parseDouble(txtTx.getText());                       // period of x motion
                 phi0 = Math.PI*Double.parseDouble(txtphi0.getText())/180;       // radians
                 btnRun.setEnabled(false);
-                BifurcateActivity activity = new BifurcateActivity(theta0, w0);
+                LyapunovActivity activity = new LyapunovActivity(theta0, w0);
                 activity.execute();
-            }
-        });
-        btnClear.addActionListener(new AbstractAction()
-        {
-            public void actionPerformed(ActionEvent event)
-            {
-                DC.clearRect(0, 0, image.getWidth(), image.getHeight());
-                lblImage.repaint();
             }
         });
     }
@@ -254,43 +248,87 @@ public class Bifurcate extends JDialog
     }
 }
 
-class BifurcateActivity extends SwingWorker<Void, Point>
+class LyapunovActivity extends SwingWorker<Void, Point>
 {
     final int Nper = 100;                       // # of iterations per Tx
-    final int NCycle = 256;                     // # of Tx cycles to execute per y
-    final double delt = Bifurcate.Tx/Nper;
+    final int NCycle = 30;                      // # of Tx cycles before perturb
+    final int NPerturb = 15;			// # of Tx cycles after perturb
+    final double delt = Lyapunov.Tx/Nper;
     final Color clr = new Color(40, 40, 136);
-    double tempmin = 7, tempmax = -1;           // range of theta
+    double tempmin = 10, tempmax = -10;         // range of lyapunov exponent
     Point2D.Double pt;                          // phase-space point (theta, w)
     double y;                                   // distance to forcing function
-    double t = 0;
+    double t = 0;                               // time
 
-    public BifurcateActivity(double passtheta0, double passw0)
+    public LyapunovActivity(double passtheta0, double passw0)
     {
         pt = new Point2D.Double(passtheta0, passw0);
     }
 
     protected Void doInBackground() throws Exception
     {
-        for (int i = 0; i < Bifurcate.image.getWidth(); i++)
+        Point2D.Double ptN;                     // phase-space point after NCycle
+        Point2D.Double ptN0;                    // unperturbed     after extra NPerturb cycles
+        Point2D.Double ptNth;                   // theta perturbed after extra NPerturb cycles
+        Point2D.Double ptNw;                    // w perturbed     after extra NPerturb cycles
+        double deltheta = 0.01;
+        double delw = 0.01;
+        double delin = Math.sqrt(deltheta*deltheta + delw*delw);
+        double delout, exp;
+        for (int i = 0; i < Lyapunov.image.getWidth(); i++)
         {
-            y = Bifurcate.ymin + i*(Bifurcate.ymax - Bifurcate.ymin)/Bifurcate.image.getWidth();
+            y = Lyapunov.ymin + i*(Lyapunov.ymax - Lyapunov.ymin)/Lyapunov.image.getWidth();
             for (int j = 0; j < NCycle; j++)
             {
-                //System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + y + ", " + pt.x + ", " + pt.y);
                 for (int k = 0; k < Nper; k++)
                 {
-                    pt = Bifurcate.runge_kutta(t, pt.x, pt.y, delt, y);
+                    pt = Lyapunov.runge_kutta(t, pt.x, pt.y, delt, y);
                     t += delt;
                 }
-                if (pt.x > Bifurcate.thmin && pt.x < Bifurcate.thmax)
-                    publish(new Point(i, (int) (Bifurcate.image.getHeight()*(pt.x - Bifurcate.thmin)/(Bifurcate.thmax - Bifurcate.thmin))));
-                if (pt.x > tempmax) tempmax = pt.x;
-                if (pt.x < tempmin) tempmin = pt.x;
             }
-            Bifurcate.lblImage.repaint();
+            ptN = new Point2D.Double(pt.x, pt.y);       // unperturbed pt after NCycle
+
+            for (int j = 0; j < NPerturb; j++)
+                for (int k = 0; k < Nper; k++)
+                {
+                    pt = Lyapunov.runge_kutta(t, pt.x, pt.y, delt, y);
+                    t += delt;
+                }
+            ptN0 = new Point2D.Double(pt.x, pt.y);      // unperturbed after NPerturb
+
+            pt.x = ptN.x + deltheta;                    // perturb theta
+            pt.y = ptN.y;
+            for (int j = 0; j < NPerturb; j++)
+                for (int k = 0; k < Nper; k++)
+                {
+                    pt = Lyapunov.runge_kutta(t, pt.x, pt.y, delt, y);
+                    t += delt;
+                }
+            ptNth = new Point2D.Double(pt.x, pt.y);     // theta perturbed after NPerturb
+
+            pt.x = ptN.x;
+            pt.y = ptN.y + delw;                        // perturb w
+            for (int j = 0; j < NPerturb; j++)
+                for (int k = 0; k < Nper; k++)
+                {
+                    pt = Lyapunov.runge_kutta(t, pt.x, pt.y, delt, y);
+                    t += delt;
+                }
+            ptNw = new Point2D.Double(pt.x, pt.y);      // w perturbed after NPerturb
+            //System.out.println(i + ", " + y + ", " + ptN.x + ", " + ptN.y + ", " + ptN0.x + ", " + ptN0.y + ", " + ptNth.x + ", " + ptNth.y + ", " + ptNw.x + ", " + ptNw.y);
+            delout = Math.sqrt((ptN0.x - ptNth.x)*(ptN0.x - ptNth.x) + (ptN0.y - ptNth.y)*(ptN0.y - ptNth.y)
+                             + (ptN0.x - ptNw.x)*(ptN0.x - ptNw.x) + (ptN0.y - ptNw.y)*(ptN0.y - ptNw.y));
+            exp = Math.log(delout/delin)/NPerturb/Lyapunov.Tx;
+            if (exp > Lyapunov.lymin && exp < Lyapunov.lymax)
+                publish(new Point(i, (int) (Lyapunov.image.getHeight()*(exp - Lyapunov.lymax)/(Lyapunov.lymin - Lyapunov.lymax))));
+            if (exp > tempmax) tempmax = exp;
+            if (exp < tempmin) tempmin = exp;
+            Lyapunov.lblImage.repaint();
+
+            pt.x = ptN.x;                               // revert to common pt
+            pt.y = ptN.y;
         }
-        System.out.println("min->max = " + tempmin + ", " + tempmax);
+        System.out.println("exp min->max = " + tempmin + ", " + tempmax);
         return null;
     }
 
@@ -298,15 +336,15 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     {
         for (Point listpt : points)
         {
-            if (Bifurcate.ymax > Bifurcate.ymin)
-                Bifurcate.image.setRGB(listpt.x, listpt.y, clr.getRGB());
+            if (Lyapunov.ymax > Lyapunov.ymin)
+                Lyapunov.image.setRGB(listpt.x, listpt.y, clr.getRGB());
             else                                // plot in reverse
-                Bifurcate.image.setRGB(Bifurcate.image.getWidth() - 1 - listpt.x, listpt.y, clr.getRGB());
+                Lyapunov.image.setRGB(Lyapunov.image.getWidth() - 1 - listpt.x, listpt.y, clr.getRGB());
         }
     }
 
     @Override protected void done()
     {
-        Bifurcate.btnRun.setEnabled(true);
+        Lyapunov.btnRun.setEnabled(true);
     }
 }
