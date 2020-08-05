@@ -13,14 +13,21 @@
 
 package zeeman;
 
+import java.awt.geom.Point2D;
 import javax.swing.*;
 import java.io.*;
 import java.util.Properties;
 
 public class main
 {
+    private static Properties pgmProp = new Properties();
     protected static double[][] xbound = new double[4][];
     protected static double[][] ybound = new double[4][];
+    protected static double A, x, y, keyincr;                       // variables from staticComponent
+    protected static double ystart, yend;                           // variables from Bifurcate
+    protected static double theta0, w0, x0, xa, y0, c, Tx, phi0;    // variables from PhaseSpace
+    protected static double dtheta0dy, dw0dy;
+    protected static int NLimit;                                    // # of Tx per limit cycle (to be determined)
     protected static final String VERSION_NO = "0.1";
     private static final double TOL = 0.0000000001;
 
@@ -37,7 +44,88 @@ public class main
         //double th = 5.04;
         //for (int i = 5780; i <= 5800; i += 4)
         //    th = solve_for_boundary(th, 6, 1.36, i*0.001);
+        //double tmpx = 0.0;
+        //double tmpy = 5.5;
+        //for (int i = 0; i <= 360; i ++)
+            //System.out.println(i + ", " + calc_F(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_dFdth(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdth2(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdthdy(i*Math.PI/180, A, tmpx, tmpy));
+            //System.out.println(i + ", " + dedth(i*Math.PI/180, tmpx, tmpy) + ", " + d2edthdx(i*Math.PI/180, tmpx, tmpy) + ", " + d2edthdy(i*Math.PI/180, tmpx, tmpy));
+            //System.out.println(i + ", " + e(i*Math.PI/180, tmpx, tmpy) + ", " + dedx(i*Math.PI/180, tmpx, tmpy) + ", " + dedy(i*Math.PI/180, tmpx, tmpy));
    }
+
+    protected static void load_prefs()
+    {
+        try                                         // recall program properties
+        {
+            if (new File(System.getProperty("user.home"), "ZCMPrefs.ini").exists())
+            {
+                pgmProp.load(new FileInputStream(new File(System.getProperty("user.home"), "ZCMPrefs.ini")));
+                A = Double.parseDouble(pgmProp.getProperty("initA", "4"));
+                x = Double.parseDouble(pgmProp.getProperty("initx", "200"));
+                y = Double.parseDouble(pgmProp.getProperty("inity", "400"));
+                keyincr = Double.parseDouble(pgmProp.getProperty("keyincr", "1"));
+                theta0 = Double.parseDouble(pgmProp.getProperty("theta0", "0"));
+                w0 = Double.parseDouble(pgmProp.getProperty("w0", "0"));
+                x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
+                xa = Double.parseDouble(pgmProp.getProperty("xa", "0.6"));
+                y0 = Double.parseDouble(pgmProp.getProperty("y0", "6"));
+                c = Double.parseDouble(pgmProp.getProperty("c", "1"));
+                Tx = Double.parseDouble(pgmProp.getProperty("Tx", "1"));
+                phi0 = Double.parseDouble(pgmProp.getProperty("phi0", "0"));
+                NLimit = Integer.parseInt(pgmProp.getProperty("NLimit", "0"));
+                ystart = Double.parseDouble(pgmProp.getProperty("ystart", "6"));
+                yend = Double.parseDouble(pgmProp.getProperty("yend", "6.5"));
+                dtheta0dy = Double.parseDouble(pgmProp.getProperty("dtheta0dy", "0"));
+                dw0dy = Double.parseDouble(pgmProp.getProperty("dw0dy", "0"));
+            }
+            else                                    // factory default
+            {
+                A = 4;
+                x = 200;
+                y = 400;
+                keyincr = 1;
+                theta0 = 0;
+                w0 = 0;
+                x0 = 0;
+                xa = 0.6;
+                y0 = 6;
+                c = 1;
+                Tx = 1;
+                phi0 = 0;
+                NLimit = 0;
+                ystart = 6;
+                yend = 6.5;
+                dtheta0dy = 0;
+                dw0dy = 0;
+            }
+        }
+        catch (IOException e)
+            {System.out.println("error reading ZCMPrefs.ini : " + e);}
+    }
+
+    protected static void save_prefs()
+    {
+        pgmProp.setProperty("initA", "" + A);
+        pgmProp.setProperty("initx", "" + x);
+        pgmProp.setProperty("inity", "" + y);
+        pgmProp.setProperty("keyincr", "" + keyincr);
+        pgmProp.setProperty("theta0", "" + theta0);
+        pgmProp.setProperty("w0", "" + w0);
+        pgmProp.setProperty("x0", "" + x0);
+        pgmProp.setProperty("xa", "" + xa);
+        pgmProp.setProperty("y0", "" + y0);
+        pgmProp.setProperty("c", "" + c);
+        pgmProp.setProperty("Tx", "" + Tx);
+        pgmProp.setProperty("phi0", "" + phi0);
+        pgmProp.setProperty("NLimit", "" + NLimit);
+        pgmProp.setProperty("ystart", "" + ystart);
+        pgmProp.setProperty("yend", "" + yend);
+        pgmProp.setProperty("dtheta0dy", "" + dtheta0dy);
+        pgmProp.setProperty("dw0dy", "" + dw0dy);
+        try
+            {pgmProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "ZCMPrefs.ini"), "Zeeman Catastrophe Machine v" + VERSION_NO + " Prefs");}
+        catch (IOException e)
+            {JOptionPane.showMessageDialog(null, e.getMessage(), " Could not save Preferences file", JOptionPane.WARNING_MESSAGE);}
+    }
 
     protected static String getInfo()
     {
@@ -168,6 +256,75 @@ public class main
         return th;
     }
 
+    protected static Point2D.Double runge_kutta(int itime, double th, double w, double delt, double y)
+    {
+        double xt;
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+
+        xt = x0 + xa*Math.cos(2*Math.PI*itime*delt/Tx + phi0);
+        k1 = delt*w;
+        l1 = delt*(-c*calc_dFdth(th, A, xt, y) -w);
+
+        xt = x0 + xa*Math.cos(2*Math.PI*(itime*delt + delt/2)/Tx + phi0);
+        k2 = delt*(w + l1/2);
+        l2 = delt*(-c*calc_dFdth(th + k1/2, A, xt, y) -(w + l1/2));
+
+        k3 = delt*(w + l2/2);
+        l3 = delt*(-c*calc_dFdth(th + k2/2, A, xt, y) -(w + l2/2));
+
+        xt = x0 + xa*Math.cos(2*Math.PI*(itime*delt + delt)/Tx + phi0);
+        k4 = delt*(w + l3);
+        l4 = delt*(-c*calc_dFdth(th + k3, A, xt, y) -(w + l3));
+        return new Point2D.Double(th + (k1 + 2*k2 + 2*k3 + k4)/6, w + (l1 + 2*l2 + 2*l3 + l4)/6);
+    }
+
+    protected static Point2D.Double runge_kutta_4(int itime, double[] pt4, double delt, double y)
+    {
+        double xt;
+        double th = pt4[0];
+        double w = pt4[1];
+        double dthdy = pt4[2];
+        double dwdy = pt4[3];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double n1, n2, n3, n4;
+
+        xt = x0 + xa*Math.cos(2*Math.PI*itime*delt/Tx + phi0);
+        k1 = delt*w;
+        l1 = delt*(-c*calc_dFdth(th, A, xt, y) -w);
+        m1 = delt*dwdy;
+        n1 = delt*(-c*calc_d2Fdthdy(th, A, xt, y)
+                   -c*calc_d2Fdth2(th, A, xt, y)*dthdy - dwdy);
+
+        xt = x0 + xa*Math.cos(2*Math.PI*(itime*delt + delt/2)/Tx + phi0);
+        k2 = delt*(w + l1/2);
+        l2 = delt*(-c*calc_dFdth(th + k1/2, A, xt, y) - (w + l1/2));
+        m2 = delt*(dwdy + n1/2);
+        n2 = delt*(-c*calc_d2Fdthdy(th + k1/2, A, xt, y)
+                   -c*calc_d2Fdth2(th + k1/2, A, xt, y)*(dthdy + m1/2) - (dwdy + n1/2));
+
+        k3 = delt*(w + l2/2);
+        l3 = delt*(-c*calc_dFdth(th + k2/2, A, xt, y) - (w + l2/2));
+        m3 = delt*(dwdy + n2/2);
+        n3 = delt*(-c*calc_d2Fdthdy(th + k2/2, A, xt, y)
+                   -c*calc_d2Fdth2(th + k2/2, A, xt, y)*(dthdy + m2/2) - (dwdy + n2/2));
+
+        xt = x0 + xa*Math.cos(2*Math.PI*(itime*delt + delt)/Tx + phi0);
+        k4 = delt*(w + l3);
+        l4 = delt*(-c*calc_dFdth(th + k3, A, xt, y) - (w + l3));
+        m4 = delt*(dwdy + n3);
+        n4 = delt*(-c*calc_d2Fdthdy(th + k3, A, xt, y)
+                   -c*calc_d2Fdth2(th + k3, A, xt, y)*(dthdy + m3) - (dwdy + n3));
+        pt4[0] = th + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt4[1] = w + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt4[2] = dthdy + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt4[3] = dwdy + (n1 + 2*n2 + 2*n3 + n4)/6;
+        //System.out.println(itime + ", " + (th + (k1 + 2*k2 + 2*k3 + k4)/6) + ", " + (w + (l1 + 2*l2 + 2*l3 + l4)/6));
+        return new Point2D.Double(pt4[2], pt4[3]);
+    }
+
     private static double e(double th, double x, double y)
     {
         return Math.sqrt((x - Math.sin(th))*(x - Math.sin(th)) + (y + Math.cos(th))*(y + Math.cos(th)));
@@ -193,9 +350,19 @@ public class main
         return (x - Math.sin(th))/e(th, x, y);
     }
 
+    private static double dedy(double th, double x, double y)
+    {
+        return (y + Math.cos(th))/e(th, x, y);
+    }
+
     private static double d2edthdx(double th, double x, double y)
     {
         return (-Math.cos(th) - dedth(th, x, y)*dedx(th, x, y))/e(th, x, y);
+    }
+
+    private static double d2edthdy(double th, double x, double y)
+    {
+        return (-Math.sin(th) - dedth(th, x, y)*dedy(th, x, y))/e(th, x, y);
     }
 
     private static double d3edth2dx(double th, double x, double y)
@@ -211,6 +378,11 @@ public class main
     protected static double calc_dFdth(double th, double A, double x, double y)
     {
         return (e(th, 0, -A) - A/2)*dedth(th, 0, -A) + (e(th, x, y) - A/2)*dedth(th, x, y);
+    }
+
+    private static double calc_d2Fdthdy(double th, double A, double x, double y)
+    {
+        return dedy(th, x, y)*dedth(th, x, y)   + (e(th, x, y) - A/2)*d2edthdy(th, x, y);
     }
 
     private static double calc_dFdx(double th, double A, double x, double y)

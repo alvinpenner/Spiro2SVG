@@ -19,29 +19,26 @@ public class Bifurcate extends JDialog
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JPanel bifurcatePanel = new JPanel();
     private static JPanel parmsPanel = new JPanel();
-    private static JTextField txtA = new JTextField();
-    private static JTextField txtTheta0 = new JTextField();
-    private static JTextField txtw0 = new JTextField();
-    private static JTextField txtx0 = new JTextField();
-    private static JTextField txtxa = new JTextField();
-    private static JTextField txtymin = new JTextField();
-    private static JTextField txtymax = new JTextField();
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
-    protected static double theta0;                         // static variables
-    protected static double xa, ymin, ymax;                 // static variables
-    protected static double c, x0, w0, Tx, phi0;            // dynamic variables
     protected static double thmin = 1.5, thmax = 4.8;
 
-    public Bifurcate(Image img, double xorg)
+    public Bifurcate(Image img)
     {
         JPanel spacerPanel1 = new JPanel();
         JPanel spacerPanel2 = new JPanel();
+        final JTextField txtA = new JTextField();
+        final JTextField txtTheta0 = new JTextField();
+        final JTextField txtw0 = new JTextField();
+        final JTextField txtx0 = new JTextField();
+        final JTextField txtxa = new JTextField();
         final JTextField txtc = new JTextField();
         final JTextField txtTx = new JTextField();
         final JTextField txtphi0 = new JTextField();
+        final JTextField txtystart = new JTextField();
+        final JTextField txtyend = new JTextField();
 
-        setTitle(" Dynamic Zeeman - Bifurcate diagram");
+        setTitle(" Dynamic Zeeman - Bifurcate diagram (θ vs. y)");
         setIconImage(img);
         setSize(755, 500);
         setLocationByPlatform(true);
@@ -49,66 +46,66 @@ public class Bifurcate extends JDialog
         JPanel APanel = new JPanel();
         APanel.setOpaque(false);
         JLabel lblA = new JLabel("A");
-        lblA.setPreferredSize(new Dimension(40, 18));
+        lblA.setPreferredSize(new Dimension(35, 18));
         APanel.add(lblA);
-        txtA.setPreferredSize(new Dimension(45, 18));
-        txtA.setText(Double.toString(staticComponent.A));
+        txtA.setPreferredSize(new Dimension(50, 18));
+        txtA.setText(Double.toString(main.A));
         txtA.setEditable(false);
         APanel.add(txtA);
 
         JPanel theta0Panel = new JPanel();
         theta0Panel.setOpaque(false);
         JLabel lblTheta0 = new JLabel("θ0");
-        lblTheta0.setPreferredSize(new Dimension(40, 18));
+        lblTheta0.setPreferredSize(new Dimension(35, 18));
         theta0Panel.add(lblTheta0);
-        txtTheta0.setPreferredSize(new Dimension(45, 18));
-        txtTheta0.setText("0.0");
+        txtTheta0.setPreferredSize(new Dimension(50, 18));
+        txtTheta0.setText(String.format("%.2f", main.theta0*180/Math.PI));
         theta0Panel.add(txtTheta0);
 
         JPanel w0Panel = new JPanel();
         w0Panel.setOpaque(false);
         JLabel lblw0 = new JLabel("ω0");
-        lblw0.setPreferredSize(new Dimension(40, 18));
+        lblw0.setPreferredSize(new Dimension(35, 18));
         w0Panel.add(lblw0);
-        txtw0.setPreferredSize(new Dimension(45, 18));
-        txtw0.setText(Double.toString(w0));
+        txtw0.setPreferredSize(new Dimension(50, 18));
+        txtw0.setText(Double.toString(main.w0));
         w0Panel.add(txtw0);
 
         JPanel x0Panel = new JPanel();
         x0Panel.setOpaque(false);
         JLabel lblx0 = new JLabel("x0");
-        lblx0.setPreferredSize(new Dimension(40, 18));
+        lblx0.setPreferredSize(new Dimension(35, 18));
         x0Panel.add(lblx0);
-        txtx0.setPreferredSize(new Dimension(45, 18));
-        txtx0.setText(Double.toString(x0));
+        txtx0.setPreferredSize(new Dimension(50, 18));
+        txtx0.setText(Double.toString(main.x0));
         x0Panel.add(txtx0);
 
         JPanel xaPanel = new JPanel();
         xaPanel.setOpaque(false);
         JLabel lblxa = new JLabel("xa");
-        lblxa.setPreferredSize(new Dimension(40, 18));
+        lblxa.setPreferredSize(new Dimension(35, 18));
         xaPanel.add(lblxa);
-        txtxa.setPreferredSize(new Dimension(45, 18));
-        txtxa.setText(String.format("%.2f", xorg));
+        txtxa.setPreferredSize(new Dimension(50, 18));
+        txtxa.setText(String.format("%.2f", main.xa));
         xaPanel.add(txtxa);
 
-        JPanel yminPanel = new JPanel();
-        yminPanel.setOpaque(false);
-        JLabel lblymin = new JLabel("ystart");
-        lblymin.setPreferredSize(new Dimension(40, 18));
-        yminPanel.add(lblymin);
-        txtymin.setPreferredSize(new Dimension(45, 18));
-        txtymin.setText(String.format("%.3f", ymin));
-        yminPanel.add(txtymin);
+        JPanel ystartPanel = new JPanel();
+        ystartPanel.setOpaque(false);
+        JLabel lblystart = new JLabel("ystart");
+        lblystart.setPreferredSize(new Dimension(35, 18));
+        ystartPanel.add(lblystart);
+        txtystart.setPreferredSize(new Dimension(50, 18));
+        txtystart.setText(String.format("%.3f", main.ystart));
+        ystartPanel.add(txtystart);
 
-        JPanel ymaxPanel = new JPanel();
-        ymaxPanel.setOpaque(false);
-        JLabel lblymax = new JLabel("yend");
-        lblymax.setPreferredSize(new Dimension(40, 18));
-        ymaxPanel.add(lblymax);
-        txtymax.setPreferredSize(new Dimension(45, 18));
-        txtymax.setText(String.format("%.3f", ymax));
-        ymaxPanel.add(txtymax);
+        JPanel yendPanel = new JPanel();
+        yendPanel.setOpaque(false);
+        JLabel lblyend = new JLabel("yend");
+        lblyend.setPreferredSize(new Dimension(35, 18));
+        yendPanel.add(lblyend);
+        txtyend.setPreferredSize(new Dimension(50, 18));
+        txtyend.setText(String.format("%.3f", main.yend));
+        yendPanel.add(txtyend);
 
         spacerPanel1.setPreferredSize(new Dimension(85, 6));
         spacerPanel1.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.DARK_GRAY));
@@ -117,28 +114,28 @@ public class Bifurcate extends JDialog
         JPanel cPanel = new JPanel();
         cPanel.setOpaque(false);
         JLabel lblc = new JLabel("c");
-        lblc.setPreferredSize(new Dimension(40, 18));
+        lblc.setPreferredSize(new Dimension(25, 18));
         cPanel.add(lblc);
-        txtc.setPreferredSize(new Dimension(45, 18));
-        txtc.setText(Double.toString(c));
+        txtc.setPreferredSize(new Dimension(60, 18));
+        txtc.setText(Double.toString(main.c));
         cPanel.add(txtc);
 
         JPanel TxPanel = new JPanel();
         TxPanel.setOpaque(false);
         JLabel lblTx = new JLabel("Tx");
-        lblTx.setPreferredSize(new Dimension(40, 18));
+        lblTx.setPreferredSize(new Dimension(25, 18));
         TxPanel.add(lblTx);
-        txtTx.setPreferredSize(new Dimension(45, 18));
-        txtTx.setText(Double.toString(Tx));
+        txtTx.setPreferredSize(new Dimension(60, 18));
+        txtTx.setText(Double.toString(main.Tx));
         TxPanel.add(txtTx);
 
         JPanel phi0Panel = new JPanel();
         phi0Panel.setOpaque(false);
         JLabel lblphi0 = new JLabel("φ0");
-        lblphi0.setPreferredSize(new Dimension(40, 18));
+        lblphi0.setPreferredSize(new Dimension(25, 18));
         phi0Panel.add(lblphi0);
-        txtphi0.setPreferredSize(new Dimension(45, 18));
-        txtphi0.setText(String.format("%.2f", phi0*180/Math.PI));
+        txtphi0.setPreferredSize(new Dimension(60, 18));
+        txtphi0.setText(String.format("%.2f", main.phi0*180/Math.PI));
         phi0Panel.add(txtphi0);
 
         spacerPanel2.setPreferredSize(new Dimension(85, 6));
@@ -165,8 +162,8 @@ public class Bifurcate extends JDialog
         parmsPanel.add(w0Panel);
         parmsPanel.add(x0Panel);
         parmsPanel.add(xaPanel);
-        parmsPanel.add(yminPanel);
-        parmsPanel.add(ymaxPanel);
+        parmsPanel.add(ystartPanel);
+        parmsPanel.add(yendPanel);
         parmsPanel.add(spacerPanel1);
         parmsPanel.add(cPanel);
         parmsPanel.add(TxPanel);
@@ -188,10 +185,10 @@ public class Bifurcate extends JDialog
         {
             @Override public void mouseMoved(MouseEvent e)
             {
-                if (ymax > ymin)
-                    lblposn.setText(String.format(" %.4f", ymin + e.getX()*(ymax - ymin)/image.getWidth()) + ", " + String.format("%.3f", thmin + e.getY()*(thmax - thmin)/image.getHeight()));
+                if (main.yend > main.ystart)
+                    lblposn.setText(String.format(" %.4f", main.ystart + e.getX()*(main.yend - main.ystart)/image.getWidth()) + ", " + String.format("%.3f", thmin + e.getY()*(thmax - thmin)/image.getHeight()));
                 else
-                    lblposn.setText(String.format(" %.4f", ymax + e.getX()*(ymin - ymax)/image.getWidth()) + ", " + String.format("%.3f", thmin + e.getY()*(thmax - thmin)/image.getHeight()));
+                    lblposn.setText(String.format(" %.4f", main.yend + e.getX()*(main.ystart - main.yend)/image.getWidth()) + ", " + String.format("%.3f", thmin + e.getY()*(thmax - thmin)/image.getHeight()));
             }
         });
         bifurcatePanel.add(lblImage);
@@ -205,17 +202,17 @@ public class Bifurcate extends JDialog
         {
             public void actionPerformed(ActionEvent event)
             {
-                theta0 = Math.PI*Double.parseDouble(txtTheta0.getText())/180;   // radians
-                w0 = Double.parseDouble(txtw0.getText());                       // radians/sec
-                x0 = Double.parseDouble(txtx0.getText());                       // units of R
-                xa = Double.parseDouble(txtxa.getText());                       // units of R
-                ymin = Double.parseDouble(txtymin.getText());                   // units of R
-                ymax = Double.parseDouble(txtymax.getText());                   // units of R
-                c = Double.parseDouble(txtc.getText());                         // moment of inertia
-                Tx = Double.parseDouble(txtTx.getText());                       // period of x motion
-                phi0 = Math.PI*Double.parseDouble(txtphi0.getText())/180;       // radians
+                main.theta0 = Math.PI*Double.parseDouble(txtTheta0.getText())/180;   // radians
+                main.w0 = Double.parseDouble(txtw0.getText());                       // radians/sec
+                main.x0 = Double.parseDouble(txtx0.getText());                       // units of R
+                main.xa = Double.parseDouble(txtxa.getText());                       // units of R
+                main.c = Double.parseDouble(txtc.getText());                         // moment of inertia
+                main.Tx = Double.parseDouble(txtTx.getText());                       // period of x motion
+                main.phi0 = Math.PI*Double.parseDouble(txtphi0.getText())/180;       // radians
+                main.ystart = Double.parseDouble(txtystart.getText());               // units of R
+                main.yend = Double.parseDouble(txtyend.getText());                   // units of R
                 btnRun.setEnabled(false);
-                BifurcateActivity activity = new BifurcateActivity(theta0, w0);
+                BifurcateActivity activity = new BifurcateActivity(main.theta0, main.w0);
                 activity.execute();
             }
         });
@@ -228,42 +225,18 @@ public class Bifurcate extends JDialog
             }
         });
     }
-
-    protected static Point2D.Double runge_kutta(double t, double th, double w, double delt, double y)
-    {
-        double x;
-        double k1, k2, k3, k4;
-        double l1, l2, l3, l4;                      // fix fix bug bug replace ymin with a variable y
-
-        x = x0 + xa*Math.cos(2*Math.PI*t/Tx + phi0);
-        k1 = delt*w;
-        l1 = delt*(-c*main.calc_dFdth(th, staticComponent.A, x, y) -w);
-
-        x = x0 + xa*Math.cos(2*Math.PI*(t + delt/2)/Tx + phi0);
-        k2 = delt*(w + l1/2);
-        l2 = delt*(-c*main.calc_dFdth(th + k1/2, staticComponent.A, x, y) -(w + l1/2));
-
-        k3 = delt*(w + l2/2);
-        l3 = delt*(-c*main.calc_dFdth(th + k2/2, staticComponent.A, x, y) -(w + l2/2));
-
-        x = x0 + xa*Math.cos(2*Math.PI*(t + delt)/Tx + phi0);
-        k4 = delt*(w + l3);
-        l4 = delt*(-c*main.calc_dFdth(th + k3, staticComponent.A, x, y) -(w + l3));
-
-        return new Point2D.Double(th + (k1 + 2*k2 + 2*k3 + k4)/6, w + (l1 + 2*l2 + 2*l3 + l4)/6);
-    }
 }
 
 class BifurcateActivity extends SwingWorker<Void, Point>
 {
     final int Nper = 100;                       // # of iterations per Tx
     final int NCycle = 256;                     // # of Tx cycles to execute per y
-    final double delt = Bifurcate.Tx/Nper;
+    final double delt = main.Tx/Nper;
     final Color clr = new Color(40, 40, 136);
     double tempmin = 7, tempmax = -1;           // range of theta
     Point2D.Double pt;                          // phase-space point (theta, w)
     double y;                                   // distance to forcing function
-    double t = 0;
+    private int itime = 0;
 
     public BifurcateActivity(double passtheta0, double passw0)
     {
@@ -274,14 +247,14 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     {
         for (int i = 0; i < Bifurcate.image.getWidth(); i++)
         {
-            y = Bifurcate.ymin + i*(Bifurcate.ymax - Bifurcate.ymin)/Bifurcate.image.getWidth();
+            y = main.ystart + i*(main.yend - main.ystart)/Bifurcate.image.getWidth();
             for (int j = 0; j < NCycle; j++)
             {
                 //System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + y + ", " + pt.x + ", " + pt.y);
                 for (int k = 0; k < Nper; k++)
                 {
-                    pt = Bifurcate.runge_kutta(t, pt.x, pt.y, delt, y);
-                    t += delt;
+                    pt = main.runge_kutta(itime, pt.x, pt.y, delt, y);
+                    itime++;
                 }
                 if (pt.x > Bifurcate.thmin && pt.x < Bifurcate.thmax)
                     publish(new Point(i, (int) (Bifurcate.image.getHeight()*(pt.x - Bifurcate.thmin)/(Bifurcate.thmax - Bifurcate.thmin))));
@@ -298,7 +271,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     {
         for (Point listpt : points)
         {
-            if (Bifurcate.ymax > Bifurcate.ymin)
+            if (main.yend > main.ystart)
                 Bifurcate.image.setRGB(listpt.x, listpt.y, clr.getRGB());
             else                                // plot in reverse
                 Bifurcate.image.setRGB(Bifurcate.image.getWidth() - 1 - listpt.x, listpt.y, clr.getRGB());

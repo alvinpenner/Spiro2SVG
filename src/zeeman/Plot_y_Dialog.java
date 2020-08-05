@@ -10,7 +10,6 @@ import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-//import java.awt.image.BufferedImage;
 import javax.swing.*;
 
 public class Plot_y_Dialog extends JDialog
