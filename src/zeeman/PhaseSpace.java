@@ -16,8 +16,8 @@ import java.util.GregorianCalendar;
 
 public class PhaseSpace extends JDialog
 {
-    private final static int N = 159600;             // total # of iterations
-    private final static int Nper = 100;            // # of iterations per Tx (assume even)
+    private final static int N = 160000;               // total # of iterations 160000
+    private final static int Nper = 100; //100;        // # of iterations per Tx (assume even)
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Path2D.Double path3 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
@@ -30,24 +30,37 @@ public class PhaseSpace extends JDialog
     private static JCheckBox ddyChk = new JCheckBox("d/dy of phase");
     private static JLabel lblThetarange;
     private static JLabel lblwrange;
+    private static double[][] M;       // for use by gaussj
+    private static double[] v;         // for use by gaussj
+    private static double[] sol;       // for use by gaussj
 
     public PhaseSpace(Image img)
     {
         //phasePanel.setBackground(Color.white);
-        JPanel spacerPanel1 = new JPanel();
-        JPanel spacerPanel2 = new JPanel();
-        JPanel spacerPanel3 = new JPanel();
-        final JTextField txtA = new JTextField();
-        final JTextField txtTheta0 = new JTextField();
-        final JTextField txtw0 = new JTextField();
-        final JTextField txtx0 = new JTextField();
-        final JTextField txtxa = new JTextField();
-        final JTextField txty0 = new JTextField();
-        final JTextField txtc = new JTextField();
-        final JTextField txtTx = new JTextField();
-        final JTextField txtphi0 = new JTextField();
-        final JTextField txtdTheta0 = new JTextField();
-        final JTextField txtdw0 = new JTextField();
+        JLabel[] lbl = {new JLabel("A"),
+                        new JLabel("θ0"),
+                        new JLabel("ω0"),
+                        new JLabel("x0"),
+                        new JLabel("xa"),
+                        new JLabel("y0"),
+                        new JLabel("c"),
+                        new JLabel("Tx"),
+                        new JLabel("φ0"),
+                        new JLabel("dθ0dy"),
+                        new JLabel("dω0dy")};
+        final JTextField[] txt = {new JTextField(Double.toString(main.A)),
+                                  new JTextField(String.format("%.4f", main.theta0*180/Math.PI)),
+                                  new JTextField(Double.toString(main.w0)),
+                                  new JTextField(Double.toString(main.x0)),
+                                  new JTextField(String.format("%.2f", main.xa)),
+                                  new JTextField(String.format("%.6f", main.y0)),
+                                  new JTextField(Double.toString(main.c)),
+                                  new JTextField(Double.toString(main.Tx)),
+                                  new JTextField(String.format("%.1f", main.phi0*180/Math.PI)),
+                                  new JTextField(Double.toString(main.dtheta0dy)),
+                                  new JTextField(Double.toString(main.dw0dy))};
+        JPanel[] spacerPanel = new JPanel[3];
+        JPanel[] dataPanel = new JPanel[11];
         JButton btnRun = new JButton("Run");
         String[] NLimitdata = {" 0", " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", " 10"};
         final JComboBox NLimitCombo = new JComboBox(NLimitdata);
@@ -60,117 +73,23 @@ public class PhaseSpace extends JDialog
         setSize(786, 639);
         setLocationByPlatform(true);
 
-        JPanel APanel = new JPanel();
-        APanel.setOpaque(false);
-        JLabel lblA = new JLabel("A");
-        lblA.setPreferredSize(new Dimension(40, 18));
-        APanel.add(lblA);
-        txtA.setPreferredSize(new Dimension(70, 18));
-        txtA.setText(Double.toString(main.A));
-        txtA.setEditable(false);
-        APanel.add(txtA);
-
-        JPanel theta0Panel = new JPanel();
-        theta0Panel.setOpaque(false);
-        JLabel lblTheta0 = new JLabel("θ0");
-        lblTheta0.setPreferredSize(new Dimension(40, 18));
-        theta0Panel.add(lblTheta0);
-        txtTheta0.setPreferredSize(new Dimension(70, 18));
-        txtTheta0.setText(String.format("%.4f", main.theta0*180/Math.PI));
-        theta0Panel.add(txtTheta0);
-
-        JPanel w0Panel = new JPanel();
-        w0Panel.setOpaque(false);
-        JLabel lblw0 = new JLabel("ω0");
-        lblw0.setPreferredSize(new Dimension(40, 18));
-        w0Panel.add(lblw0);
-        txtw0.setPreferredSize(new Dimension(70, 18));
-        txtw0.setText(Double.toString(main.w0));
-        w0Panel.add(txtw0);
-
-        JPanel x0Panel = new JPanel();
-        x0Panel.setOpaque(false);
-        JLabel lblx0 = new JLabel("x0");
-        lblx0.setPreferredSize(new Dimension(40, 18));
-        x0Panel.add(lblx0);
-        txtx0.setPreferredSize(new Dimension(70, 18));
-        txtx0.setText(Double.toString(main.x0));
-        x0Panel.add(txtx0);
-
-        JPanel xaPanel = new JPanel();
-        xaPanel.setOpaque(false);
-        JLabel lblxa = new JLabel("xa");
-        lblxa.setPreferredSize(new Dimension(40, 18));
-        xaPanel.add(lblxa);
-        txtxa.setPreferredSize(new Dimension(70, 18));
-        txtxa.setText(String.format("%.2f", main.xa));
-        xaPanel.add(txtxa);
-
-        JPanel y0Panel = new JPanel();
-        y0Panel.setOpaque(false);
-        JLabel lbly0 = new JLabel("y0");
-        lbly0.setPreferredSize(new Dimension(40, 18));
-        y0Panel.add(lbly0);
-        txty0.setPreferredSize(new Dimension(70, 18));
-        txty0.setText(String.format("%.6f", main.y0));
-        y0Panel.add(txty0);
-
-        spacerPanel1.setPreferredSize(new Dimension(110, 6));
-        spacerPanel1.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.DARK_GRAY));
-        spacerPanel1.setOpaque(false);
-
-        JPanel cPanel = new JPanel();
-        cPanel.setOpaque(false);
-        JLabel lblc = new JLabel("c");
-        lblc.setPreferredSize(new Dimension(40, 18));
-        cPanel.add(lblc);
-        txtc.setPreferredSize(new Dimension(70, 18));
-        txtc.setText(Double.toString(main.c));
-        cPanel.add(txtc);
-
-        JPanel TxPanel = new JPanel();
-        TxPanel.setOpaque(false);
-        JLabel lblTx = new JLabel("Tx");
-        lblTx.setPreferredSize(new Dimension(40, 18));
-        TxPanel.add(lblTx);
-        txtTx.setPreferredSize(new Dimension(70, 18));
-        txtTx.setText(Double.toString(main.Tx));
-        TxPanel.add(txtTx);
-
-        JPanel phi0Panel = new JPanel();
-        phi0Panel.setOpaque(false);
-        JLabel lblphi0 = new JLabel("φ0");
-        lblphi0.setPreferredSize(new Dimension(40, 18));
-        phi0Panel.add(lblphi0);
-        txtphi0.setPreferredSize(new Dimension(70, 18));
-        txtphi0.setText(String.format("%.1f", main.phi0*180/Math.PI));
-        phi0Panel.add(txtphi0);
-
-        JPanel dtheta0Panel = new JPanel();
-        dtheta0Panel.setOpaque(false);
-        JLabel lbldTheta0 = new JLabel("dθ0dy");
-        lbldTheta0.setPreferredSize(new Dimension(40, 18));
-        dtheta0Panel.add(lbldTheta0);
-        txtdTheta0.setPreferredSize(new Dimension(70, 18));
-        txtdTheta0.setText(Double.toString(main.dtheta0dy));
-        dtheta0Panel.add(txtdTheta0);
-
-        JPanel dw0Panel = new JPanel();
-        dw0Panel.setOpaque(false);
-        JLabel lbldw0 = new JLabel("dω0dy");
-        lbldw0.setPreferredSize(new Dimension(40, 18));
-        dw0Panel.add(lbldw0);
-        txtdw0.setPreferredSize(new Dimension(70, 18));
-        txtdw0.setText(Double.toString(main.dw0dy));
-        dw0Panel.add(txtdw0);
-
-        spacerPanel2.setPreferredSize(new Dimension(110, 6));
-        spacerPanel2.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.DARK_GRAY));
-        spacerPanel2.setOpaque(false);
-
-        spacerPanel3.setPreferredSize(new Dimension(110, 6));
-        spacerPanel3.setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.DARK_GRAY));
-        spacerPanel3.setOpaque(false);
+        for (int i = 0; i < spacerPanel.length; i++)
+        {
+            spacerPanel[i] = new JPanel();
+            spacerPanel[i].setPreferredSize(new Dimension(110, 6));
+            spacerPanel[i].setBorder(BorderFactory.createMatteBorder(0,0,1,0,Color.DARK_GRAY));
+            spacerPanel[i].setOpaque(false);
+        }
+        for (int i = 0; i < dataPanel.length; i++)
+        {
+            dataPanel[i] = new JPanel();
+            dataPanel[i].setOpaque(false);
+            lbl[i].setPreferredSize(new Dimension(40, 18));
+            dataPanel[i].add(lbl[i]);
+            txt[i].setPreferredSize(new Dimension(70, 18));
+            dataPanel[i].add(txt[i]);
+        }
+        txt[0].setEditable(false);                              // A distance
 
         JPanel thetarangePanel = new JPanel();
         thetarangePanel.setOpaque(false);
@@ -198,25 +117,25 @@ public class PhaseSpace extends JDialog
 
         parmsPanel.removeAll();
         parmsPanel.setBackground(new Color(200, 221, 242));
-        parmsPanel.add(APanel);
-        parmsPanel.add(theta0Panel);
-        parmsPanel.add(w0Panel);
-        parmsPanel.add(x0Panel);
-        parmsPanel.add(xaPanel);
-        parmsPanel.add(y0Panel);
-        parmsPanel.add(spacerPanel1);
-        parmsPanel.add(cPanel);
-        parmsPanel.add(TxPanel);
-        parmsPanel.add(phi0Panel);
-        parmsPanel.add(dtheta0Panel);
-        parmsPanel.add(dw0Panel);
-        parmsPanel.add(spacerPanel2);
+        parmsPanel.add(dataPanel[0]);
+        parmsPanel.add(dataPanel[1]);
+        parmsPanel.add(dataPanel[2]);
+        parmsPanel.add(dataPanel[3]);
+        parmsPanel.add(dataPanel[4]);
+        parmsPanel.add(dataPanel[5]);
+        parmsPanel.add(spacerPanel[0]);
+        parmsPanel.add(dataPanel[6]);
+        parmsPanel.add(dataPanel[7]);
+        parmsPanel.add(dataPanel[8]);
+        parmsPanel.add(dataPanel[9]);
+        parmsPanel.add(dataPanel[10]);
+        parmsPanel.add(spacerPanel[1]);
         parmsPanel.add(btnRun);
         parmsPanel.add(NLimitPanel);
         parmsPanel.add(complementChk);
         parmsPanel.add(printChk);
         parmsPanel.add(ddyChk);
-        parmsPanel.add(spacerPanel3);
+        parmsPanel.add(spacerPanel[2]);
         parmsPanel.add(thetarangePanel);
         parmsPanel.add(wrangePanel);
         parmsPanel.setMaximumSize(new Dimension(170, 3000));
@@ -232,21 +151,24 @@ public class PhaseSpace extends JDialog
         {
             public void actionPerformed(ActionEvent event)
             {
+                for (int i = 0; i < txt.length; i++)
+                    if (txt[i].getText().isEmpty())
+                        txt[i].setText("0");
                 if (!ddyChk.isSelected())
                     setTitle(" Dynamic Zeeman - ω vs. θ");
                 else
                     setTitle(" Dynamic Zeeman - dω/dy vs. dθ/dy");
-                main.theta0 = Math.PI*Double.parseDouble(txtTheta0.getText())/180;   // radians
-                main.w0 = Double.parseDouble(txtw0.getText());                       // radians/sec
-                main.x0 = Double.parseDouble(txtx0.getText());                       // units of R
-                main.xa = Double.parseDouble(txtxa.getText());                       // units of R
-                main.y0 = Double.parseDouble(txty0.getText());                       // units of R
-                main.c = Double.parseDouble(txtc.getText());                         // moment of inertia
-                main.Tx = Double.parseDouble(txtTx.getText());                       // period of x motion
-                main.phi0 = Math.PI*Double.parseDouble(txtphi0.getText())/180;       // radians
-                main.dtheta0dy = Double.parseDouble(txtdTheta0.getText());           // radians
-                main.dw0dy = Double.parseDouble(txtdw0.getText());                   // radians/sec
-                main.NLimit = NLimitCombo.getSelectedIndex();                        // number of Tx in limit cycle
+                main.theta0 = Math.PI*Double.parseDouble(txt[1].getText())/180;     // radians
+                main.w0 = Double.parseDouble(txt[2].getText());                     // radians/sec
+                main.x0 = Double.parseDouble(txt[3].getText());                     // units of R
+                main.xa = Double.parseDouble(txt[4].getText());                     // units of R
+                main.y0 = Double.parseDouble(txt[5].getText());                     // units of R
+                main.c = Double.parseDouble(txt[6].getText());                      // moment of inertia
+                main.Tx = Double.parseDouble(txt[7].getText());                     // period of x motion
+                main.phi0 = Math.PI*Double.parseDouble(txt[8].getText())/180;       // radians
+                main.dtheta0dy = Double.parseDouble(txt[9].getText());              // radians
+                main.dw0dy = Double.parseDouble(txt[10].getText());                 // radians/sec
+                main.NLimit = NLimitCombo.getSelectedIndex();                       // number of Tx in limit cycle
                 phase_space();
             }
         });
@@ -260,11 +182,14 @@ public class PhaseSpace extends JDialog
         double thmin, thmax;
         double tempx;
 
+        M = new double[Nper*main.NLimit][Nper*main.NLimit];     // for use by gaussj
+        v = new double[Nper*main.NLimit];                       // for use by gaussj
+
         if (printChk.isSelected())
         {
             GregorianCalendar now = new GregorianCalendar();
             System.out.println("\nDynamic Zeeman: " + now.getTime());
-            System.out.printf("A, %.1f\ntheta0, %f\nw0, %.2f\nx0, %.2f\nxa, %.2f\ny0, %.5f\nc, %f\nTx, %.2f\nphi0, %f\n\n", main.A, main.theta0, main.w0, main.x0, main.xa, main.y0, main.c, main.Tx, main.phi0);
+            System.out.printf("A, %.1f\ntheta0, %f\nw0, %.3f\nx0, %.3f\nxa, %.3f\ny0, %.5f\nc, %f\nTx, %.3f\nphi0, %f\n\n", main.A, main.theta0, main.w0, main.x0, main.xa, main.y0, main.c, main.Tx, main.phi0);
             System.out.println("t, x, theta, w, rhs");
             tempx = main.x0 + main.xa*Math.cos(main.phi0);
             System.out.println("0.0, " + tempx + ", " + pt.x + ", " + pt.y + ", " + (-main.c*main.calc_dFdth(pt.x, main.A, tempx, main.y0) - pt.y));
@@ -273,6 +198,11 @@ public class PhaseSpace extends JDialog
         path2.reset();              // limit cycle
         if (!ddyChk.isSelected())
         {
+            if (finalphase != null)
+            {
+                pt.x = finalphase[0];
+                pt.y = finalphase[1];
+            }
             path1.moveTo(pt.x, pt.y);
             thmin = pt.x;
             thmax = pt.x;
@@ -282,7 +212,10 @@ public class PhaseSpace extends JDialog
         else
         {
             if (finalphase != null)
-                System.arraycopy(finalphase, 0, pt4, 0, pt4.length);
+                if (finalphase.length == pt4.length)
+                    System.arraycopy(finalphase, 0, pt4, 0, pt4.length);
+                else if (finalphase.length == 2)
+                    System.arraycopy(finalphase, 0, pt4, 0, 2);
             path1.moveTo(pt4[2], pt4[3]);
             thmin = pt4[2];
             thmax = pt4[2];
@@ -320,7 +253,12 @@ public class PhaseSpace extends JDialog
             {
                 tempx = main.x0 + main.xa*Math.cos(2*Math.PI*(i + 1)*delt/main.Tx + main.phi0);
                 if (!ddyChk.isSelected())
-                    System.out.println((i + 1)*delt + ", " + tempx + ", " + pt.x + ", " + pt.y + ", " + (-main.c*main.calc_dFdth(pt.x, main.A, tempx, main.y0) - pt.y));
+                {
+                    //System.out.println((i + 1)*delt + ", " + tempx + ", " + pt.x + ", " + pt.y + ", " + (-main.c*main.calc_dFdth(pt.x, main.A, tempx, main.y0) - pt.y));
+                    //System.out.println((i + 1)*delt + ", " + tempx + ", " + pt.x + ", " + pt.y + ", " + main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0));
+                    gen_array(i - N + main.NLimit*Nper + 1, main.NLimit*Nper, main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0), main.c*main.calc_d2Fdthdy(pt.x, main.A, tempx, main.y0), delt);
+                    //gen_vector(i - N + main.NLimit*Nper + 1, main.NLimit*Nper, main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0), main.c*main.calc_d2Fdthdy(pt.x, main.A, tempx, main.y0), delt);
+                }
                 else
                     System.out.println((i + 1)*delt + ", " + tempx + ", " + pt4[0] + ", " + pt4[1] + ", " + pt4[2] + ", " + pt4[3]);
             }
@@ -329,6 +267,7 @@ public class PhaseSpace extends JDialog
         {
             lblThetarange.setText("θ = " + String.format("%.1f", 180*thmin/Math.PI) + ", " + String.format("%.1f", 180*thmax/Math.PI));
             lblwrange.setText("ω = " + String.format("%.2f", wmin) + ", " + String.format("%.2f", wmax));
+            finalphase = new double[] {pt.x, pt.y};
             System.out.println("final phase, " + main.y0 + ", " + main.NLimit + ", " + (thmax - thmin) + ", " + (wmax - wmin) + ", " + 180*pt.x/Math.PI + ", " + pt.y);
         }
         else
@@ -371,6 +310,87 @@ public class PhaseSpace extends JDialog
             path3.transform(at);
         }
         phasePanel.repaint();
+    }
+
+    private void gen_array(int i, int N, double d2Fdth2, double d2Fdthdy, double delt)
+    {
+        // this is for Python, to generate eigenvalues of M
+        // M[0][j] = d2Fdth2, v[j] = d2Fdthdy
+        if (i < N)                  // fill the array M
+        {
+            M[0][i] = d2Fdth2;
+            v[i] = d2Fdthdy;        // not currently used
+        }
+        else                        // print the array
+        {
+            System.out.println("# diagonal elements of M");
+            System.out.println("x0 = " + main.x0);
+            System.out.println("y0 = " + main.y0 + " # N = " + N);
+            System.out.println("delt = " + delt);
+            System.out.print("d2Fdth2 = np.array([" + M[0][0]);
+            for (int j = 1; j < N; j++)
+                System.out.print(", " + M[0][j]);
+            System.out.println("])");
+            System.out.print("d2Fdthdy = np.array([" + v[0]);
+            for (int j = 1; j < N; j++)
+                System.out.print(", " + v[j]);
+            System.out.println("])");
+        }
+    }
+
+    private void gen_array_Excel(int i, int N, double d2Fdth2, double d2Fdthdy, double delt)
+    {
+        // this is for Excel
+        // generate an NxN array and Nx1 vector suitable for calculating dtheta/dy
+        // OBSOLETE - quadratic formula
+        if (i >= N) return;
+        for (int j = 0; j < N; j++)
+            if (j == i)
+                System.out.print((d2Fdth2 - 2.0/delt/delt) + ",");
+            else if (j == (N + i - 1) % N)
+                System.out.print((-0.5/delt + 1.0/delt/delt) + ",");
+            else if (j == (i + 1) % N)
+                System.out.print((0.5/delt + 1.0/delt/delt) + ",");
+            else
+                System.out.print("0,");
+        System.out.println("," + (-d2Fdthdy));
+    }
+
+    private void gen_vector(int i, int N, double d2Fdth2, double d2Fdthdy, double delt)
+    {
+        // this is to solve directly for dthetady using gaussj
+        // and using a previously pre-converged solution for theta, w versus t
+        if (i < N)                  // fill the matrix M
+        {
+            for (int j = 0; j < N; j++)
+                if (j == i)
+                    M[i][j] = d2Fdth2 - 30.0/delt/delt/12;
+                else if (j == (N + i - 1) % N)
+                    M[i][j] = -8.0/delt/12 + 16.0/delt/delt/12;
+                else if (j == (i + 1) % N)
+                    M[i][j] =  8.0/delt/12 + 16.0/delt/delt/12;
+                else if (j == (N + i - 2) % N)
+                    M[i][j] =  1.0/delt/12 - 1.0/delt/delt/12;
+                else if (j == (i + 2) % N)
+                    M[i][j] = -1.0/delt/12 - 1.0/delt/delt/12;
+                else
+                    M[i][j] = 0.0;
+            v[i] = -d2Fdthdy;
+        }
+        else                        // solve M*sol = v
+        {
+            System.out.println("gaussj solution for theta");
+            for (int j = 0; j < N; j++)
+            {
+                for (int k = 0; k < N; k++)
+                    System.out.print(M[j][k] + ", ");
+                System.out.println();
+            }
+            sol = main.gaussj(M, v);
+            System.out.println("i, dtheta/dy, dw/dy");
+            for (int j = 0; j < N; j++)
+                System.out.println(j + ", " + sol[j] + ", " + (-sol[(j + 2) % N] + 8.0*sol[(j + 1) % N] - 8.0*sol[(j + N - 1) % N] + sol[(j + N - 2) % N])/12/delt);
+        }
     }
 }
 

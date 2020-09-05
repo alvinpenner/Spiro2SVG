@@ -44,12 +44,14 @@ public class main
         //double th = 5.04;
         //for (int i = 5780; i <= 5800; i += 4)
         //    th = solve_for_boundary(th, 6, 1.36, i*0.001);
-        //double tmpx = 0.0;
-        //double tmpy = 5.5;
+        //double tmpx = 0.1;
+        //double tmpy = 5.501;
         //for (int i = 0; i <= 360; i ++)
             //System.out.println(i + ", " + calc_F(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_dFdth(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdth2(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdthdy(i*Math.PI/180, A, tmpx, tmpy));
             //System.out.println(i + ", " + dedth(i*Math.PI/180, tmpx, tmpy) + ", " + d2edthdx(i*Math.PI/180, tmpx, tmpy) + ", " + d2edthdy(i*Math.PI/180, tmpx, tmpy));
             //System.out.println(i + ", " + e(i*Math.PI/180, tmpx, tmpy) + ", " + dedx(i*Math.PI/180, tmpx, tmpy) + ", " + dedy(i*Math.PI/180, tmpx, tmpy));
+            //System.out.println(i + ", " + e(i*Math.PI/180, tmpx, tmpy) + ", " + dedy(i*Math.PI/180, tmpx, tmpy) + ", " + d2edy2(i*Math.PI/180, tmpx, tmpy));
+            //System.out.println(i + ", " + calc_F(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_dFdy(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdy2(i*Math.PI/180, A, tmpx, tmpy));
    }
 
     protected static void load_prefs()
@@ -355,6 +357,11 @@ public class main
         return (y + Math.cos(th))/e(th, x, y);
     }
 
+    private static double d2edy2(double th, double x, double y)
+    {
+        return (1.0 - dedy(th, x, y)*dedy(th, x, y))/e(th, x, y);
+    }
+
     private static double d2edthdx(double th, double x, double y)
     {
         return (-Math.cos(th) - dedth(th, x, y)*dedx(th, x, y))/e(th, x, y);
@@ -380,7 +387,7 @@ public class main
         return (e(th, 0, -A) - A/2)*dedth(th, 0, -A) + (e(th, x, y) - A/2)*dedth(th, x, y);
     }
 
-    private static double calc_d2Fdthdy(double th, double A, double x, double y)
+    protected static double calc_d2Fdthdy(double th, double A, double x, double y)
     {
         return dedy(th, x, y)*dedth(th, x, y)   + (e(th, x, y) - A/2)*d2edthdy(th, x, y);
     }
@@ -390,12 +397,22 @@ public class main
         return (e(th, x, y) - A/2)*dedx(th, x, y);
     }
 
+    private static double calc_dFdy(double th, double A, double x, double y)
+    {
+        return (e(th, x, y) - A/2)*dedy(th, x, y);
+    }
+
+    private static double calc_d2Fdy2(double th, double A, double x, double y)
+    {
+        return dedy(th, x, y)*dedy(th, x, y) + (e(th, x, y) - A/2)*d2edy2(th, x, y);
+    }
+
     private static double calc_d2Fdthdx(double th, double A, double x, double y)
     {
         return dedth(th, x, y)*dedx(th, x, y) + (e(th, x, y) - A/2)*d2edthdx(th, x, y);
     }
 
-    private static double calc_d2Fdth2(double th, double A, double x, double y)
+    protected static double calc_d2Fdth2(double th, double A, double x, double y)
     {
         return dedth(th, 0, -A)*dedth(th, 0, -A) + (e(th, 0, -A) - A/2)*d2edth2(th, 0, -A)
              + dedth(th, x,  y)*dedth(th, x,  y) + (e(th, x,  y) - A/2)*d2edth2(th, x,  y);
@@ -410,5 +427,108 @@ public class main
     private static double calc_d3Fdth2dx(double th, double A, double x, double y)
     {
         return d2edth2(th, x, y)*dedx(th, x, y) + 2*dedth(th, x, y)*d2edthdx(th, x, y) + (e(th, x, y) - A/2)*d3edth2dx(th, x, y);
+    }
+
+    protected static double[] gaussj(double[][] m, double[] v)
+    {
+        // copied from BSpline5.java
+        // solve m*x = v
+        // based on the routine gaussj() in "Numerical Recipes in C", p.39, W.H.Press
+        // Gauss-Jordan elimination with full pivoting
+        if (m.length != m[0].length) return null;
+        if (m.length != v.length) return null;
+        int i, j, k, l, ll, icol = 0, irow = 0;
+        int n = m.length;
+        double big, dum, pivinv;
+        double[][] a = new double[n][n];
+        double[] b = new double[n];
+        int[] indxc = new int[n];
+        int[] indxr = new int[n];
+        int[] ipiv = new int[n];
+        for (i = 0; i < n; i++)
+            for (j = 0; j < n; j++)
+                a[i][j] = m[i][j];
+        for (i = 0; i < n; i++)
+            b[i] = v[i];
+        for (i = 0; i < n; i++)
+            ipiv[i] = 0;
+        for (i = 0; i < n; i++)
+        {
+            big = 0;
+            for (j = 0; j < n; j++)
+                if (ipiv[j] != 1)
+                    for (k = 0; k < n; k++)
+                        if (ipiv[k] == 0)
+                        {
+                            if (Math.abs(a[j][k]) >= big)
+                            {
+                                big = Math.abs(a[j][k]);
+                                irow = j;
+                                icol = k;
+                            }
+                        }
+                        else if (ipiv[k] > 1)
+                        {
+                            System.out.println("gaussj error : Singular Matrix 1");
+                            return null;
+                        }
+            ++(ipiv[icol]);
+            if (irow != icol)
+            {
+                for (l = 0; l < n; l++) swapa (a, irow, l, icol, l);
+                swapv(b, irow, icol);
+            }
+            indxr[i] = irow;
+            indxc[i] = icol;
+            if (a[icol][icol] == 0)
+            {
+                System.out.println("gaussj error : Singular Matrix 2");
+                return null;
+            }
+            pivinv = 1/a[icol][icol];
+            a[icol][icol] = 1;
+            for (l = 0; l < n; l++) a[icol][l] *= pivinv;
+            b[icol] *= pivinv;
+            for (ll = 0; ll < n; ll++)
+                if (ll != icol)
+                {
+                    dum = a[ll][icol];
+                    a[ll][icol] = 0;
+                    for (l = 0; l < n; l++) a[ll][l] -= a[icol][l]*dum;
+                    b[ll] -= b[icol]*dum;
+                }
+        }
+        for (l = n - 1; l >= 0; l--)
+            if (indxr[l] != indxc[l])
+                for (k = 0; k < n; k++)
+                    swapa(a, k, indxr[l], k, indxc[l]);
+        //System.out.println("a inverse");
+        //for (i = 0; i < n; i++)
+        //{
+        //    for (j = 0; j < n; j++)
+        //        System.out.print(a[i][j] + ", ");
+        //    System.out.println();
+        //}
+        //return a;
+        //System.out.println("b");
+        //for (i = 0; i < n; i++)
+        //    System.out.println(b[i]);
+        return b;
+    }
+
+    private static void swapa(double[][] a, int i1, int j1, int i2, int j2)
+    {
+        // copied from BSpline5.java
+        double temp = a[i1][j1];
+        a[i1][j1] = a[i2][j2];
+        a[i2][j2] = temp;
+    }
+
+    private static void swapv(double[] v, int i1, int i2)
+    {
+        // copied from BSpline5.java
+        double temp = v[i1];
+        v[i1] = v[i2];
+        v[i2] = temp;
     }
 }
