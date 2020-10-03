@@ -179,6 +179,13 @@ public class Bifurcate extends JDialog
 
         DC.setBackground(Color.white);
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
+        DC.setFont(new Font( "SansSerif", Font.BOLD, 12 ));
+        DC.setColor(new Color(40, 40, 136));
+        DC.drawLine(480, 55, 490, 55);
+        DC.drawString("increasing", 500, 60);
+        DC.setColor(new Color(255, 128, 0));
+        DC.drawLine(480, 75, 490, 75);
+        DC.drawString("decreasing", 500, 80);
 
         lblImage.setBorder(BorderFactory.createEtchedBorder());
         lblImage.addMouseMotionListener(new MouseMotionAdapter()
@@ -224,6 +231,13 @@ public class Bifurcate extends JDialog
                 lblImage.repaint();
             }
         });
+        //addKeyListener(new KeyAdapter()
+        //{
+        //    @Override public void keyPressed(KeyEvent e)
+        //    {
+        //        System.out.println("bifurcate key event");
+        //    }
+        //});
     }
 }
 
@@ -232,7 +246,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     final int Nper = 100;                       // # of iterations per Tx
     final int NCycle = 256;                     // # of Tx cycles to execute per y
     final double delt = main.Tx/Nper;
-    final Color clr = new Color(40, 40, 136);
+    Color clr;
     double tempmin = 7, tempmax = -1;           // range of theta
     Point2D.Double pt;                          // phase-space point (theta, w)
     double y;                                   // distance to forcing function
@@ -241,6 +255,10 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     public BifurcateActivity(double passtheta0, double passw0)
     {
         pt = new Point2D.Double(passtheta0, passw0);
+        if (main.yend > main.ystart)
+            clr = new Color(40, 40, 136);
+        else
+            clr = new Color(255, 128, 0);
     }
 
     protected Void doInBackground() throws Exception

@@ -381,6 +381,14 @@ class staticComponent extends JComponent
         {
             @Override public void keyPressed(KeyEvent e)
             {
+                if (e.getKeyCode() == KeyEvent.VK_F1)   // save a PNG file using the F1 key
+                {
+                    if (bifurcate_dlg != null && bifurcate_dlg.isShowing())
+                        main.save_PNG(bifurcate_dlg.image, String.format("bifurcate_%.4f_%.4f", main.ystart, main.yend));
+                    else if (lyapunov_dlg != null && lyapunov_dlg.isShowing())
+                        main.save_PNG(lyapunov_dlg.image, String.format("lyapunov_%.4f_%.4f", main.ystart, main.yend));
+                    return;
+                }
                 switch (e.getKeyCode())
                 {
                 case KeyEvent.VK_LEFT:

@@ -14,6 +14,8 @@
 package zeeman;
 
 import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.*;
 import java.util.Properties;
@@ -140,6 +142,17 @@ public class main
                System.getProperty("os.version") + "\n\n" +
                "Preferences File = " + System.getProperty("user.home") + System.getProperty("file.separator") + "ZCMPrefs.ini\n" +
                "Output Data File = " + System.getProperty("user.home") + System.getProperty("file.separator") + "ZCM_Output.csv\n";
+    }
+
+    protected static void save_PNG(BufferedImage img, String label)
+    {
+        try
+        {
+            ImageIO.write(img, "png", new File("\\Windows\\Temp", label + ".png"));
+            System.out.println("save PNG: " + label);
+        }
+        catch (IOException e)
+            {System.out.println("save_PNG error = " + e);}
     }
 
     protected static double solve_for_critical(double th, double A, double x, double y)

@@ -16,7 +16,8 @@ import java.util.GregorianCalendar;
 
 public class PhaseSpace extends JDialog
 {
-    private final static int N = 160000;               // total # of iterations 160000
+    private final static int N = 160000; // 161000;    // total # of iterations 160000
+    //private final static int N = 300;
     private final static int Nper = 100; //100;        // # of iterations per Tx (assume even)
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
@@ -50,19 +51,19 @@ public class PhaseSpace extends JDialog
                         new JLabel("dω0dy")};
         final JTextField[] txt = {new JTextField(Double.toString(main.A)),
                                   new JTextField(String.format("%.4f", main.theta0*180/Math.PI)),
-                                  new JTextField(Double.toString(main.w0)),
+                                  new JTextField(String.format("%.4f", main.w0)),
                                   new JTextField(Double.toString(main.x0)),
                                   new JTextField(String.format("%.2f", main.xa)),
                                   new JTextField(String.format("%.6f", main.y0)),
                                   new JTextField(Double.toString(main.c)),
                                   new JTextField(Double.toString(main.Tx)),
                                   new JTextField(String.format("%.1f", main.phi0*180/Math.PI)),
-                                  new JTextField(Double.toString(main.dtheta0dy)),
-                                  new JTextField(Double.toString(main.dw0dy))};
+                                  new JTextField(String.format("%.4f", main.dtheta0dy)),
+                                  new JTextField(String.format("%.4f", main.dw0dy))};
         JPanel[] spacerPanel = new JPanel[3];
         JPanel[] dataPanel = new JPanel[11];
         JButton btnRun = new JButton("Run");
-        String[] NLimitdata = {" 0", " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", " 10"};
+        String[] NLimitdata = {" 0", " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", " 10", " 11", " 12", " 13", " 14", " 15", " 16"};
         final JComboBox NLimitCombo = new JComboBox(NLimitdata);
 
         if (!ddyChk.isSelected())
@@ -146,6 +147,7 @@ public class PhaseSpace extends JDialog
         getContentPane().add(parmsPanel);
         getContentPane().add(phasePanel);
         setVisible(true);
+        System.out.println("PhaseSpace, " + N + ", " + Nper + ", " + (float) N/Nper);
 
         btnRun.addActionListener(new AbstractAction()
         {
@@ -204,6 +206,8 @@ public class PhaseSpace extends JDialog
                 pt.y = finalphase[1];
             }
             path1.moveTo(pt.x, pt.y);
+            if (N == main.NLimit*Nper)
+                path2.moveTo(pt.x, pt.y);               // in case N = main.NLimit*Nper
             thmin = pt.x;
             thmax = pt.x;
             wmin = pt.y;
@@ -319,7 +323,7 @@ public class PhaseSpace extends JDialog
         if (i < N)                  // fill the array M
         {
             M[0][i] = d2Fdth2;
-            v[i] = d2Fdthdy;        // not currently used
+            v[i] = d2Fdthdy;
         }
         else                        // print the array
         {

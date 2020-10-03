@@ -14,8 +14,6 @@ import javax.swing.*;
 
 public class Plot_y_Dialog extends JDialog
 {
-    //private static final BufferedImage img = new BufferedImage(300, 300, BufferedImage.TYPE_3BYTE_BGR);
-    //private static final Graphics2D DC = img.createGraphics();
     private JButton btnClear = new JButton("Clear");
 
     public Plot_y_Dialog(int width, int height, Image img, double xorg, double yorg)
