@@ -381,6 +381,18 @@ class staticComponent extends JComponent
         {
             @Override public void keyPressed(KeyEvent e)
             {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE)    // stop Bifurcate plot
+                {
+                    Bifurcate.activitycancel = true;
+                    System.out.println("Bifurcate escaped = " + Bifurcate.activitycancel);
+                    return;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_MINUS)    // change direction of time
+                {
+                    PhaseSpace.timedir *= -1;
+                    System.out.println("direction of time is " + PhaseSpace.timedir);
+                    return;
+                }
                 if (e.getKeyCode() == KeyEvent.VK_F1)   // save a PNG file using the F1 key
                 {
                     if (bifurcate_dlg != null && bifurcate_dlg.isShowing())

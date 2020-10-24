@@ -16,8 +16,9 @@ import java.util.GregorianCalendar;
 
 public class PhaseSpace extends JDialog
 {
-    private final static int N = 160000; // 161000;    // total # of iterations 160000
-    //private final static int N = 300;
+    protected static double timedir = 1;               // direction of time (+/-)
+    private final static int N = 160000; // 160000;    // total # of iterations 160000
+    //private final static int N = 100;
     private final static int Nper = 100; //100;        // # of iterations per Tx (assume even)
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
@@ -178,7 +179,8 @@ public class PhaseSpace extends JDialog
 
     private void phase_space()
     {
-        final double delt = main.Tx/Nper;
+        double delt = timedir*main.Tx/Nper;
+        //final double delt = -main.Tx/Nper;       // test code
         Point2D.Double pt = new Point2D.Double(main.theta0, main.w0);
         double[] pt4 = new double[] {main.theta0, main.w0, main.dtheta0dy, main.dw0dy};   // theta, w, dthetady, dwdy
         double thmin, thmax;
@@ -186,25 +188,16 @@ public class PhaseSpace extends JDialog
 
         M = new double[Nper*main.NLimit][Nper*main.NLimit];     // for use by gaussj
         v = new double[Nper*main.NLimit];                       // for use by gaussj
+        //System.out.println("phasePanel.getWidth() = " + phasePanel.getWidth() + ", " + phasePanel.getHeight());
 
-        if (printChk.isSelected())
-        {
-            GregorianCalendar now = new GregorianCalendar();
-            System.out.println("\nDynamic Zeeman: " + now.getTime());
-            System.out.printf("A, %.1f\ntheta0, %f\nw0, %.3f\nx0, %.3f\nxa, %.3f\ny0, %.5f\nc, %f\nTx, %.3f\nphi0, %f\n\n", main.A, main.theta0, main.w0, main.x0, main.xa, main.y0, main.c, main.Tx, main.phi0);
-            System.out.println("t, x, theta, w, rhs");
-            tempx = main.x0 + main.xa*Math.cos(main.phi0);
-            System.out.println("0.0, " + tempx + ", " + pt.x + ", " + pt.y + ", " + (-main.c*main.calc_dFdth(pt.x, main.A, tempx, main.y0) - pt.y));
-        }
+        if (finalphase == null)
+            finalphase = new double[] {pt4[0], pt4[1], pt4[2], pt4[3]};
         path1.reset();              // transient path
         path2.reset();              // limit cycle
         if (!ddyChk.isSelected())
         {
-            if (finalphase != null)
-            {
-                pt.x = finalphase[0];
-                pt.y = finalphase[1];
-            }
+            pt.x = finalphase[0];
+            pt.y = finalphase[1];
             path1.moveTo(pt.x, pt.y);
             if (N == main.NLimit*Nper)
                 path2.moveTo(pt.x, pt.y);               // in case N = main.NLimit*Nper
@@ -215,16 +208,21 @@ public class PhaseSpace extends JDialog
         }
         else
         {
-            if (finalphase != null)
-                if (finalphase.length == pt4.length)
-                    System.arraycopy(finalphase, 0, pt4, 0, pt4.length);
-                else if (finalphase.length == 2)
-                    System.arraycopy(finalphase, 0, pt4, 0, 2);
+            System.arraycopy(finalphase, 0, pt4, 0, pt4.length);
             path1.moveTo(pt4[2], pt4[3]);
             thmin = pt4[2];
             thmax = pt4[2];
             wmin = pt4[3];
             wmax = pt4[3];
+        }
+        if (printChk.isSelected())
+        {
+            GregorianCalendar now = new GregorianCalendar();
+            System.out.println("\nDynamic Zeeman: " + now.getTime());
+            System.out.printf("A, %.1f\ntheta0, %f\nw0, %.3f\nx0, %.3f\nxa, %.3f\ny0, %.5f\nc, %f\nTx, %.3f\nphi0, %f\n\n", main.A, main.theta0, main.w0, main.x0, main.xa, main.y0, main.c, main.Tx, main.phi0);
+            System.out.println("t, x, theta, w, rhs");
+            tempx = main.x0 + main.xa*Math.cos(main.phi0);
+            System.out.println("0.0, " + tempx + ", " + pt.x + ", " + pt.y + ", " + main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0));
         }
         for (int i = 0; i < N; i++)
         {
@@ -259,7 +257,7 @@ public class PhaseSpace extends JDialog
                 if (!ddyChk.isSelected())
                 {
                     //System.out.println((i + 1)*delt + ", " + tempx + ", " + pt.x + ", " + pt.y + ", " + (-main.c*main.calc_dFdth(pt.x, main.A, tempx, main.y0) - pt.y));
-                    //System.out.println((i + 1)*delt + ", " + tempx + ", " + pt.x + ", " + pt.y + ", " + main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0));
+                    //System.out.println((i + 1)*delt + ", " + tempx + ", " + pt.x + ", " + pt.y + ", " + main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0) +  ", " + main.calc_dFdth(pt.x, main.A, tempx, main.y0));
                     gen_array(i - N + main.NLimit*Nper + 1, main.NLimit*Nper, main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0), main.c*main.calc_d2Fdthdy(pt.x, main.A, tempx, main.y0), delt);
                     //gen_vector(i - N + main.NLimit*Nper + 1, main.NLimit*Nper, main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0), main.c*main.calc_d2Fdthdy(pt.x, main.A, tempx, main.y0), delt);
                 }
@@ -271,14 +269,15 @@ public class PhaseSpace extends JDialog
         {
             lblThetarange.setText("θ = " + String.format("%.1f", 180*thmin/Math.PI) + ", " + String.format("%.1f", 180*thmax/Math.PI));
             lblwrange.setText("ω = " + String.format("%.2f", wmin) + ", " + String.format("%.2f", wmax));
-            finalphase = new double[] {pt.x, pt.y};
+            finalphase[0] = pt.x;
+            finalphase[1] = pt.y;
             System.out.println("final phase, " + main.y0 + ", " + main.NLimit + ", " + (thmax - thmin) + ", " + (wmax - wmin) + ", " + 180*pt.x/Math.PI + ", " + pt.y);
         }
         else
         {
             lblThetarange.setText("dθdy = " + String.format("%.2f", thmin) + ", " + String.format("%.2f", thmax));
             lblwrange.setText("dωdy = " + String.format("%.2f", wmin) + ", " + String.format("%.2f", wmax));
-            finalphase = new double[] {pt4[0], pt4[1], pt4[2], pt4[3]};
+            System.arraycopy(pt4, 0, finalphase, 0, pt4.length);
             System.out.println("final ddy, " + main.y0 + ", " + main.NLimit + ", " + (thmax - thmin) + ", " + (wmax - wmin) + ", " + 180*pt4[0]/Math.PI + ", " + pt4[1] + ", " + pt4[2] + ", " + pt4[3]);
         }
         if (complementChk.isSelected())

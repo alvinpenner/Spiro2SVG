@@ -46,8 +46,8 @@ public class main
         //double th = 5.04;
         //for (int i = 5780; i <= 5800; i += 4)
         //    th = solve_for_boundary(th, 6, 1.36, i*0.001);
-        //double tmpx = 0.1;
-        //double tmpy = 5.501;
+        //double tmpx = 0.0;
+        //double tmpy = 6.5;
         //for (int i = 0; i <= 360; i ++)
             //System.out.println(i + ", " + calc_F(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_dFdth(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdth2(i*Math.PI/180, A, tmpx, tmpy) + ", " + calc_d2Fdthdy(i*Math.PI/180, A, tmpx, tmpy));
             //System.out.println(i + ", " + dedth(i*Math.PI/180, tmpx, tmpy) + ", " + d2edthdx(i*Math.PI/180, tmpx, tmpy) + ", " + d2edthdy(i*Math.PI/180, tmpx, tmpy));
