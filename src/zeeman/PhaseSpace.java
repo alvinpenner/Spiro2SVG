@@ -17,8 +17,8 @@ import java.util.GregorianCalendar;
 public class PhaseSpace extends JDialog
 {
     protected static double timedir = 1;               // direction of time (+/-)
-    private final static int N = 160000; // 160000;    // total # of iterations 160000
-    //private final static int N = 100;
+    private final static int N = 160200; // 160000;    // total # of iterations 160000
+    //private final static int N = 300;
     private final static int Nper = 100; //100;        // # of iterations per Tx (assume even)
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
@@ -172,7 +172,9 @@ public class PhaseSpace extends JDialog
                 main.dtheta0dy = Double.parseDouble(txt[9].getText());              // radians
                 main.dw0dy = Double.parseDouble(txt[10].getText());                 // radians/sec
                 main.NLimit = NLimitCombo.getSelectedIndex();                       // number of Tx in limit cycle
+                //System.out.println("start (" + ddyChk.isSelected() + ") = ," + System.currentTimeMillis());
                 phase_space();
+                //System.out.println("end   (" + ddyChk.isSelected() + ") = ," + System.currentTimeMillis());
             }
         });
     }
