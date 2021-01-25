@@ -19,7 +19,7 @@ public class Rossler_z_bifurcate extends JDialog
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
-    protected static double zmin = 0, zmax = 25;
+    protected static double zmin = 0, zmax = 35; //25;
 
     public Rossler_z_bifurcate(Image img)
     {

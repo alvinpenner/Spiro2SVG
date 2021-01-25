@@ -16,15 +16,16 @@ import java.util.GregorianCalendar;
 public class Rossler_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = 0.02;
-    private final static int N = 50000;            // total # of iterations 160000
+    private final static double DEFAULT_DELT = 0.02; // 0.02;
+    private final static int N = 500000; //50000;            // total # of iterations 160000
     private static double[] pt6_old;
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     //protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Line2D.Double xaxis = new Line2D.Double(0, 0, 0, 0);
     protected Line2D.Double yaxis = new Line2D.Double(0, 0, 0, 0);
     private static JCheckBox printChk = new JCheckBox("  print  ");
-    private static JCheckBox ddyChk = new JCheckBox("d/dy of phase");
+    private static JCheckBox ddyChk = new JCheckBox("d/dc of phase");
+    private static JCheckBox delddyChk = new JCheckBox("del d/dc");
     private static JLabel lblxrange;
     private static JLabel lblyrange;
     private static JLabel lblzrange;
@@ -42,12 +43,16 @@ public class Rossler_y_vs_x extends JDialog
     {
         final JPanel parmsPanel = new JPanel();
         Main.type = "phase";
-        if (!ddyChk.isSelected())
+        if (delddyChk.isSelected())
+            ddyChk.setSelected(false);
+        if (!ddyChk.isSelected() && !delddyChk.isSelected())    // normal phase space
             setTitle(" Rossler System - phase y vs. x");
-        else
+        else if (ddyChk.isSelected())                           // ddy phase space
             setTitle(" Rossler System - dy/dc vs. dx/dc");
+        else
+            setTitle(" Rossler System - del dy/dc vs. del dx/dc");  // compensated ddy
         setIconImage(img);
-        setSize(610 + 70, 493 + 70);
+        setSize(610 + 100, 493 + 100);
         setLocationByPlatform(true);
 
         final JLabel[] lbl = {new JLabel("a"),
@@ -99,6 +104,7 @@ public class Rossler_y_vs_x extends JDialog
         printPanel.add(printChk);
 
         ddyChk.setOpaque(false);
+        delddyChk.setOpaque(false);
 
         JPanel xrangePanel = new JPanel();
         xrangePanel.setPreferredSize(new Dimension(130, 24));
@@ -137,6 +143,7 @@ public class Rossler_y_vs_x extends JDialog
         parmsPanel.add(btnRun);
         parmsPanel.add(printPanel);
         parmsPanel.add(ddyChk);
+        parmsPanel.add(delddyChk);
         parmsPanel.add(spacerPanel[2]);
         parmsPanel.add(xrangePanel);
         parmsPanel.add(yrangePanel);
@@ -163,15 +170,19 @@ public class Rossler_y_vs_x extends JDialog
                 for (int i = 0; i < txt.length; i++)
                     if (txt[i].getText().isEmpty())
                         txt[i].setText("0");
-                if (!ddyChk.isSelected())
+                if (delddyChk.isSelected())
+                    ddyChk.setSelected(false);
+                if (!ddyChk.isSelected() && !delddyChk.isSelected())    // normal phase space
                     setTitle(" Rossler System - phase y vs. x");
-                else
+                else if (ddyChk.isSelected())                           // ddy phase space
                     setTitle(" Rossler System - dy/dc vs. dx/dc");
+                else
+                    setTitle(" Rossler System - del dy/dc vs. del dx/dc");  // compensated ddy
                 if (Main.a != Double.parseDouble(txt[0].getText())) changed = true;
                 Main.a = Double.parseDouble(txt[0].getText());
                 if (Main.b != Double.parseDouble(txt[1].getText())) changed = true;
                 Main.b = Double.parseDouble(txt[1].getText());
-                if (Main.c != Double.parseDouble(txt[2].getText())) changed = true;
+                //if (Main.c != Double.parseDouble(txt[2].getText())) changed = true;
                 Main.c = Double.parseDouble(txt[2].getText());
                 if (Main.x0 != Double.parseDouble(txt[3].getText())) changed = true;
                 Main.x0 = Double.parseDouble(txt[3].getText());
@@ -217,7 +228,9 @@ public class Rossler_y_vs_x extends JDialog
         GregorianCalendar now = new GregorianCalendar();
         double[] pt6 = new double[] {Main.x0, Main.y0, Main.z0, Main.dx0dc, Main.dy0dc, Main.dz0dc};
         double xmin, xmax, ymin, ymax, zmin, zmax;
+        double delx, dely;                              // only for compensated ddy runs
         String lblhdr;
+        String fmt = "%.3f";
 
         if (Period == 0)
             delt = DEFAULT_DELT;
@@ -226,13 +239,13 @@ public class Rossler_y_vs_x extends JDialog
         else
             System.arraycopy(pt6_old, 0, pt6, 0, pt6.length);   // re-use previous run
         if (ch || printChk.isSelected() || first)
-            if (!ddyChk.isSelected())
+            if (!ddyChk.isSelected() && !delddyChk.isSelected())
                 System.out.println("Rossler y vs. x, " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
             else
                 System.out.println("Rossler dy/dc vs. dx/dc, " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
         first = false;
         if (printChk.isSelected())
-            if (!ddyChk.isSelected())
+            if (!ddyChk.isSelected() && !delddyChk.isSelected())
             {
                 System.out.println("iT, x, y, z");
                 System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
@@ -242,7 +255,7 @@ public class Rossler_y_vs_x extends JDialog
                 System.out.println("iT, x, y, z, dx/dc, dy/dc, dz/dc, dt/dc");
                 //System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
             }
-        if (!ddyChk.isSelected())
+        if (!ddyChk.isSelected() && !delddyChk.isSelected())    // normal phase space
         {
             xmin = pt6[0];
             xmax = pt6[0];
@@ -251,7 +264,7 @@ public class Rossler_y_vs_x extends JDialog
             zmin = pt6[2];
             zmax = pt6[2];
         }
-        else
+        else if (ddyChk.isSelected())                           // ddy phase space
         {
             xmin = pt6[3];
             xmax = pt6[3];
@@ -260,12 +273,21 @@ public class Rossler_y_vs_x extends JDialog
             zmin = pt6[5];
             zmax = pt6[5];
         }
-        path1.reset();                                      // transient path
+        else                                                    // compensated ddy
+        {
+            xmin = pt6[3] + (-pt6[1] - pt6[2])*dtdc(pt6);
+            xmax = xmin;
+            ymin = pt6[4] + (pt6[0] + Main.a*pt6[1])*dtdc(pt6);
+            ymax = ymin;
+            zmin = 0;
+            zmax = 0;
+        }
+        path1.reset();
         path1.moveTo(xmin, ymin);
         for (int j = 0; j < N; j++)
         {
             iT++;
-            if (!ddyChk.isSelected())
+            if (!ddyChk.isSelected() && !delddyChk.isSelected())    // normal phase space
             {
                 Main.runge_kutta_rossler3(pt6, delt, Main.c);
                 if (pt6[0] > xmax) xmax = pt6[0];
@@ -275,10 +297,12 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt6[2] > zmax) zmax = pt6[2];
                 if (pt6[2] < zmin) zmin = pt6[2];
                 path1.lineTo(pt6[0], pt6[1]);
-                if (printChk.isSelected() && j >= N - 1500)
-                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                //if (printChk.isSelected() && j >= N - 1500)
+                //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                if (printChk.isSelected() && Period > 0 && j >= N - Period)
+                    Main.gen_array(j - N + Period, Period, delt, pt6[0], pt6[1], pt6[2]);
             }
-            else
+            else if (ddyChk.isSelected())                           // ddy phase space
             {
                 Main.runge_kutta_rossler6(pt6, delt, Main.c);
                 if (pt6[3] > xmax) xmax = pt6[3];
@@ -288,6 +312,19 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt6[5] > zmax) zmax = pt6[5];
                 if (pt6[5] < zmin) zmin = pt6[5];
                 path1.lineTo(pt6[3], pt6[4]);
+                if (printChk.isSelected() && j >= N - 2001)
+                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5] + ", " + dtdc(pt6));
+            }
+            else
+            {
+                Main.runge_kutta_rossler6(pt6, delt, Main.c);       // compensated ddy
+                delx = pt6[3] + (-pt6[1] - pt6[2])*dtdc(pt6);
+                dely = pt6[4] + (pt6[0] + Main.a*pt6[1])*dtdc(pt6);
+                if (delx > xmax) xmax = delx;
+                if (delx < xmin) xmin = delx;
+                if (dely > ymax) ymax = dely;
+                if (dely < ymin) ymin = dely;
+                path1.lineTo(delx, dely);
                 if (printChk.isSelected() && j >= N - 2001)
                     System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5] + ", " + dtdc(pt6));
             }
@@ -331,21 +368,29 @@ public class Rossler_y_vs_x extends JDialog
         path1.transform(at);
         //System.out.println(xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
         lblhdr = !ddyChk.isSelected() ? "x" : "dx";
-        lblxrange.setText(lblhdr + " = " + String.format("%.4f", xmin) + ", " + String.format("%.4f", xmax));
+        lblxrange.setText(lblhdr + " = " + String.format(fmt, xmin) + ", " + String.format(fmt, xmax));
         lblhdr = !ddyChk.isSelected() ? "y" : "dy";
-        lblyrange.setText(lblhdr + " = " + String.format("%.4f", ymin) + ", " + String.format("%.4f", ymax));
+        lblyrange.setText(lblhdr + " = " + String.format(fmt, ymin) + ", " + String.format(fmt, ymax));
         lblhdr = !ddyChk.isSelected() ? "z" : "dz";
-        lblzrange.setText(lblhdr + " = " + String.format("%.4f", zmin) + ", " + String.format("%.4f", zmax));
+        lblzrange.setText(lblhdr + " = " + String.format(fmt, zmin) + ", " + String.format(fmt, zmax));
         xaxis = new Line2D.Double(0, ymax*phasePanel.getHeight()/(ymax - ymin), phasePanel.getWidth(), ymax*phasePanel.getHeight()/(ymax - ymin));
         yaxis = new Line2D.Double(-xmin*phasePanel.getWidth()/(xmax - xmin), 0, -xmin*phasePanel.getWidth()/(xmax - xmin), phasePanel.getHeight());
         phasePanel.repaint();
     }
 
-    private double dtdc(double[] pt6)
+    private double dtdc(double[] pt6)          // two-dimensional (dx, dy)
     {
         double xdot = -pt6[1] - pt6[2];
         double ydot = pt6[0] + Main.a*pt6[1];
         return -(pt6[3]*xdot + pt6[4]*ydot)/(xdot*xdot + ydot*ydot);
+    }
+
+    private double dtdc3(double[] pt6)          // three-dimensional (dx, dy, dz)
+    {
+        double xdot = -pt6[1] - pt6[2];
+        double ydot = pt6[0] + Main.a*pt6[1];
+        double zdot = Main.b + pt6[2]*(pt6[0] - Main.c);
+        return -(pt6[3]*xdot + pt6[4]*ydot + pt6[5]*zdot)/(xdot*xdot + ydot*ydot + zdot*zdot);
     }
 }
 

@@ -264,7 +264,7 @@ public class PhaseSpace extends JDialog
                     //gen_vector(i - N + main.NLimit*Nper + 1, main.NLimit*Nper, main.c*main.calc_d2Fdth2(pt.x, main.A, tempx, main.y0), main.c*main.calc_d2Fdthdy(pt.x, main.A, tempx, main.y0), delt);
                 }
                 else
-                    System.out.println((i + 1)*delt + ", " + tempx + ", " + pt4[0] + ", " + pt4[1] + ", " + pt4[2] + ", " + pt4[3]);
+                    System.out.println((i + 1)*delt + ", " + tempx + ", " + pt4[0] + ", " + pt4[1] + ", " + pt4[2] + ", " + pt4[3] + ", " + (- main.c*main.calc_dFdth(pt4[0], main.A, tempx, main.y0) - pt4[1]));
             }
         }
         if (!ddyChk.isSelected())
