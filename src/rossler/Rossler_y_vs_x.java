@@ -229,11 +229,14 @@ public class Rossler_y_vs_x extends JDialog
         double[] pt6 = new double[] {Main.x0, Main.y0, Main.z0, Main.dx0dc, Main.dy0dc, Main.dz0dc};
         double xmin, xmax, ymin, ymax, zmin, zmax;
         double delx, dely;                              // only for compensated ddy runs
+        int Nloop = N;                                  // number of iterations
         String lblhdr;
-        String fmt = "%.3f";
+        String fmt = "%.4f";
 
         if (Period == 0)
             delt = DEFAULT_DELT;
+        //else
+        //    Nloop = 1000*Period;
         if (ch)
             iT = 0;
         else
@@ -284,7 +287,7 @@ public class Rossler_y_vs_x extends JDialog
         }
         path1.reset();
         path1.moveTo(xmin, ymin);
-        for (int j = 0; j < N; j++)
+        for (int j = 0; j < Nloop; j++)
         {
             iT++;
             if (!ddyChk.isSelected() && !delddyChk.isSelected())    // normal phase space
@@ -297,10 +300,10 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt6[2] > zmax) zmax = pt6[2];
                 if (pt6[2] < zmin) zmin = pt6[2];
                 path1.lineTo(pt6[0], pt6[1]);
-                //if (printChk.isSelected() && j >= N - 1500)
+                //if (printChk.isSelected() && j >= Nloop - 1500)
                 //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
-                if (printChk.isSelected() && Period > 0 && j >= N - Period)
-                    Main.gen_array(j - N + Period, Period, delt, pt6[0], pt6[1], pt6[2]);
+                if (printChk.isSelected() && Period > 0 && j >= Nloop - Period)
+                    Main.gen_array(j - Nloop + Period, Period, delt, pt6[0], pt6[1], pt6[2]);
             }
             else if (ddyChk.isSelected())                           // ddy phase space
             {
@@ -312,7 +315,7 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt6[5] > zmax) zmax = pt6[5];
                 if (pt6[5] < zmin) zmin = pt6[5];
                 path1.lineTo(pt6[3], pt6[4]);
-                if (printChk.isSelected() && j >= N - 2001)
+                if (printChk.isSelected() && j >= Nloop - 2001)
                     System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5] + ", " + dtdc(pt6));
             }
             else
@@ -325,7 +328,7 @@ public class Rossler_y_vs_x extends JDialog
                 if (dely > ymax) ymax = dely;
                 if (dely < ymin) ymin = dely;
                 path1.lineTo(delx, dely);
-                if (printChk.isSelected() && j >= N - 2001)
+                if (printChk.isSelected() && j >= Nloop - 2001)
                     System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5] + ", " + dtdc(pt6));
             }
             if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt6[2])

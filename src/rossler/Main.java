@@ -20,10 +20,10 @@ import java.util.Properties;
 public class Main
 {
     private static Properties pgmProp = new Properties();
-    protected static double a, b, c;                        // parameters
-    protected static double cstart, cend;                   // bifurcate range
-    protected static double x0, y0, z0;                     // initial values
-    protected static double dx0dc, dy0dc, dz0dc;            // initial values
+    protected static double a, b, c;                    // parameters
+    protected static double cstart, cend;               // bifurcate range
+    protected static double x0, y0, z0;                 // initial values
+    protected static double dx0dc, dy0dc, dz0dc;        // initial values
     protected static String type;
     protected static final String VERSION_NO = "0.1";
     protected static Rossler_y_vs_x plot_y_vs_x;
@@ -34,9 +34,12 @@ public class Main
                                                        { 1, -4, -4, 1}};
     private static double[] gen_x, gen_y, gen_z;
     private static double xdot, ydot, zdot, x2dot, y2dot, z2dot;
+    private static double x3dot, y3dot, phi2dot;
     private static double phi, theta, phidot, thetadot;
     private static double[][] dTdphi, dTdtheta, dTd1, dTda, dTdxc, dTdz;
-    private static double[][] M;                            // solve Mx + v = 0
+    private static double[][] M;                        // solve Mx + v = 0
+    private static double[][][] Mout;                   // diagonal elements of M
+    private static double[] Moutdot00, Moutdot01;       // for the second-order d.e.
     private static double[] v;
 
     public static void main(String[] args)
@@ -201,18 +204,10 @@ public class Main
             gen_x = new double[Period];
             gen_y = new double[Period];
             gen_z = new double[Period];
-            M = new double[3*Period][3*Period];
-            v = new double[3*Period];
-            for (int i = 0; i < M.length; i++)
-                for (int j = 0; j < M.length; j++)
-                    M[i][j] = 0;
-            for (int i = 0; i < v.length; i++)
-                v[i] = 0;
-            System.out.println("\n# Rossler diagonal elements of M");
+            System.out.println("\nRossler diagonal elements of M");
             System.out.println("c      = " + c);
             System.out.println("Period = " + Period);
             System.out.println("delt   = " + delt);
-            System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta, x2dot, y2dot, z2dot, phidot, thetadot");
             //System.out.print("d2Fdth2 = np.array([" + M[0][0]);
             //for (int j = 1; j < N; j++)
             //    System.out.print(", " + M[0][j]);
@@ -227,9 +222,18 @@ public class Main
         gen_z[index] = z;
         if (index == Period - 1)
         {
+            v = new double[3*Period];
+            for (int i = 0; i < v.length; i++)
+                v[i] = 0;
+            Mout = new double[3][3][Period];
+            Moutdot00 = new double[Period];
+            Moutdot01 = new double[Period];
             //double dTaudc = 0.11636;             // add compensation for dTau/dc
             double dTaudc = 0.1163616;             // add compensation for dTau/dc
             double v0 = Double.NaN, v1 = Double.NaN, vN2 = Double.NaN, vN1 = Double.NaN;
+            //System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta, x2dot, y2dot, z2dot, phidot, thetadot, x3dot, y3dot, phi2dot");
+            System.out.println("i, x, y, z, xdot, ydot, zdot");
+            //System.out.println("i, M00, M01, M10, M11, cos(phi), sin(theta)");
             for (int i = 0; i < Period; i++)                        // i = time index
             {
                 xdot = -gen_y[i] - gen_z[i];
@@ -259,40 +263,153 @@ public class Main
                 x2dot = -ydot - zdot;
                 y2dot = xdot + a*ydot;
                 z2dot = zdot*(gen_x[i] - c) + gen_z[i]*xdot;
+                x3dot = -y2dot - z2dot;
+                y3dot = x2dot + a*y2dot;
                 phidot = (xdot*y2dot - ydot*x2dot)/(xdot*xdot + ydot*ydot);
+                phi2dot = ((xdot*xdot + ydot*ydot)*(xdot*y3dot - ydot*x3dot) - 2.0*(xdot*y2dot - ydot*x2dot)*(xdot*x2dot + ydot*y2dot))
+                        / (xdot*xdot + ydot*ydot)/(xdot*xdot + ydot*ydot);
                 thetadot = ((x2dot*xdot + y2dot*ydot)*zdot - z2dot*(xdot*xdot + ydot*ydot))/
                            Math.sqrt(xdot*xdot + ydot*ydot)/(xdot*xdot + ydot*ydot + zdot*zdot);
-                System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot + ", " + phi + ", " + theta
-                                                                                           + ", " + x2dot + ", " + y2dot + ", " + z2dot + ", " + phidot + ", " + thetadot);
-                // generate M, v
+                //System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot + ", " + phi + ", " + theta
+                //                                                                           + ", " + x2dot + ", " + y2dot + ", " + z2dot + ", " + phidot + ", " + thetadot
+                //                                                                           + ", " + x3dot + ", " + y3dot + ", " + phi2dot);
+                System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot);
+
+                // generate diagonals of M, and v
 
                 for (int vari = 0; vari < 3; vari++)                       // var = (dx'/dc, dy'/dc, dz'/dc)
                     for (int varj = 0; varj < 3; varj++)
-                        M[i + vari*Period][i + varj*Period] = - dTdphi[vari][varj]*phidot - dTdtheta[vari][varj]*thetadot
-                                                              - dTd1[vari][varj] - dTda[vari][varj]*a
-                                                              - dTdxc[vari][varj]*(gen_x[i] - c) - dTdz[vari][varj]*gen_z[i];
-                for (int vari = 0; vari < 3; vari++)                       // d/dt of (dx'/dc, dy'/dc, dz'/dc)
-                {
-                    M[i + vari*Period][(i + 1) % Period + vari*Period] += 8.0/delt/12.0;
-                    M[i + vari*Period][(i - 1 + Period) % Period + vari*Period] += -8.0/delt/12.0;
-                    M[i + vari*Period][(i + 2) % Period + vari*Period] += -1.0/delt/12.0;
-                    M[i + vari*Period][(i - 2 + Period) % Period + vari*Period] += 1.0/delt/12.0;
-                }
+                        Mout[vari][varj][i] = - dTdphi[vari][varj]*phidot - dTdtheta[vari][varj]*thetadot
+                                              - dTd1[vari][varj] - dTda[vari][varj]*a
+                                              - dTdxc[vari][varj]*(gen_x[i] - c) - dTdz[vari][varj]*gen_z[i];
+                Moutdot00[i] = -2.0*a*Math.sin(phi)*Math.cos(phi)*phidot;
+                Moutdot01[i] = -(phi2dot*Math.cos(theta) - phidot*Math.sin(theta)*thetadot
+                             + thetadot*(Math.sin(theta) - Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.cos(phi)*Math.sin(theta))
+                             + phidot*(Math.sin(phi)*Math.sin(theta) + a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.sin(phi)*Math.cos(theta)));
                 v[i + Period] = -Math.sin(theta)*gen_z[i];
                 v[i + 2*Period] = -Math.cos(theta)*gen_z[i];
+                //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Moutdot00[i] + ", " + Moutdot01[i]);
+                //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Math.cos(phi) + ", " + Math.sin(theta));
             }
-            v[2*Period] += -dTaudc*(vN2 - 8.0*vN1)/delt/12.0;
+            v[2*Period] += -dTaudc*(vN2 - 8.0*vN1)/delt/12.0;   // apply time drift in b.c.
             v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
             v[3*Period - 2] += -dTaudc*v0/delt/12.0;
             v[3*Period - 1] += dTaudc*(8.0*v0 - v1)/delt/12.0;
-            double[] soln = gaussj(M, v);
-            System.out.println("\nRossler soln: Ax = b");
-            System.out.println("c      = " + c);
-            System.out.println("Period = " + Period);
-            System.out.println("delt   = " + delt);
-            System.out.println("i, dx'/dc, dy'/dc, dz'/dc");
-            for (int i = 0; i < Period; i++)                        // i = time index
-                System.out.println(i + ", " + soln[i] + ", " + soln[i + Period] + ", " + soln[i + 2*Period]);
+
+            if (false)                                          // solve Mx = b in Java
+            {
+                M = new double[3*Period][3*Period];
+                for (int i = 0; i < M.length; i++)
+                    for (int j = 0; j < M.length; j++)
+                        M[i][j] = 0;
+                for (int i = 0; i < Period; i++)                // i = time index
+                {
+                    for (int vari = 0; vari < 3; vari++)        // var = (dx'/dc, dy'/dc, dz'/dc)
+                        for (int varj = 0; varj < 3; varj++)
+                            M[i + vari*Period][i + varj*Period] = Mout[vari][varj][i];
+                    for (int vari = 0; vari < 3; vari++)        // d/dt of (dx'/dc, dy'/dc, dz'/dc)
+                    {
+                        M[i + vari*Period][(i + 1) % Period + vari*Period] += 8.0/delt/12.0;
+                        M[i + vari*Period][(i - 1 + Period) % Period + vari*Period] += -8.0/delt/12.0;
+                        M[i + vari*Period][(i + 2) % Period + vari*Period] += -1.0/delt/12.0;
+                        M[i + vari*Period][(i - 2 + Period) % Period + vari*Period] += 1.0/delt/12.0;
+                    }
+                }
+                double[] soln = gaussj(M, v);
+                System.out.println("\nRossler soln: Ax = b");
+                System.out.println("c      = " + c);
+                System.out.println("Period = " + Period);
+                System.out.println("delt   = " + delt);
+                System.out.println("i, dx'/dc, dy'/dc, dz'/dc");
+                for (int i = 0; i < Period; i++)                // i = time index
+                    System.out.println(i + ", " + soln[i] + ", " + soln[i + Period] + ", " + soln[i + 2*Period]);
+            }
+            //System.out.println("M = ");
+            //for (int i = 0; i < 3*Period; i++)
+            //{
+            //    System.out.print(i);
+            //    for (int j = 0; j < 3*Period; j++)
+            //        System.out.print(", " + M[i][j]);
+            //    System.out.println();
+            //}
+            //System.out.println("v = ");
+            //for (int i = 0; i < 3*Period; i++)
+            //    System.out.println(i + ", " + v[i]);
+
+            //if (true)                                         // test reduced 2-D version
+            //{
+            //    double[][] M2 = new double[2*Period][2*Period];
+            //    double[] v2 = new double[2*Period];
+            //    for (int i = 0; i < M2.length; i++)
+            //        for (int j = 0; j < M2.length; j++)
+            //            M2[i][j] = M[i][j];
+            //    for (int i = 0; i < v2.length; i++)
+            //        v2[i] = v[i];
+            //    System.out.println("\nReduced 2-D solution of Rossler Mx = b");
+            //    double[] soln2 = gaussj(M2, v2);
+            //    for (int i = 0; i < Period; i++)                        // i = time index
+            //        System.out.println(i + ", " + soln2[i] + ", " + soln2[i + Period]);
+            //}
+
+            if (true)                                           // solve first-order d.e. in Python
+            {
+                System.out.println("\nfinal (x y z) =," + gen_x[Period - 1] + ", " + gen_y[Period - 1] + ", " + gen_z[Period - 1]);
+                System.out.println("\n# Rossler first-order d.e. elements of M");
+                System.out.println("c      = " + c);
+                System.out.println("delt   = " + delt);
+                for (int vari = 0; vari < 2; vari++)            // var = (dx'/dc, dy'/dc, dz'/dc)
+                    for (int varj = 0; varj < 2; varj++)
+                    {
+                        System.out.print("M" + vari + varj + " = np.array([" + Mout[vari][varj][0]);
+                        for (int i = 1; i < Period; i++)            // i = time index
+                            System.out.print("," + Mout[vari][varj][i]);
+                        System.out.println("])");
+                    }
+                System.out.print("b1 = np.array([" + v[Period]);
+                for (int i = 1; i < Period; i++)
+                    System.out.print(", " + v[i + Period]);
+                System.out.println("])");
+                //System.out.print("b2 = np.array([" + v[2*Period]);
+                //for (int i = 1; i < Period; i++)
+                //    System.out.print(", " + v[i + 2*Period]);
+                //System.out.println("])");
+            }
+
+            if (false)                                           // solve second-order d.e. in Python
+            {
+                System.out.println("\n# Rossler second-order d.e. elements of M");
+                System.out.println("c      = " + c);
+                System.out.println("delt   = " + delt);
+                System.out.print("x2dot = np.array([");
+                for (int i = 0; i < Period; i++)                // i = time index
+                {
+                    if (i > 0) System.out.print(",");
+                    System.out.print(-Mout[0][1][i]);
+                }
+                System.out.println("])");
+                System.out.print("xdot  = np.array([");
+                for (int i = 0; i < Period; i++)                // i = time index
+                {
+                    if (i > 0) System.out.print(",");
+                    System.out.print(Moutdot01[i] + Mout[0][0][i]*Mout[0][1][i] + Mout[0][1][i]*Mout[1][1][i]);
+                }
+                System.out.println("])");
+                System.out.print("x     = np.array([");
+                for (int i = 0; i < Period; i++)                // i = time index
+                {
+                    if (i > 0) System.out.print(",");
+                    System.out.print(Moutdot00[i]*Mout[0][1][i] - Mout[0][0][i]*Moutdot01[i]
+                                   + Mout[0][1][i]*(Mout[0][1][i]*Mout[1][0][i] - Mout[0][0][i]*Mout[1][1][i]));
+                }
+                System.out.println("])");
+                System.out.print("b     = np.array([");
+                for (int i = 0; i < Period; i++)                // i = time index
+                {
+                    if (i > 0) System.out.print(",");
+                    System.out.print(-Mout[0][1][i]*Mout[0][1][i]*v[i + Period]);
+                }
+                System.out.println("])");
+            }
         }
     }
 
