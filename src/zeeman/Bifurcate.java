@@ -15,9 +15,10 @@ import javax.swing.*;
 public class Bifurcate extends JDialog
 {
     protected static final BufferedImage image = new BufferedImage(600, 400, BufferedImage.TYPE_3BYTE_BGR);
-    private static final Graphics2D DC = image.createGraphics();
+    protected static final Graphics2D DC = image.createGraphics();
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JPanel bifurcatePanel = new JPanel();
+    protected static JCheckBox initChk = new JCheckBox("constant init");
     private static JPanel parmsPanel = new JPanel();
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
@@ -52,7 +53,7 @@ public class Bifurcate extends JDialog
 
         setTitle(" Dynamic Zeeman - Bifurcate diagram (θ vs. y)");
         setIconImage(img);
-        setSize(755, 500);
+        setSize(755, 530);
         setLocationByPlatform(true);
 
         for (int i = 0; i < spacerPanel.length; i++)
@@ -78,6 +79,7 @@ public class Bifurcate extends JDialog
             dataPanel[i].add(txt[i]);
         }
         txt[0].setEditable(false);                              // A distance
+        initChk.setOpaque(false);
 
         JPanel thrangePanel = new JPanel();
         thrangePanel.setOpaque(false);
@@ -101,6 +103,7 @@ public class Bifurcate extends JDialog
         parmsPanel.add(dataPanel[4]);
         parmsPanel.add(dataPanel[5]);
         parmsPanel.add(dataPanel[6]);
+        parmsPanel.add(initChk);
         parmsPanel.add(spacerPanel[0]);
         parmsPanel.add(dataPanel[7]);
         parmsPanel.add(dataPanel[8]);
@@ -117,12 +120,16 @@ public class Bifurcate extends JDialog
         DC.setBackground(Color.white);
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
         DC.setFont(new Font( "SansSerif", Font.BOLD, 12 ));
-        DC.setColor(new Color(40, 40, 136));
+        DC.setColor(new Color(0, 160, 0));
         DC.drawLine(480, 55, 490, 55);
-        DC.drawString("increasing", 500, 60);
-        DC.setColor(new Color(255, 128, 0));
+        DC.drawString("constant init", 500, 60);
+        DC.setColor(new Color(40, 40, 136));
         DC.drawLine(480, 75, 490, 75);
-        DC.drawString("decreasing", 500, 80);
+        DC.drawString("increasing", 500, 80);
+        DC.setColor(new Color(255, 128, 0));
+        DC.drawLine(480, 95, 490, 95);
+        DC.drawString("decreasing", 500, 100);
+        DC.setColor(Color.white);
 
         lblImage.setBorder(BorderFactory.createEtchedBorder());
         lblImage.addMouseMotionListener(new MouseMotionAdapter()
@@ -160,7 +167,7 @@ public class Bifurcate extends JDialog
                 main.phi0 = Math.PI*Double.parseDouble(txt[9].getText())/180;     // radians
                 btnRun.setEnabled(false);
                 Bifurcate.activitycancel = false;
-                BifurcateActivity activity = new BifurcateActivity(main.theta0, main.w0);
+                BifurcateActivity activity = new BifurcateActivity();
                 activity.execute();
             }
         });
@@ -178,20 +185,24 @@ public class Bifurcate extends JDialog
 class BifurcateActivity extends SwingWorker<Void, Point>
 {
     final int Nper = 100;                       // # of iterations per Tx
-    final int NCycle = 256;                     // # of Tx cycles to execute per y
+    final int NCycle = 256;                     // # of Tx cycles to execute/record per y
     final double delt = main.Tx/Nper;
+    int Ninit = 100;                            // # of Tx cycles to initiallize limit cycle (if 0, then use previous run)
     Color clr;
     double tempmin = 7, tempmax = -1;           // range of theta
-    Point2D.Double pt;                          // phase-space point (theta, w)
+    Point2D.Double pt = new Point2D.Double(main.theta0, main.w0);   // phase-space point (theta, w)
     double y;                                   // distance to forcing function
     private int itime = 0;
 
-    public BifurcateActivity(double passtheta0, double passw0)
+    public BifurcateActivity()
     {
-        pt = new Point2D.Double(passtheta0, passw0);
-        if (main.yend > main.ystart)
+        if (!Bifurcate.initChk.isSelected())    // override the factory default, use last values
+            Ninit = 0;
+        if (Ninit > 0)                          // use factory default for initiallizing theta, w
+            clr = new Color(0, 160, 0);
+        else if (main.yend > main.ystart)       // use previous run (forward)
             clr = new Color(40, 40, 136);
-        else
+        else                                    // use previous run (reverse)
             clr = new Color(255, 128, 0);
     }
 
@@ -200,19 +211,28 @@ class BifurcateActivity extends SwingWorker<Void, Point>
         for (int i = 0; i < Bifurcate.image.getWidth(); i++)
         {
             y = main.ystart + i*(main.yend - main.ystart)/Bifurcate.image.getWidth();
-            for (int j = 0; j < NCycle; j++)
+            if (Ninit > 0)                                  // use factory default
+            {
+                pt.x = main.theta0;
+                pt.y = main.w0;
+            }
+            //System.out.println(i + ", " + y + ", " + pt.x + ", " + pt.y);
+            for (int j = 0; j < NCycle + Ninit; j++)
             {
                 //System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + y + ", " + pt.x + ", " + pt.y);
                 for (int k = 0; k < Nper; k++)
                 {
                     pt = main.runge_kutta(itime, pt.x, pt.y, delt, y);
+                    //if (j == NCycle - 1) System.out.print(", " + (int) (100*pt.y));
                     itime++;
                 }
-                if (pt.x > Bifurcate.thmin && pt.x < Bifurcate.thmax)
+                if (pt.x > Bifurcate.thmin && pt.x < Bifurcate.thmax && j > Ninit)
                     publish(new Point(i, (int) (Bifurcate.image.getHeight()*(pt.x - Bifurcate.thmin)/(Bifurcate.thmax - Bifurcate.thmin))));
-                if (pt.x > tempmax) tempmax = pt.x;
-                if (pt.x < tempmin) tempmin = pt.x;
+                if (pt.x > tempmax && j > Ninit) tempmax = pt.x;
+                if (pt.x < tempmin && j > Ninit) tempmin = pt.x;
+                //System.out.print(", " + (int) (100*pt.y));
             }
+            publish(new Point(i, (int) (Bifurcate.image.getHeight() - 1))); // cursor at the bottom
             Bifurcate.lblImage.repaint();
             if (Bifurcate.activitycancel)
                 break;
@@ -236,5 +256,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     {
         Bifurcate.btnRun.setEnabled(true);
         Bifurcate.activitycancel = false;
+        Bifurcate.DC.drawLine(0, Bifurcate.image.getHeight() - 1, Bifurcate.image.getWidth() - 1, Bifurcate.image.getHeight() - 1); // clear cursor at the bottom
+        Bifurcate.lblImage.repaint();
     }
 }
