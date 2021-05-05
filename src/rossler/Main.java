@@ -12,7 +12,9 @@
 
 package rossler;
 
-import java.awt.*;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.*;
 import java.util.Properties;
@@ -205,6 +207,8 @@ public class Main
             gen_y = new double[Period];
             gen_z = new double[Period];
             System.out.println("\nRossler diagonal elements of M");
+            System.out.println("a      = " + a);
+            System.out.println("b      = " + b);
             System.out.println("c      = " + c);
             System.out.println("Period = " + Period);
             System.out.println("delt   = " + delt);
@@ -232,8 +236,12 @@ public class Main
             double dTaudc = 0.1163616;             // add compensation for dTau/dc
             double v0 = Double.NaN, v1 = Double.NaN, vN2 = Double.NaN, vN1 = Double.NaN;
             //System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta, x2dot, y2dot, z2dot, phidot, thetadot, x3dot, y3dot, phi2dot");
-            System.out.println("i, x, y, z, xdot, ydot, zdot");
+            System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta");
             //System.out.println("i, M00, M01, M10, M11, cos(phi), sin(theta)");
+            double xmin = 999, xmax = -999;
+            double ymin = 999, ymax = -999;
+            double zmin = 999, zmax = -999;
+            double thmin = 999, thmax = -999;
             for (int i = 0; i < Period; i++)                        // i = time index
             {
                 xdot = -gen_y[i] - gen_z[i];
@@ -245,6 +253,14 @@ public class Main
                 else if (i == Period - 1) vN1 = Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot);
                 phi = Math.atan2(xdot, -ydot);
                 theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
+                if (gen_x[i] > xmax) xmax = gen_x[i];
+                if (gen_x[i] < xmin) xmin = gen_x[i];
+                if (gen_y[i] > ymax) ymax = gen_y[i];
+                if (gen_y[i] < ymin) ymin = gen_y[i];
+                if (gen_z[i] > zmax) zmax = gen_z[i];
+                if (gen_z[i] < zmin) zmin = gen_z[i];
+                if (theta > thmax) thmax = theta;
+                if (theta < thmin) thmin = theta;
                 dTdphi = new double[][] {{                0,  Math.cos(theta), -Math.sin(theta)},
                                          { -Math.cos(theta),                0,               0},
                                          {  Math.sin(theta),                0,               0}};
@@ -273,7 +289,8 @@ public class Main
                 //System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot + ", " + phi + ", " + theta
                 //                                                                           + ", " + x2dot + ", " + y2dot + ", " + z2dot + ", " + phidot + ", " + thetadot
                 //                                                                           + ", " + x3dot + ", " + y3dot + ", " + phi2dot);
-                System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot);
+                //System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot);
+                System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ", " + xdot + ", " + ydot + ", " + zdot + ", " + phi + ", " + theta);
 
                 // generate diagonals of M, and v
 
@@ -288,13 +305,40 @@ public class Main
                              + phidot*(Math.sin(phi)*Math.sin(theta) + a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.sin(phi)*Math.cos(theta)));
                 v[i + Period] = -Math.sin(theta)*gen_z[i];
                 v[i + 2*Period] = -Math.cos(theta)*gen_z[i];
-                //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Moutdot00[i] + ", " + Moutdot01[i]);
-                //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Math.cos(phi) + ", " + Math.sin(theta));
+
+                // test limiting behavior at c = 2*a (temporary code only)
+
+                if (false)               // enable limit point code
+                {
+                    double delx = Math.atan(Math.sqrt(2 - a*a)/a);
+                    double dely = Math.atan(-a*Math.sqrt(2 - a*a)/(1 - a*a));
+                    xdot = -Math.sqrt(2)*Math.sin(2*i*Math.PI/Period + delx);
+                    ydot = -Math.sin(2*i*Math.PI/Period + dely);
+                    zdot = -Math.sin(2*i*Math.PI/Period);
+                    phi = Math.atan2(xdot, -ydot);
+                    theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
+                    //System.out.println(delx + ", " + dely + ", " + a);
+                    Mout[0][0][i] = -a*Math.sin(phi)*Math.sin(phi);
+                    Mout[0][1][i] = Math.cos(phi)/Math.sin(theta);
+                    //Mout[1][0][i] = -2*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)*Math.cos(theta)*Math.cos(theta)/Math.sin(theta) - gen_z[i]*Math.cos(phi)*Math.sin(theta);
+                    //Mout[1][1][i] = -(1 - gen_z[i])*Math.sin(phi)*Math.sin(theta)*Math.cos(theta)
+                    //                - a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta)*Math.cos(theta)
+                    //                - (gen_x[i] - c)*Math.sin(theta)*Math.sin(theta);
+                    //Mout[1][0][i] = -2.0*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)*Math.cos(theta)*Math.cos(theta)/Math.sin(theta) - Math.cos(phi)*Math.sin(theta);
+                    Mout[1][0][i] = -2.0*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)/Math.sin(theta);
+                    Mout[1][1][i] = - a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta)*Math.cos(theta)
+                                    + a*Math.sin(theta)*Math.sin(theta);
+                    //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Moutdot00[i] + ", " + Moutdot01[i] + ", " + gen_x[i] + ", " + gen_z[i]);
+                    //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + phi + ", " + theta);
+                    System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + phi + ", " + theta + ", " + xdot + ", " + ydot + ", " + zdot
+                                         + ", " + (Mout[0][0][i]*Mout[1][1][i] - Mout[0][1][i]*Mout[1][0][i]));
+                }
             }
             v[2*Period] += -dTaudc*(vN2 - 8.0*vN1)/delt/12.0;   // apply time drift in b.c.
             v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
             v[3*Period - 2] += -dTaudc*v0/delt/12.0;
             v[3*Period - 1] += dTaudc*(8.0*v0 - v1)/delt/12.0;
+            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax + ", " + thmin + ", " + thmax);
 
             if (false)                                          // solve Mx = b in Java
             {
@@ -353,9 +397,11 @@ public class Main
 
             if (true)                                           // solve first-order d.e. in Python
             {
-                System.out.println("\nfinal (x y z) =," + gen_x[Period - 1] + ", " + gen_y[Period - 1] + ", " + gen_z[Period - 1]);
-                System.out.println("\n# Rossler first-order d.e. elements of M");
-                System.out.println("c      = " + c);
+                System.out.println("\nfinal (x y z) =," + a + ", " + b + ", " + c + ", " + gen_x[Period - 1] + ", " + gen_y[Period - 1] + ", " + gen_z[Period - 1]);
+                System.out.println("\n# Rossler first-order d.e. elements of M (Python)");
+                System.out.println("a_in   = " + a);
+                System.out.println("b_in   = " + b);
+                System.out.println("c_in   = " + c);
                 System.out.println("delt   = " + delt);
                 for (int vari = 0; vari < 2; vari++)            // var = (dx'/dc, dy'/dc, dz'/dc)
                     for (int varj = 0; varj < 2; varj++)
@@ -369,10 +415,10 @@ public class Main
                 for (int i = 1; i < Period; i++)
                     System.out.print(", " + v[i + Period]);
                 System.out.println("])");
-                //System.out.print("b2 = np.array([" + v[2*Period]);
-                //for (int i = 1; i < Period; i++)
-                //    System.out.print(", " + v[i + 2*Period]);
-                //System.out.println("])");
+
+                //System.out.println("\nindex,M00,M01,M10,M11,b");
+                //for (int i = 0; i < Period; i++)
+                //    System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + v[i + Period]);
             }
 
             if (false)                                           // solve second-order d.e. in Python
@@ -525,6 +571,17 @@ public class Main
             {pgmProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "RosslerPrefs.ini"), "Rossler System v" + VERSION_NO + " Prefs");}
         catch (IOException e)
             {JOptionPane.showMessageDialog(null, e.getMessage(), " Could not save Preferences file", JOptionPane.WARNING_MESSAGE);}
+    }
+
+    protected static void save_PNG(BufferedImage img, String label)
+    {
+        try
+        {
+            ImageIO.write(img, "png", new File("\\Windows\\Temp", label + ".png"));
+            System.out.println("save PNG: " + label);
+        }
+        catch (IOException e)
+            {System.out.println("save_PNG error = " + e);}
     }
 
     private static double[] gaussj(double[][] m, double[] v)

@@ -1,13 +1,12 @@
 
 package rossler;
 
-// bifurcation plot of max z versus c
+// bifurcation plot of Tau versus c
 // implement Runge-Kutta: see Froberg page 269
 // see also: Numerical Recipes in C, page 713
 
 import java.awt.*;
 import java.awt.event.*;
-//import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.swing.*;
@@ -19,14 +18,14 @@ public class Rossler_z_bifurcate extends JDialog
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
-    protected static double zmin = 0, zmax = 35; //25;
+    protected static double Tmin = 2, Tmax = 8;
 
     public Rossler_z_bifurcate(Image img)
     {
         final JPanel parmsPanel = new JPanel();
         final JPanel bifurcatePanel = new JPanel();
         Main.type = "bifurcate";
-        setTitle(" Rossler System - z bifurcate vs. c");
+        setTitle(" Rossler System - Tau bifurcate vs. c");
         setIconImage(img);
         setSize(770, 450);
         setLocationByPlatform(true);
@@ -45,7 +44,7 @@ public class Rossler_z_bifurcate extends JDialog
                                   new JTextField(Double.toString(Main.x0)),
                                   new JTextField(Double.toString(Main.y0)),
                                   new JTextField(Double.toString(Main.z0))};
-        JPanel[] spacerPanel = new JPanel[3];
+        JPanel[] spacerPanel = new JPanel[2];
         JPanel[] dataPanel = new JPanel[lbl.length];
 
         for (int i = 0; i < spacerPanel.length; i++)
@@ -64,6 +63,12 @@ public class Rossler_z_bifurcate extends JDialog
             txt[i].setPreferredSize(new Dimension(70, 18));
             dataPanel[i].add(txt[i]);
         }
+
+        JPanel rangePanel = new JPanel();
+        rangePanel.setOpaque(false);
+        JLabel lblrange = new JLabel("Tau = " + Tmin + " - " + Tmax);
+        lblrange.setPreferredSize(new Dimension(95, 20));
+        rangePanel.add(lblrange);
 
         JPanel posnPanel = new JPanel();
         posnPanel.setOpaque(false);
@@ -85,14 +90,24 @@ public class Rossler_z_bifurcate extends JDialog
         parmsPanel.add(spacerPanel[1]);
         parmsPanel.add(btnRun);
         parmsPanel.add(btnClear);
-        parmsPanel.add(spacerPanel[2]);
+        parmsPanel.add(rangePanel);
         parmsPanel.add(posnPanel);
         parmsPanel.setMaximumSize(new Dimension(140, 3000));
         parmsPanel.setPreferredSize(new Dimension(140, 3000));
         parmsPanel.setBorder(BorderFactory.createEtchedBorder());
 
+        int ulx = 20;
+        int uly = 350;
         DC.setBackground(Color.white);
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
+        DC.setFont(new Font( "SansSerif", Font.BOLD, 12 ));
+        DC.setColor(new Color(40, 40, 136));
+        DC.drawLine(ulx, uly, ulx + 10, uly);
+        DC.drawString("increasing", ulx + 20, uly + 5);
+        DC.setColor(new Color(255, 128, 0));
+        DC.drawLine(ulx, uly + 20, ulx + 10, uly + 20);
+        DC.drawString("decreasing", ulx + 20, uly + 25);
+        DC.setColor(Color.white);
 
         lblImage.setBorder(BorderFactory.createEtchedBorder());
         lblImage.addMouseMotionListener(new MouseMotionAdapter()
@@ -100,9 +115,9 @@ public class Rossler_z_bifurcate extends JDialog
             @Override public void mouseMoved(MouseEvent e)
             {
                 if (Main.cend > Main.cstart)
-                    lblposn.setText(String.format(" %.4f", Main.cstart + e.getX()*(Main.cend - Main.cstart)/image.getWidth()) + ", " + String.format("%.3f", zmax + e.getY()*(zmin - zmax)/image.getHeight()));
+                    lblposn.setText(String.format(" %.4f", Main.cstart + e.getX()*(Main.cend - Main.cstart)/image.getWidth()) + ", " + String.format("%.3f", Tmax + e.getY()*(Tmin - Tmax)/image.getHeight()));
                 else
-                    lblposn.setText(String.format(" %.4f", Main.cend + e.getX()*(Main.cstart - Main.cend)/image.getWidth()) + ", " + String.format("%.3f", zmax + e.getY()*(zmin - zmax)/image.getHeight()));
+                    lblposn.setText(String.format(" %.4f", Main.cend + e.getX()*(Main.cstart - Main.cend)/image.getWidth()) + ", " + String.format("%.3f", Tmax + e.getY()*(Tmin - Tmax)/image.getHeight()));
             }
         });
         bifurcatePanel.add(lblImage);
@@ -128,7 +143,6 @@ public class Rossler_z_bifurcate extends JDialog
                 Main.y0 = Double.parseDouble(txt[5].getText());
                 Main.z0 = Double.parseDouble(txt[6].getText());
                 btnRun.setEnabled(false);
-                //Bifurcate.activitycancel = false;
                 BifurcateActivity activity = new BifurcateActivity();
                 activity.execute();
             }
@@ -158,6 +172,12 @@ public class Rossler_z_bifurcate extends JDialog
                         Main.z_bifurcate.dispose();
                         Main.plot_y_vs_x = new Rossler_y_vs_x(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
                     }
+                    if (e.getKeyCode() == KeyEvent.VK_F1)       // save a PNG file using the F1 key
+                    {
+                        if (Main.z_bifurcate != null && Main.z_bifurcate.isShowing())
+                            Main.save_PNG(image, String.format("Rossler_bifurcate_%.2f_%.2f", Main.cstart, Main.cend));
+                        return;
+                    }
                 }
             });
     }
@@ -166,7 +186,6 @@ public class Rossler_z_bifurcate extends JDialog
 class BifurcateActivity extends SwingWorker<Void, Point>
 {
     Color clr;
-    //double tempmin = 7, tempmax = -1;           // range of theta
     private static double[] pt3;
 
     public BifurcateActivity()
@@ -180,13 +199,12 @@ class BifurcateActivity extends SwingWorker<Void, Point>
 
     protected Void doInBackground() throws Exception
     {
-        int N = 20000;                                // # of iterations per c
-        double delt = 0.1;
-        double zold0 = 0, zold1 = 0;
+        int N = 100000;                             // # of iterations per c
+        double delt = 0.02;
         double c;                                   // horizontal axis
-        double zinter;                              // interpolated max z
+        double[] zlist = new double[4];             // previous z values
+        double Told = 0, Tnew = 0;                  // time of peak z
 
-        //System.out.println("init 0 = " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         for (int i = 0; i < 1000; i++)              // pre-initialize
             Main.runge_kutta_rossler3(pt3, delt, Main.cstart);
         //System.out.println("init 1 = " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
@@ -195,31 +213,23 @@ class BifurcateActivity extends SwingWorker<Void, Point>
             c = Main.cstart + i*(Main.cend - Main.cstart)/Rossler_z_bifurcate.image.getWidth();
             for (int j = 0; j < N; j++)
             {
-                //System.out.println(i + ", " + (x0 + xa*Math.cos(phi0)) + ", " + y + ", " + pt.x + ", " + pt.y);
                 Main.runge_kutta_rossler3(pt3, delt, c);
-                //if (i == 10)
-                //    System.out.println(j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
-                if (zold0 < zold1 && pt3[2] <= zold1)
+                if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[2])
                 {
-                    //System.out.println(i + ", " + zold1 + ", " + Main.parabola(i - 2, i - 1, i, zold0, zold1, pt3[2], false)
-                    //                                    + ", " + Main.parabola(i - 2, i - 1, i, zold0, zold1, pt3[2], true));
-                    //zinter = zold1;     // temporary fudge fix fix
-                    zinter = Main.parabola(j - 2, j - 1, j, zold0, zold1, pt3[2], true);
-                    //if (i == 10)
-                    //    System.out.println(j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + zinter);
-                    if (zinter > Rossler_z_bifurcate.zmin && zinter < Rossler_z_bifurcate.zmax)
-                        publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.zmax - zinter)/(Rossler_z_bifurcate.zmax - Rossler_z_bifurcate.zmin))));
+                    Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[2] - zlist[2]);
+                    //System.out.println("zlist, " + zlist[0] + ", " + zlist[1] + ", " + zlist[2] + ", " + zlist[3] + ", " + pt6[2]);
+                    if (delt*(Tnew - Told) > Rossler_z_bifurcate.Tmin && delt*(Tnew - Told) < Rossler_z_bifurcate.Tmax)
+                        publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.Tmax - delt*(Tnew - Told))/(Rossler_z_bifurcate.Tmax - Rossler_z_bifurcate.Tmin))));
+                    //if (c == 3)
+                    //    System.out.println(c + ", " + (j - 2) + ", " + Tnew + ", " + (Tnew - Told));
+                    Told = Tnew;
                 }
-                zold0 = zold1;
-                zold1 = pt3[2];
-                //if (pt.x > tempmax) tempmax = pt.x;
-                //if (pt.x < tempmin) tempmin = pt.x;
+                for (int k = 0; k < 3; k++)
+                    zlist[k] = zlist[k + 1];
+                zlist[3] = pt3[2];
             }
             Rossler_z_bifurcate.lblImage.repaint();
-            //if (Bifurcate.activitycancel)
-            //    break;
         }
-        //System.out.println("min->max = " + tempmin + ", " + tempmax);
         return null;
     }
 
@@ -238,6 +248,5 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     @Override protected void done()
     {
         Rossler_z_bifurcate.btnRun.setEnabled(true);
-        //Bifurcate.activitycancel = false;
     }
 }

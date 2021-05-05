@@ -34,7 +34,7 @@ public class Rossler_y_vs_x extends JDialog
     int iT = 0;                                     // # iterations
     double[] zlist = new double[4];                 // previous z values
     double Told = 0;
-    int Nfork = 2;                                  // number of bifurcated branches
+    int Nfork = 1;                                  // number of bifurcated branches
     double[] Tfork = new double[Nfork];             // period per branch
     int Tindex = 0;                                 // number of peaks
     double delt = DEFAULT_DELT;
@@ -178,9 +178,9 @@ public class Rossler_y_vs_x extends JDialog
                     setTitle(" Rossler System - dy/dc vs. dx/dc");
                 else
                     setTitle(" Rossler System - del dy/dc vs. del dx/dc");  // compensated ddy
-                if (Main.a != Double.parseDouble(txt[0].getText())) changed = true;
+                //if (Main.a != Double.parseDouble(txt[0].getText())) changed = true;
                 Main.a = Double.parseDouble(txt[0].getText());
-                if (Main.b != Double.parseDouble(txt[1].getText())) changed = true;
+                //if (Main.b != Double.parseDouble(txt[1].getText())) changed = true;
                 Main.b = Double.parseDouble(txt[1].getText());
                 //if (Main.c != Double.parseDouble(txt[2].getText())) changed = true;
                 Main.c = Double.parseDouble(txt[2].getText());
@@ -351,7 +351,7 @@ public class Rossler_y_vs_x extends JDialog
                         System.out.print(", " + tf);
                         Tsum += tf;
                     }
-                    System.out.println(", " + Tsum + ", " + Period + ", " + delt);
+                    System.out.println(", " + Tsum + ", " + Period + ", " + delt); // + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                     if (Period > 0)
                         delt *= Tsum/Period;
                 }
@@ -369,7 +369,7 @@ public class Rossler_y_vs_x extends JDialog
                                                 (xmax*4 + xmin*(4 - phasePanel.getWidth()))/(xmax - xmin),
                                                -(ymin*4 + ymax*(4 - phasePanel.getHeight()))/(ymax - ymin));
         path1.transform(at);
-        //System.out.println(xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
+        //System.out.println("range, " + Main.c + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
         lblhdr = !ddyChk.isSelected() ? "x" : "dx";
         lblxrange.setText(lblhdr + " = " + String.format(fmt, xmin) + ", " + String.format(fmt, xmax));
         lblhdr = !ddyChk.isSelected() ? "y" : "dy";
