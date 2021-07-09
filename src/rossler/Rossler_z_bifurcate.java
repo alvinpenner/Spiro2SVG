@@ -18,7 +18,7 @@ public class Rossler_z_bifurcate extends JDialog
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
-    protected static double Tmin = 2, Tmax = 8;
+    protected static double Tmin = 0, Tmax = 8;
 
     public Rossler_z_bifurcate(Image img)
     {
@@ -199,34 +199,52 @@ class BifurcateActivity extends SwingWorker<Void, Point>
 
     protected Void doInBackground() throws Exception
     {
-        int N = 100000;                             // # of iterations per c
-        double delt = 0.02;
+        // use peaks in y, pt3[1], to detect period
+        int N = 400000;                             // # of iterations per c
+        double delt = 0.005;
         double c;                                   // horizontal axis
         double[] zlist = new double[4];             // previous z values
         double Told = 0, Tnew = 0;                  // time of peak z
+        double Tdiff = Tnew - Told;
+        boolean first;                              // first peak at c
 
         for (int i = 0; i < 1000; i++)              // pre-initialize
             Main.runge_kutta_rossler3(pt3, delt, Main.cstart);
         //System.out.println("init 1 = " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         for (int i = 0; i < Rossler_z_bifurcate.image.getWidth(); i++)
         {
+            first = true;
             c = Main.cstart + i*(Main.cend - Main.cstart)/Rossler_z_bifurcate.image.getWidth();
             for (int j = 0; j < N; j++)
             {
                 Main.runge_kutta_rossler3(pt3, delt, c);
-                if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[2])
+                if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[1])
                 {
-                    Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[2] - zlist[2]);
+                    Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[1] - zlist[2]);
                     //System.out.println("zlist, " + zlist[0] + ", " + zlist[1] + ", " + zlist[2] + ", " + zlist[3] + ", " + pt6[2]);
-                    if (delt*(Tnew - Told) > Rossler_z_bifurcate.Tmin && delt*(Tnew - Told) < Rossler_z_bifurcate.Tmax)
-                        publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.Tmax - delt*(Tnew - Told))/(Rossler_z_bifurcate.Tmax - Rossler_z_bifurcate.Tmin))));
-                    //if (c == 3)
-                    //    System.out.println(c + ", " + (j - 2) + ", " + Tnew + ", " + (Tnew - Told));
-                    Told = Tnew;
+                    //System.out.println(i + ", " + j + ", " + Tdiff + ", " + Told + ", " + Tnew + ", " + zlist[2]);
+                    //if (Tnew - Told > 0.0 || i < 10)              // temporary code fix fix
+                    //if (Tnew - Told < 0.0 || Tnew - Told > 0.6*Tdiff)
+                    //if (Tnew - Told < 0.0 || zlist[2] > 50)
+                    if (first)
+                    {
+                        Told = Tnew;
+                        Tdiff = 0;
+                        first = false;
+                    }
+                    else //if (zlist[2] > zold/3 || c < 40) //if (Tnew - Told > 0.7*Tdiff)
+                    {
+                        Tdiff = Tnew - Told;
+                        if (delt*Tdiff > Rossler_z_bifurcate.Tmin && delt*Tdiff < Rossler_z_bifurcate.Tmax)
+                            publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.Tmax - delt*(Tnew - Told))/(Rossler_z_bifurcate.Tmax - Rossler_z_bifurcate.Tmin))));
+                        //if (c == 3)
+                        //    System.out.println(c + ", " + (j - 2) + ", " + Tnew + ", " + (Tnew - Told));
+                        Told = Tnew;
+                    }
                 }
                 for (int k = 0; k < 3; k++)
                     zlist[k] = zlist[k + 1];
-                zlist[3] = pt3[2];
+                zlist[3] = pt3[1];
             }
             Rossler_z_bifurcate.lblImage.repaint();
         }

@@ -305,34 +305,6 @@ public class Main
                              + phidot*(Math.sin(phi)*Math.sin(theta) + a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.sin(phi)*Math.cos(theta)));
                 v[i + Period] = -Math.sin(theta)*gen_z[i];
                 v[i + 2*Period] = -Math.cos(theta)*gen_z[i];
-
-                // test limiting behavior at c = 2*a (temporary code only)
-
-                if (false)               // enable limit point code
-                {
-                    double delx = Math.atan(Math.sqrt(2 - a*a)/a);
-                    double dely = Math.atan(-a*Math.sqrt(2 - a*a)/(1 - a*a));
-                    xdot = -Math.sqrt(2)*Math.sin(2*i*Math.PI/Period + delx);
-                    ydot = -Math.sin(2*i*Math.PI/Period + dely);
-                    zdot = -Math.sin(2*i*Math.PI/Period);
-                    phi = Math.atan2(xdot, -ydot);
-                    theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
-                    //System.out.println(delx + ", " + dely + ", " + a);
-                    Mout[0][0][i] = -a*Math.sin(phi)*Math.sin(phi);
-                    Mout[0][1][i] = Math.cos(phi)/Math.sin(theta);
-                    //Mout[1][0][i] = -2*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)*Math.cos(theta)*Math.cos(theta)/Math.sin(theta) - gen_z[i]*Math.cos(phi)*Math.sin(theta);
-                    //Mout[1][1][i] = -(1 - gen_z[i])*Math.sin(phi)*Math.sin(theta)*Math.cos(theta)
-                    //                - a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta)*Math.cos(theta)
-                    //                - (gen_x[i] - c)*Math.sin(theta)*Math.sin(theta);
-                    //Mout[1][0][i] = -2.0*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)*Math.cos(theta)*Math.cos(theta)/Math.sin(theta) - Math.cos(phi)*Math.sin(theta);
-                    Mout[1][0][i] = -2.0*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)/Math.sin(theta);
-                    Mout[1][1][i] = - a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta)*Math.cos(theta)
-                                    + a*Math.sin(theta)*Math.sin(theta);
-                    //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Moutdot00[i] + ", " + Moutdot01[i] + ", " + gen_x[i] + ", " + gen_z[i]);
-                    //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + phi + ", " + theta);
-                    System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + phi + ", " + theta + ", " + xdot + ", " + ydot + ", " + zdot
-                                         + ", " + (Mout[0][0][i]*Mout[1][1][i] - Mout[0][1][i]*Mout[1][0][i]));
-                }
             }
             v[2*Period] += -dTaudc*(vN2 - 8.0*vN1)/delt/12.0;   // apply time drift in b.c.
             v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
