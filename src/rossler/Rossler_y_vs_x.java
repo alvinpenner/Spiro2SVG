@@ -12,6 +12,8 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import javax.swing.*;
 import java.util.GregorianCalendar;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 
 public class Rossler_y_vs_x extends JDialog
 {
@@ -30,6 +32,7 @@ public class Rossler_y_vs_x extends JDialog
     private static JLabel lblyrange;
     private static JLabel lblzrange;
     private static JPanel phasePanel = new Plot_Phase_Panel();
+    private static PrintWriter out = null;
 
     int iT = 0;                                     // # iterations
     double[] zlist = new double[4];                 // previous z values
@@ -204,7 +207,11 @@ public class Rossler_y_vs_x extends JDialog
 
         addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent ev)
-                {Main.save_prefs();}
+                {
+                    Main.save_prefs();
+                    if (out != null)
+                        out.close();
+                }
             });
 
         for (JTextField tx: txt)
@@ -220,6 +227,16 @@ public class Rossler_y_vs_x extends JDialog
                     }
                 }
             });
+
+        if (false)
+            try
+            {
+                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Rossler_Output_" + Main.c + ".csv", false);
+                out = new PrintWriter(fw);
+                out.println("iT, x, y, z");
+            }
+            catch (java.io.IOException e)
+                {System.out.println("Rossler_Output.csv save error = " + e);}
     }
 
     private void phase_space(boolean ch, int Period)
@@ -233,6 +250,8 @@ public class Rossler_y_vs_x extends JDialog
         String lblhdr;
         String fmt = "%.4f";
 
+        if (out != null)
+            out.println("Rossler y vs. x, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + delt + ", " + N);
         if (Period == 0)
             delt = DEFAULT_DELT;
         //else
@@ -242,10 +261,17 @@ public class Rossler_y_vs_x extends JDialog
         else
             System.arraycopy(pt6_old, 0, pt6, 0, pt6.length);   // re-use previous run
         if (ch || printChk.isSelected() || first)
+        {
             if (!ddyChk.isSelected() && !delddyChk.isSelected())
                 System.out.println("Rossler y vs. x, " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
             else
                 System.out.println("Rossler dy/dc vs. dx/dc, " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
+            //System.out.println("a,b,c = " + );
+            double zt = (Main.c + Math.sqrt(Main.c*Main.c - 4*Main.a*Main.b))/2/Main.a;
+            System.out.println("P1 = (" + Main.a*zt + ", " + (-zt) + ", " + zt + ")");
+            zt = (Main.c - Math.sqrt(Main.c*Main.c - 4*Main.a*Main.b))/2/Main.a;
+            System.out.println("P2 = (" + Main.a*zt + ", " + (-zt) + ", " + zt + ")");
+        }
         first = false;
         if (printChk.isSelected())
             if (!ddyChk.isSelected() && !delddyChk.isSelected())
@@ -292,7 +318,7 @@ public class Rossler_y_vs_x extends JDialog
             iT++;
             if (!ddyChk.isSelected() && !delddyChk.isSelected())    // normal phase space
             {
-                Main.runge_kutta_rossler3(pt6, delt, Main.c);
+                Main.runge_kutta_rossler3(pt6, delt, Main.a, Main.c);
                 if (pt6[0] > xmax) xmax = pt6[0];
                 if (pt6[0] < xmin) xmin = pt6[0];
                 if (pt6[1] > ymax) ymax = pt6[1];
@@ -300,10 +326,14 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt6[2] > zmax) zmax = pt6[2];
                 if (pt6[2] < zmin) zmin = pt6[2];
                 path1.lineTo(pt6[0], pt6[1]);
-                //if (printChk.isSelected() && j >= Nloop - 1500)
-                //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                //if (j <= 5760)
+                //    System.out.println(j + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                if (out != null)
+                    out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                 if (printChk.isSelected() && Period > 0 && j >= Nloop - Period)
                     Main.gen_array(j - Nloop + Period, Period, delt, pt6[0], pt6[1], pt6[2]);
+                //if (printChk.isSelected() && Period == 0 && j >= Nloop - 288*30)
+                //    System.out.println(iT + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
             }
             else if (ddyChk.isSelected())                           // ddy phase space
             {

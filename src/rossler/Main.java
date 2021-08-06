@@ -23,6 +23,7 @@ public class Main
 {
     private static Properties pgmProp = new Properties();
     protected static double a, b, c;                    // parameters
+    protected static double astart, aend;               // bifurcate range
     protected static double cstart, cend;               // bifurcate range
     protected static double x0, y0, z0;                 // initial values
     protected static double dx0dc, dy0dc, dz0dc;        // initial values
@@ -57,7 +58,7 @@ public class Main
         //System.out.println(parabola(qx0, qx1, qx2, qa + qb*qx0 + qc*qx0*qx0, qa + qb*qx1 + qc*qx1*qx1, qa + qb*qx2 + qc*qx2*qx2, false));
     }
 
-    protected static void runge_kutta_rossler3(double[] pt3, double delt, double tempc)
+    protected static void runge_kutta_rossler3(double[] pt3, double delt, double tempa, double tempc)
     {
         double x = pt3[0];
         double y = pt3[1];
@@ -67,19 +68,19 @@ public class Main
         double m1, m2, m3, m4;
 
         k1 = delt*(-y - z);
-        l1 = delt*( x + a*y);
+        l1 = delt*( x + tempa*y);
         m1 = delt*(b + z*(x - tempc));
 
         k2 = delt*(-y - l1/2 - z - m1/2);
-        l2 = delt*( x + k1/2 + a*(y + l1/2));
+        l2 = delt*( x + k1/2 + tempa*(y + l1/2));
         m2 = delt*(b + (z + m1/2)*(x + k1/2 - tempc));
 
         k3 = delt*(-y - l2/2 - z - m2/2);
-        l3 = delt*( x + k2/2 + a*(y + l2/2));
+        l3 = delt*( x + k2/2 + tempa*(y + l2/2));
         m3 = delt*(b + (z + m2/2)*(x + k2/2 - tempc));
 
         k4 = delt*(-y - l3 - z - m3);
-        l4 = delt*( x + k3 + a*(y + l3));
+        l4 = delt*( x + k3 + tempa*(y + l3));
         m4 = delt*(b + (z + m3)*(x + k3 - tempc));
 
         pt3[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
@@ -201,6 +202,7 @@ public class Main
         dTdtheta = new double[][] {{ 0,  0,  0},
                                    { 0,  0,  1},
                                    { 0, -1,  0}};
+        double Neimark = 0;     // accumulate line integral to test Genesio Eq. 17
         if (index == 0)
         {
             gen_x = new double[Period];
@@ -244,6 +246,10 @@ public class Main
             double thmin = 999, thmax = -999;
             for (int i = 0; i < Period; i++)                        // i = time index
             {
+                if (2*(i/2) == i)
+                    Neimark += 2*(a + gen_x[i] - c)/3;
+                else
+                    Neimark += 4*(a + gen_x[i] - c)/3;
                 xdot = -gen_y[i] - gen_z[i];
                 ydot = gen_x[i] + a*gen_y[i];
                 zdot = b + gen_z[i]*(gen_x[i] - c);
@@ -310,7 +316,7 @@ public class Main
             v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
             v[3*Period - 2] += -dTaudc*v0/delt/12.0;
             v[3*Period - 1] += dTaudc*(8.0*v0 - v1)/delt/12.0;
-            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax + ", " + thmin + ", " + thmax);
+            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax + ", " + thmin + ", " + thmax + ", " + Neimark/Period);
 
             if (false)                                          // solve Mx = b in Java
             {
@@ -469,14 +475,31 @@ public class Main
         double cua = (3*q - p*p)/3;
         double cub = (2*p*p*p - 9*p*q + 27*r)/27;
         double cud = cub*cub/4 + cua*cua*cua/27;
+        double ret;
 
 //        System.out.println("\ncubic p,q,r = " + p + ", " + q + ", " + r);
-//        System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
+        //System.out.println("\ncubic a,b,d = " + cua + ", " + cub + ", " + cud);
         if (cud < 0)
         {
             double myphi = Math.acos(-cub/2/Math.sqrt(-cua*cua*cua/27));
-//            System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 4*Math.PI/3) - p/3));
-            return 2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 4*Math.PI/3) - p/3;
+            //System.out.println("3 cubic d < 0 : " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 2*Math.PI/3) - p/3) + ", " + (2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 4*Math.PI/3) - p/3));
+            ret = 2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 4*Math.PI/3) - p/3;
+            if (Math.abs(ret) < 1)
+                return ret;
+            else
+            {
+                ret = 2*Math.sqrt(-cua/3)*Math.cos(myphi/3 + 2*Math.PI/3) - p/3;
+                if (Math.abs(ret) < 1)
+                    return ret;
+                else
+                {
+                    ret = 2*Math.sqrt(-cua/3)*Math.cos(myphi/3) - p/3;
+                    if (Math.abs(ret) < 1)
+                        return ret;
+                    else
+                        return Double.NaN;
+                }
+            }
         }
         else
         {
@@ -496,8 +519,10 @@ public class Main
                 a = Double.parseDouble(pgmProp.getProperty("a", "0.2"));
                 b = Double.parseDouble(pgmProp.getProperty("b", "0.2"));
                 c = Double.parseDouble(pgmProp.getProperty("c", "2.5"));
+                astart = Double.parseDouble(pgmProp.getProperty("astart", "2"));
+                aend = Double.parseDouble(pgmProp.getProperty("aend", "NaN"));
                 cstart = Double.parseDouble(pgmProp.getProperty("cstart", "2"));
-                cend = Double.parseDouble(pgmProp.getProperty("cend", "6"));
+                cend = Double.parseDouble(pgmProp.getProperty("cend", "NaN"));
                 x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
                 y0 = Double.parseDouble(pgmProp.getProperty("y0", "0"));
                 z0 = Double.parseDouble(pgmProp.getProperty("z0", "0"));
@@ -511,8 +536,10 @@ public class Main
                 a = 0.2;
                 b = 0.2;
                 c = 2.5;
+                astart = 2;
+                aend = Double.NaN;
                 cstart = 2;
-                cend = 6;
+                cend = Double.NaN;
                 x0 = 0;
                 y0 = 0;
                 z0 = 0;
@@ -531,6 +558,8 @@ public class Main
         pgmProp.setProperty("a", "" + a);
         pgmProp.setProperty("b", "" + b);
         pgmProp.setProperty("c", "" + c);
+        pgmProp.setProperty("astart", "" + astart);
+        pgmProp.setProperty("aend", "" + aend);
         pgmProp.setProperty("cstart", "" + cstart);
         pgmProp.setProperty("cend", "" + cend);
         pgmProp.setProperty("x0", "" + x0);
