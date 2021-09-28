@@ -24,13 +24,17 @@ public class Main
     private static Properties pgmProp = new Properties();
     protected static double a, b, c;                    // parameters
     protected static double astart, aend;               // bifurcate range
+    protected static double bstart, bend;               // bifurcate range
     protected static double cstart, cend;               // bifurcate range
     protected static double x0, y0, z0;                 // initial values
     protected static double dx0dc, dy0dc, dz0dc;        // initial values
+    protected static double zc;                         // crossover z value for x-y scatter
+    protected static double xmin, xmax, ymin, ymax;     // plot range for x_y_scatter
     protected static String type;
     protected static final String VERSION_NO = "0.1";
     protected static Rossler_y_vs_x plot_y_vs_x;
     protected static Rossler_z_bifurcate z_bifurcate;
+    protected static Rossler_x_y_scatter x_y_scatter;
     private static double[][] arrinv = new double[][] {{ 2,-16, 16,-2},
                                                        {-1, 16, 16,-1},
                                                        {-2,  4, -4, 2},
@@ -42,6 +46,7 @@ public class Main
     private static double[][] dTdphi, dTdtheta, dTd1, dTda, dTdxc, dTdz;
     private static double[][] M;                        // solve Mx + v = 0
     private static double[][][] Mout;                   // diagonal elements of M
+    private static double[][] M2D = new double[2][2];   // 2-D coupling for transformed response
     private static double[] Moutdot00, Moutdot01;       // for the second-order d.e.
     private static double[] v;
 
@@ -50,15 +55,17 @@ public class Main
         load_prefs();
         if (type.equals("phase"))
             plot_y_vs_x = new Rossler_y_vs_x(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
-        else
+        else if (type.equals("bifurcate"))
             z_bifurcate = new Rossler_z_bifurcate(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+        else
+            x_y_scatter = new Rossler_x_y_scatter(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         //double qa = 2, qb = 3.7654, qc = 1.276;
         //double qx0 = 1.23, qx1 = 2.15, qx2 = 7.21;
         //System.out.println(parabola(qx0, qx1, qx2, qa + qb*qx0 + qc*qx0*qx0, qa + qb*qx1 + qc*qx1*qx1, qa + qb*qx2 + qc*qx2*qx2, true));
         //System.out.println(parabola(qx0, qx1, qx2, qa + qb*qx0 + qc*qx0*qx0, qa + qb*qx1 + qc*qx1*qx1, qa + qb*qx2 + qc*qx2*qx2, false));
     }
 
-    protected static void runge_kutta_rossler3(double[] pt3, double delt, double tempa, double tempc)
+    protected static void runge_kutta_rossler3(double[] pt3, double delt, double tempa, double tempb, double tempc)
     {
         double x = pt3[0];
         double y = pt3[1];
@@ -69,26 +76,26 @@ public class Main
 
         k1 = delt*(-y - z);
         l1 = delt*( x + tempa*y);
-        m1 = delt*(b + z*(x - tempc));
+        m1 = delt*(tempb + z*(x - tempc));
 
         k2 = delt*(-y - l1/2 - z - m1/2);
         l2 = delt*( x + k1/2 + tempa*(y + l1/2));
-        m2 = delt*(b + (z + m1/2)*(x + k1/2 - tempc));
+        m2 = delt*(tempb + (z + m1/2)*(x + k1/2 - tempc));
 
         k3 = delt*(-y - l2/2 - z - m2/2);
         l3 = delt*( x + k2/2 + tempa*(y + l2/2));
-        m3 = delt*(b + (z + m2/2)*(x + k2/2 - tempc));
+        m3 = delt*(tempb + (z + m2/2)*(x + k2/2 - tempc));
 
         k4 = delt*(-y - l3 - z - m3);
         l4 = delt*( x + k3 + tempa*(y + l3));
-        m4 = delt*(b + (z + m3)*(x + k3 - tempc));
+        m4 = delt*(tempb + (z + m3)*(x + k3 - tempc));
 
         pt3[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
         pt3[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
         pt3[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
     }
 
-    protected static void runge_kutta_rossler6(double[] pt6, double delt, double tempc)
+    protected static void runge_kutta_rossler6_ddc(double[] pt6, double delt, double tempc)
     {
         double x = pt6[0];
         double y = pt6[1];
@@ -137,6 +144,105 @@ public class Main
         pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
         pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
         pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+    }
+
+    protected static void runge_kutta_rossler6_ddu3(double[] pt6, double delt, double tempc)
+    {
+        double x = pt6[0];
+        double y = pt6[1];
+        double z = pt6[2];
+        double dx = pt6[3];
+        double dy = pt6[4];
+        double dz = pt6[5];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double dk1, dk2, dk3, dk4;
+        double dl1, dl2, dl3, dl4;
+        double dm1, dm2, dm3, dm4;
+
+        k1 = delt*(-y - z);
+        l1 = delt*( x + a*y);
+        m1 = delt*(b + z*(x - tempc));
+        dk1 = delt*(-dy - dz);
+        dl1 = delt*(dx + a*dy);
+        dm1 = delt*(dz*(x - tempc) + z*dx);
+
+        k2 = delt*(-y - l1/2 - z - m1/2);
+        l2 = delt*( x + k1/2 + a*(y + l1/2));
+        m2 = delt*(b + (z + m1/2)*(x + k1/2 - tempc));
+        dk2 = delt*(-dy - dl1/2 - dz - dm1/2);
+        dl2 = delt*(dx + dk1/2 + a*(dy + dl1/2));
+        dm2 = delt*((dz + dm1/2)*(x + k1/2 - tempc) + (z + m1/2)*(dx + dk1/2));
+
+        k3 = delt*(-y - l2/2 - z - m2/2);
+        l3 = delt*( x + k2/2 + a*(y + l2/2));
+        m3 = delt*(b + (z + m2/2)*(x + k2/2 - tempc));
+        dk3 = delt*(-dy - dl2/2 - dz - dm2/2);
+        dl3 = delt*(dx + dk2/2 + a*(dy + dl2/2));
+        dm3 = delt*((dz + dm2/2)*(x + k2/2 - tempc) + (z + m2/2)*(dx + dk2/2));
+
+        k4 = delt*(-y - l3 - z - m3);
+        l4 = delt*( x + k3 + a*(y + l3));
+        m4 = delt*(b + (z + m3)*(x + k3 - tempc));
+        dk4 = delt*(-dy - dl3 - dz - dm3);
+        dl4 = delt*(dx + dk3 + a*(dy + dl3));
+        dm4 = delt*((dz + dm3)*(x + k3 - tempc) + (z + m3)*(dx + dk3));
+
+        pt6[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt6[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt6[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
+        pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+    }
+
+    protected static void runge_kutta_rossler6_ddu2(double[] pt6, double delt, double tempc)
+    {
+        double x = pt6[0];
+        double y = pt6[1];
+        double z = pt6[2];
+        double dx = pt6[3];
+        double dy = pt6[4];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double dk1, dk2, dk3, dk4;
+        double dl1, dl2, dl3, dl4;
+
+        k1 = delt*(-y - z);
+        l1 = delt*( x + a*y);
+        m1 = delt*(b + z*(x - tempc));
+        gen_M2D(x, y, z);
+        dk1 = -delt*(M2D[0][0]*dx + M2D[0][1]*dy);
+        dl1 = -delt*(M2D[1][0]*dx + M2D[1][1]*dy);
+
+        k2 = delt*(-y - l1/2 - z - m1/2);
+        l2 = delt*( x + k1/2 + a*(y + l1/2));
+        m2 = delt*(b + (z + m1/2)*(x + k1/2 - tempc));
+        gen_M2D(x + k1/2, y + l1/2, z + m1/2);
+        dk2 = -delt*(M2D[0][0]*(dx + dk1/2) + M2D[0][1]*(dy + dl1/2));
+        dl2 = -delt*(M2D[1][0]*(dx + dk1/2) + M2D[1][1]*(dy + dl1/2));
+
+        k3 = delt*(-y - l2/2 - z - m2/2);
+        l3 = delt*( x + k2/2 + a*(y + l2/2));
+        m3 = delt*(b + (z + m2/2)*(x + k2/2 - tempc));
+        gen_M2D(x + k2/2, y + l2/2, z + m2/2);
+        dk3 = -delt*(M2D[0][0]*(dx + dk2/2) + M2D[0][1]*(dy + dl2/2));
+        dl3 = -delt*(M2D[1][0]*(dx + dk2/2) + M2D[1][1]*(dy + dl2/2));
+
+        k4 = delt*(-y - l3 - z - m3);
+        l4 = delt*( x + k3 + a*(y + l3));
+        m4 = delt*(b + (z + m3)*(x + k3 - tempc));
+        gen_M2D(x + k3, y + l3, z + m3);
+        dk4 = -delt*(M2D[0][0]*(dx + dk3) + M2D[0][1]*(dy + dl3));
+        dl4 = -delt*(M2D[1][0]*(dx + dk3) + M2D[1][1]*(dy + dl3));
+
+        pt6[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt6[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt6[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
     }
 
     protected static void runge_kutta_rossler6_test(double[] pt6, double delt, double tempc)
@@ -196,13 +302,31 @@ public class Main
         pt6[5] += (b + pt6[2]*(pt6[0] - tempc))*dTdc;
     }
 
+    private static void gen_M2D(double x, double y, double z)
+    {
+        xdot = -y - z;
+        ydot = x + a*y;
+        zdot = b + z*(x - c);
+        phi = Math.atan2(xdot, -ydot);
+        theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
+
+        M2D[0][0] = -a*Math.sin(phi)*Math.sin(phi);
+        M2D[0][1] =    Math.cos(phi)/Math.sin(theta);
+        M2D[1][0] = -2.0*a*Math.sin(phi)*Math.cos(phi)*Math.cos(theta) - Math.cos(phi)/Math.sin(theta)
+                    - (z - 1)*Math.cos(phi)*Math.sin(theta);
+        M2D[1][1] = - a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta)*Math.cos(theta)
+                    - (x - c)*Math.sin(theta)*Math.sin(theta)
+                    + (z - 1)*Math.sin(phi)*Math.sin(theta)*Math.cos(theta);
+        //System.out.println("  , " + M2D[0][0] + ", " + M2D[0][1] + ", " + M2D[1][0] + ", " + M2D[1][1]);
+    }
+
     protected static void gen_array(int index, int Period, double delt, double x, double y, double z)
     {
         // see book Chaos II, p. 35
         dTdtheta = new double[][] {{ 0,  0,  0},
                                    { 0,  0,  1},
                                    { 0, -1,  0}};
-        double Neimark = 0;     // accumulate line integral to test Genesio Eq. 17
+        double av_x = 0, av_y = 0, av_z = 0;     // accumulate averages to test Genesio Eq. 17
         if (index == 0)
         {
             gen_x = new double[Period];
@@ -235,7 +359,7 @@ public class Main
             Moutdot00 = new double[Period];
             Moutdot01 = new double[Period];
             //double dTaudc = 0.11636;             // add compensation for dTau/dc
-            double dTaudc = 0.1163616;             // add compensation for dTau/dc
+            //double dTaudc = 0.1163616;             // add compensation for dTau/dc
             double v0 = Double.NaN, v1 = Double.NaN, vN2 = Double.NaN, vN1 = Double.NaN;
             //System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta, x2dot, y2dot, z2dot, phidot, thetadot, x3dot, y3dot, phi2dot");
             System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta");
@@ -246,10 +370,9 @@ public class Main
             double thmin = 999, thmax = -999;
             for (int i = 0; i < Period; i++)                        // i = time index
             {
-                if (2*(i/2) == i)
-                    Neimark += 2*(a + gen_x[i] - c)/3;
-                else
-                    Neimark += 4*(a + gen_x[i] - c)/3;
+                av_x += gen_x[i];
+                av_y += gen_y[i];
+                av_z += gen_z[i];
                 xdot = -gen_y[i] - gen_z[i];
                 ydot = gen_x[i] + a*gen_y[i];
                 zdot = b + gen_z[i]*(gen_x[i] - c);
@@ -309,14 +432,18 @@ public class Main
                 Moutdot01[i] = -(phi2dot*Math.cos(theta) - phidot*Math.sin(theta)*thetadot
                              + thetadot*(Math.sin(theta) - Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.cos(phi)*Math.sin(theta))
                              + phidot*(Math.sin(phi)*Math.sin(theta) + a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.sin(phi)*Math.cos(theta)));
-                v[i + Period] = -Math.sin(theta)*gen_z[i];
+                v[i + Period] = -Math.sin(theta)*gen_z[i];            // original code for d/dc
+                //v[i + Period] = (a*gen_z[i] + a - c)*Math.sin(theta);   // attempt to emulate trace {J)
+                //v[i + Period] = Math.sin(theta);                        // new code for d/db
                 v[i + 2*Period] = -Math.cos(theta)*gen_z[i];
+                //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i]);
+                //gen_M2D(gen_x[i], gen_y[i], gen_z[i]);
             }
-            v[2*Period] += -dTaudc*(vN2 - 8.0*vN1)/delt/12.0;   // apply time drift in b.c.
-            v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
-            v[3*Period - 2] += -dTaudc*v0/delt/12.0;
-            v[3*Period - 1] += dTaudc*(8.0*v0 - v1)/delt/12.0;
-            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax + ", " + thmin + ", " + thmax + ", " + Neimark/Period);
+            //v[2*Period] += -dTaudc*(vN2 - 8.0*vN1)/delt/12.0;   // apply time drift in b.c.
+            //v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
+            //v[3*Period - 2] += -dTaudc*v0/delt/12.0;
+            //v[3*Period - 1] += dTaudc*(8.0*v0 - v1)/delt/12.0;
+            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax + ", " + thmin + ", " + thmax + ", " + (av_x/Period + a - c));
 
             if (false)                                          // solve Mx = b in Java
             {
@@ -521,11 +648,18 @@ public class Main
                 c = Double.parseDouble(pgmProp.getProperty("c", "2.5"));
                 astart = Double.parseDouble(pgmProp.getProperty("astart", "2"));
                 aend = Double.parseDouble(pgmProp.getProperty("aend", "NaN"));
+                bstart = Double.parseDouble(pgmProp.getProperty("bstart", "2"));
+                bend = Double.parseDouble(pgmProp.getProperty("bend", "NaN"));
                 cstart = Double.parseDouble(pgmProp.getProperty("cstart", "2"));
                 cend = Double.parseDouble(pgmProp.getProperty("cend", "NaN"));
                 x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
                 y0 = Double.parseDouble(pgmProp.getProperty("y0", "0"));
                 z0 = Double.parseDouble(pgmProp.getProperty("z0", "0"));
+                zc = Double.parseDouble(pgmProp.getProperty("zc", "1"));
+                xmin = Double.parseDouble(pgmProp.getProperty("xmin", "-2"));
+                xmax = Double.parseDouble(pgmProp.getProperty("xmax", "2"));
+                ymin = Double.parseDouble(pgmProp.getProperty("ymin", "-2"));
+                ymax = Double.parseDouble(pgmProp.getProperty("ymax", "2"));
                 dx0dc = Double.parseDouble(pgmProp.getProperty("dx0dc", "0"));
                 dy0dc = Double.parseDouble(pgmProp.getProperty("dy0dc", "0"));
                 dz0dc = Double.parseDouble(pgmProp.getProperty("dz0dc", "0"));
@@ -538,11 +672,18 @@ public class Main
                 c = 2.5;
                 astart = 2;
                 aend = Double.NaN;
+                bstart = 2;
+                bend = Double.NaN;
                 cstart = 2;
                 cend = Double.NaN;
                 x0 = 0;
                 y0 = 0;
                 z0 = 0;
+                zc = 1;
+                xmin = -2;
+                xmax = 2;
+                ymin = -2;
+                ymax = 2;
                 dx0dc = 0;
                 dy0dc = 0;
                 dz0dc = 0;
@@ -560,11 +701,18 @@ public class Main
         pgmProp.setProperty("c", "" + c);
         pgmProp.setProperty("astart", "" + astart);
         pgmProp.setProperty("aend", "" + aend);
+        pgmProp.setProperty("bstart", "" + bstart);
+        pgmProp.setProperty("bend", "" + bend);
         pgmProp.setProperty("cstart", "" + cstart);
         pgmProp.setProperty("cend", "" + cend);
         pgmProp.setProperty("x0", "" + x0);
         pgmProp.setProperty("y0", "" + y0);
         pgmProp.setProperty("z0", "" + z0);
+        pgmProp.setProperty("zc", "" + zc);
+        pgmProp.setProperty("xmin", "" + xmin);
+        pgmProp.setProperty("xmax", "" + xmax);
+        pgmProp.setProperty("ymin", "" + ymin);
+        pgmProp.setProperty("ymax", "" + ymax);
         pgmProp.setProperty("dx0dc", "" + dx0dc);
         pgmProp.setProperty("dy0dc", "" + dy0dc);
         pgmProp.setProperty("dz0dc", "" + dz0dc);

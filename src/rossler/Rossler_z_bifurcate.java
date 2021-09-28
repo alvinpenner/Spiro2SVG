@@ -28,12 +28,13 @@ public class Rossler_z_bifurcate extends JDialog
         Main.type = "bifurcate";
         setTitle(" Rossler System - Tau bifurcate");
         setIconImage(img);
-        setSize(770, 450);
+        setSize(770, 470);
         setLocationByPlatform(true);
 
         final JLabel[] lbl = {new JLabel("a start"),
                               new JLabel("a end"),
-                              new JLabel("b"),
+                              new JLabel("b start"),
+                              new JLabel("b end"),
                               new JLabel("c start"),
                               new JLabel("c end"),
                               new JLabel("x0"),
@@ -41,7 +42,8 @@ public class Rossler_z_bifurcate extends JDialog
                               new JLabel("z0")};
         final JTextField[] txt = {new JTextField(Double.toString(Main.astart)),
                                   new JTextField(Double.toString(Main.aend)),
-                                  new JTextField(Double.toString(Main.b)),
+                                  new JTextField(Double.toString(Main.bstart)),
+                                  new JTextField(Double.toString(Main.bend)),
                                   new JTextField(Double.toString(Main.cstart)),
                                   new JTextField(Double.toString(Main.cend)),
                                   new JTextField(Double.toString(Main.x0)),
@@ -87,10 +89,11 @@ public class Rossler_z_bifurcate extends JDialog
         parmsPanel.add(dataPanel[2]);
         parmsPanel.add(dataPanel[3]);
         parmsPanel.add(dataPanel[4]);
-        parmsPanel.add(spacerPanel[0]);
         parmsPanel.add(dataPanel[5]);
+        parmsPanel.add(spacerPanel[0]);
         parmsPanel.add(dataPanel[6]);
         parmsPanel.add(dataPanel[7]);
+        parmsPanel.add(dataPanel[8]);
         parmsPanel.add(spacerPanel[1]);
         parmsPanel.add(btnRun);
         parmsPanel.add(btnClear);
@@ -141,17 +144,24 @@ public class Rossler_z_bifurcate extends JDialog
                         txt[i].setText("0");
                 Main.astart = Double.parseDouble(txt[0].getText());
                 Main.aend = Double.parseDouble(txt[1].getText());
-                Main.b = Double.parseDouble(txt[2].getText());
-                Main.cstart = Double.parseDouble(txt[3].getText());
-                Main.cend = Double.parseDouble(txt[4].getText());
-                Main.x0 = Double.parseDouble(txt[5].getText());
-                Main.y0 = Double.parseDouble(txt[6].getText());
-                Main.z0 = Double.parseDouble(txt[7].getText());
+                Main.bstart = Double.parseDouble(txt[2].getText());
+                Main.bend = Double.parseDouble(txt[3].getText());
+                Main.cstart = Double.parseDouble(txt[4].getText());
+                Main.cend = Double.parseDouble(txt[5].getText());
+                Main.x0 = Double.parseDouble(txt[6].getText());
+                Main.y0 = Double.parseDouble(txt[7].getText());
+                Main.z0 = Double.parseDouble(txt[8].getText());
                 if (!Double.isNaN(Main.aend))
                 {
                     setTitle(" Rossler System - Tau bifurcate vs. a");
                     scan_start = Main.astart;
                     scan_end = Main.aend;
+                }
+                else if (!Double.isNaN(Main.bend))
+                {
+                    setTitle(" Rossler System - Tau bifurcate vs. b");
+                    scan_start = Main.bstart;
+                    scan_end = Main.bend;
                 }
                 else if (!Double.isNaN(Main.cend))
                 {
@@ -192,7 +202,7 @@ public class Rossler_z_bifurcate extends JDialog
                     {
                         Main.save_prefs();
                         Main.z_bifurcate.dispose();
-                        Main.plot_y_vs_x = new Rossler_y_vs_x(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+                        Main.x_y_scatter = new Rossler_x_y_scatter(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
                     }
                     if (e.getKeyCode() == KeyEvent.VK_F1)       // save a PNG file using the F1 key
                     {
@@ -232,7 +242,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
         boolean first;                              // first peak at c
 
         for (int i = 0; i < 1000; i++)              // pre-initialize
-            Main.runge_kutta_rossler3(pt3, delt, Main.astart, Main.cstart);
+            Main.runge_kutta_rossler3(pt3, delt, Main.astart, Main.bstart, Main.cstart);
         //System.out.println("init 1 = " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         for (int i = 0; i < Rossler_z_bifurcate.image.getWidth(); i++)
         {
@@ -244,9 +254,11 @@ class BifurcateActivity extends SwingWorker<Void, Point>
             for (int j = 0; j < N; j++)
             {
                 if (!Double.isNaN(Main.aend))
-                    Main.runge_kutta_rossler3(pt3, delt, scan, Main.cstart);
+                    Main.runge_kutta_rossler3(pt3, delt, scan, Main.bstart, Main.cstart);
+                else if(!Double.isNaN(Main.bend))
+                    Main.runge_kutta_rossler3(pt3, delt, Main.astart, scan, Main.cstart);
                 else
-                    Main.runge_kutta_rossler3(pt3, delt, Main.astart, scan);
+                    Main.runge_kutta_rossler3(pt3, delt, Main.astart, Main.bstart, scan);
                 //if (i == 210)
                 //    System.out.println("scan all, " + i + ", " + j + ", " + pt3[1]);
                 if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[1])
