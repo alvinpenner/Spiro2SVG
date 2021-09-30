@@ -14,6 +14,7 @@ package rossler;
 
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.awt.geom.Point2D;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.*;
@@ -28,13 +29,15 @@ public class Main
     protected static double cstart, cend;               // bifurcate range
     protected static double x0, y0, z0;                 // initial values
     protected static double dx0dc, dy0dc, dz0dc;        // initial values
-    protected static double zc;                         // crossover z value for x-y scatter
-    protected static double xmin, xmax, ymin, ymax;     // plot range for x_y_scatter
+    protected static double zc;                         // z' crossover value for x-y scatter (transformed)
+    protected static double xmin, xmax, ymin, ymax;     // (x', y') plot range for x_y_scatter (transformed)
+    protected static double project_phi, project_theta; // Euler angles
     protected static String type;
     protected static final String VERSION_NO = "0.1";
     protected static Rossler_y_vs_x plot_y_vs_x;
     protected static Rossler_z_bifurcate z_bifurcate;
     protected static Rossler_x_y_scatter x_y_scatter;
+    protected static Euler_Slider euler_slider;
     private static double[][] arrinv = new double[][] {{ 2,-16, 16,-2},
                                                        {-1, 16, 16,-1},
                                                        {-2,  4, -4, 2},
@@ -54,11 +57,17 @@ public class Main
     {
         load_prefs();
         if (type.equals("phase"))
+        {
             plot_y_vs_x = new Rossler_y_vs_x(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+            euler_slider = new Euler_Slider(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+        }
         else if (type.equals("bifurcate"))
             z_bifurcate = new Rossler_z_bifurcate(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         else
+        {
             x_y_scatter = new Rossler_x_y_scatter(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+            euler_slider = new Euler_Slider(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+        }
         //double qa = 2, qb = 3.7654, qc = 1.276;
         //double qx0 = 1.23, qx1 = 2.15, qx2 = 7.21;
         //System.out.println(parabola(qx0, qx1, qx2, qa + qb*qx0 + qc*qx0*qx0, qa + qb*qx1 + qc*qx1*qx1, qa + qb*qx2 + qc*qx2*qx2, true));
@@ -302,6 +311,15 @@ public class Main
         pt6[5] += (b + pt6[2]*(pt6[0] - tempc))*dTdc;
     }
 
+    protected static Point2D.Double project_2D(double x, double y, double z)
+    {
+        double phi_rad = project_phi*Math.PI/180;
+        double theta_rad = project_theta*Math.PI/180;
+        double xp = x*Math.cos(phi_rad) + y*Math.sin(phi_rad);
+        double yp = (-x*Math.sin(phi_rad) + y*Math.cos(phi_rad))*Math.cos(theta_rad) + z*Math.sin(theta_rad);
+        return new Point2D.Double(xp, yp);
+    }
+
     private static void gen_M2D(double x, double y, double z)
     {
         xdot = -y - z;
@@ -364,10 +382,10 @@ public class Main
             //System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta, x2dot, y2dot, z2dot, phidot, thetadot, x3dot, y3dot, phi2dot");
             System.out.println("i, x, y, z, xdot, ydot, zdot, phi, theta");
             //System.out.println("i, M00, M01, M10, M11, cos(phi), sin(theta)");
-            double xmin = 999, xmax = -999;
-            double ymin = 999, ymax = -999;
-            double zmin = 999, zmax = -999;
-            double thmin = 999, thmax = -999;
+            double xmin_temp = 999, xmax_temp = -999;
+            double ymin_temp = 999, ymax_temp = -999;
+            double zmin_temp = 999, zmax_temp = -999;
+            double thmin_temp = 999, thmax_temp = -999;
             for (int i = 0; i < Period; i++)                        // i = time index
             {
                 av_x += gen_x[i];
@@ -382,14 +400,14 @@ public class Main
                 else if (i == Period - 1) vN1 = Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot);
                 phi = Math.atan2(xdot, -ydot);
                 theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
-                if (gen_x[i] > xmax) xmax = gen_x[i];
-                if (gen_x[i] < xmin) xmin = gen_x[i];
-                if (gen_y[i] > ymax) ymax = gen_y[i];
-                if (gen_y[i] < ymin) ymin = gen_y[i];
-                if (gen_z[i] > zmax) zmax = gen_z[i];
-                if (gen_z[i] < zmin) zmin = gen_z[i];
-                if (theta > thmax) thmax = theta;
-                if (theta < thmin) thmin = theta;
+                if (gen_x[i] > xmax_temp) xmax_temp = gen_x[i];
+                if (gen_x[i] < xmin_temp) xmin_temp = gen_x[i];
+                if (gen_y[i] > ymax_temp) ymax_temp = gen_y[i];
+                if (gen_y[i] < ymin_temp) ymin_temp = gen_y[i];
+                if (gen_z[i] > zmax_temp) zmax_temp = gen_z[i];
+                if (gen_z[i] < zmin_temp) zmin_temp = gen_z[i];
+                if (theta > thmax_temp) thmax_temp = theta;
+                if (theta < thmin_temp) thmin_temp = theta;
                 dTdphi = new double[][] {{                0,  Math.cos(theta), -Math.sin(theta)},
                                          { -Math.cos(theta),                0,               0},
                                          {  Math.sin(theta),                0,               0}};
@@ -443,7 +461,7 @@ public class Main
             //v[2*Period + 1] += -dTaudc*vN1/delt/12.0;
             //v[3*Period - 2] += -dTaudc*v0/delt/12.0;
             //v[3*Period - 1] += dTaudc*(8.0*v0 - v1)/delt/12.0;
-            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax + ", " + thmin + ", " + thmax + ", " + (av_x/Period + a - c));
+            System.out.println("\nrange, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + xmin_temp + ", " + xmax_temp + ", " + ymin_temp + ", " + ymax_temp + ", " + zmin_temp + ", " + zmax_temp + ", " + thmin_temp + ", " + thmax_temp + ", " + (av_x/Period + a - c));
 
             if (false)                                          // solve Mx = b in Java
             {
@@ -663,6 +681,10 @@ public class Main
                 dx0dc = Double.parseDouble(pgmProp.getProperty("dx0dc", "0"));
                 dy0dc = Double.parseDouble(pgmProp.getProperty("dy0dc", "0"));
                 dz0dc = Double.parseDouble(pgmProp.getProperty("dz0dc", "0"));
+                project_phi = Double.parseDouble(pgmProp.getProperty("project_phi", "0"));
+                project_theta = Double.parseDouble(pgmProp.getProperty("project_theta", "0"));
+                //project_phi = 10.01;
+                //project_theta = 11.9;
             }
             else                                    // factory default
             {
@@ -687,6 +709,8 @@ public class Main
                 dx0dc = 0;
                 dy0dc = 0;
                 dz0dc = 0;
+                project_phi = 0;
+                project_theta = 0;
             }
         }
         catch (IOException e)
@@ -716,6 +740,8 @@ public class Main
         pgmProp.setProperty("dx0dc", "" + dx0dc);
         pgmProp.setProperty("dy0dc", "" + dy0dc);
         pgmProp.setProperty("dz0dc", "" + dz0dc);
+        pgmProp.setProperty("project_phi", "" + project_phi);
+        pgmProp.setProperty("project_theta", "" + project_theta);
         try
             {pgmProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "RosslerPrefs.ini"), "Rossler System v" + VERSION_NO + " Prefs");}
         catch (IOException e)

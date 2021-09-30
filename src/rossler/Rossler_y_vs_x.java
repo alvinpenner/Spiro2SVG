@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import javax.swing.*;
 import java.util.GregorianCalendar;
 import java.io.PrintWriter;
@@ -48,7 +49,7 @@ public class Rossler_y_vs_x extends JDialog
         final JPanel parmsPanel = new JPanel();
         Main.type = "phase";
         if (phaseRadio.isSelected())                            // normal phase space
-            setTitle(" Rossler System - phase y vs. x");
+            setTitle(" Rossler System - phase y' vs. x'");
         else if (ddcRadio.isSelected())                           // ddy phase space
             setTitle(" Rossler System - dy/dc vs. dx/dc");
         else if (ddu3Radio.isSelected())
@@ -56,7 +57,7 @@ public class Rossler_y_vs_x extends JDialog
         else if (ddu2Radio.isSelected())
             setTitle(" Rossler System - dy/du vs. dx/du (2-D)");  // Lyapunov response
         else
-            setTitle(" Rossler System - phase y vs. x");
+            setTitle(" Rossler System - phase y' vs. x'");
         setIconImage(img);
         setSize(610 + 100, 493 + 100 + 40);
         setLocationByPlatform(true);
@@ -192,7 +193,7 @@ public class Rossler_y_vs_x extends JDialog
                     if (txt[i].getText().isEmpty())
                         txt[i].setText("0");
                 if (phaseRadio.isSelected())                                // normal phase space
-                    setTitle(" Rossler System - phase y vs. x");
+                    setTitle(" Rossler System - phase y' vs. x' (" + Main.project_phi + ", " + Main.project_theta + ") (" + delt + ")");
                 else if (ddcRadio.isSelected())                             // ddc phase space
                     setTitle(" Rossler System - dy/dc vs. dx/dc");
                 else if (ddu3Radio.isSelected())
@@ -227,6 +228,7 @@ public class Rossler_y_vs_x extends JDialog
             @Override public void windowClosing(WindowEvent ev)
                 {
                     Main.save_prefs();
+                    Main.euler_slider.dispose();
                 }
             });
 
@@ -238,6 +240,7 @@ public class Rossler_y_vs_x extends JDialog
                     if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
                     {
                         Main.save_prefs();
+                        Main.euler_slider.dispose();
                         Main.plot_y_vs_x.dispose();
                         Main.z_bifurcate = new Rossler_z_bifurcate(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
                     }
@@ -252,6 +255,7 @@ public class Rossler_y_vs_x extends JDialog
         PrintWriter out = null;
         double[] pt6 = new double[] {Main.x0, Main.y0, Main.z0, Main.dx0dc, Main.dy0dc, Main.dz0dc};
         double xmin, xmax, ymin, ymax, zmin, zmax;
+        Point2D.Double pt2;                             // projected (x', y') using Euler angles
         int Nloop = N;                                  // number of iterations
         String lblhdr;
         String fmt = "%.3f";
@@ -278,7 +282,7 @@ public class Rossler_y_vs_x extends JDialog
         if (ch || printChk.isSelected() || first)
         {
             if (phaseRadio.isSelected())
-                System.out.println("Rossler y vs. x, " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
+                System.out.println("Rossler y' vs. x', " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + Main.project_phi + ", " + Main.project_theta + ", " + delt + ", " + N);
             else if (ddcRadio.isSelected())
                 System.out.println("Rossler dy/dc vs. dx/dc, " + now.getTime() + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
             else
@@ -303,12 +307,13 @@ public class Rossler_y_vs_x extends JDialog
             }
         if (phaseRadio.isSelected())                        // normal phase space
         {
-            xmin = pt6[0];
-            xmax = pt6[0];
-            ymin = pt6[1];
-            ymax = pt6[1];
-            zmin = pt6[2];
-            zmax = pt6[2];
+            pt2 = Main.project_2D(pt6[0], pt6[1], pt6[2]);
+            xmin = pt2.x;
+            xmax = pt2.x;
+            ymin = pt2.y;
+            ymax = pt2.y;
+            zmin = 0;
+            zmax = 0;
         }
         else                                                    // ddc/ddy tangent phase space
         {
@@ -327,13 +332,12 @@ public class Rossler_y_vs_x extends JDialog
             if (phaseRadio.isSelected())                        // normal phase space
             {
                 Main.runge_kutta_rossler3(pt6, delt, Main.a, Main.b, Main.c);
-                if (pt6[0] > xmax) xmax = pt6[0];
-                if (pt6[0] < xmin) xmin = pt6[0];
-                if (pt6[1] > ymax) ymax = pt6[1];
-                if (pt6[1] < ymin) ymin = pt6[1];
-                if (pt6[2] > zmax) zmax = pt6[2];
-                if (pt6[2] < zmin) zmin = pt6[2];
-                path1.lineTo(pt6[0], pt6[1]);
+                pt2 = Main.project_2D(pt6[0], pt6[1], pt6[2]);
+                if (pt2.x > xmax) xmax = pt2.x;
+                if (pt2.x < xmin) xmin = pt2.x;
+                if (pt2.y > ymax) ymax = pt2.y;
+                if (pt2.y < ymin) ymin = pt2.y;
+                path1.lineTo(pt2.x, pt2.y);
                 //if (j <= 1000)
                 //    System.out.println(j + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                 if (out != null && true)

@@ -203,6 +203,7 @@ public class Rossler_z_bifurcate extends JDialog
                         Main.save_prefs();
                         Main.z_bifurcate.dispose();
                         Main.x_y_scatter = new Rossler_x_y_scatter(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
+                        Main.euler_slider = new Euler_Slider(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
                     }
                     if (e.getKeyCode() == KeyEvent.VK_F1)       // save a PNG file using the F1 key
                     {

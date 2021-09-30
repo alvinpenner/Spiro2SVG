@@ -6,6 +6,7 @@ package rossler;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.awt.geom.Point2D;
 import java.util.List;
 import javax.swing.*;
 
@@ -23,7 +24,7 @@ public class Rossler_x_y_scatter extends JDialog
         final JPanel parmsPanel = new JPanel();
         final JPanel scatterPanel = new JPanel();
         Main.type = "scatter";
-        setTitle(" Rossler System - x-y Scatter (" + ScatterActivity.delt + ")");
+        setTitle(" Rossler System - x'-y' Scatter (" + Main.project_phi + ", " + Main.project_theta + ") (" + ScatterActivity.delt + ")");
         setIconImage(img);
         setSize(570, 450);
         setLocationByPlatform(true);
@@ -34,7 +35,7 @@ public class Rossler_x_y_scatter extends JDialog
                               new JLabel("x0"),
                               new JLabel("y0"),
                               new JLabel("z0"),
-                              new JLabel("zc")};
+                              new JLabel("zc'")};
         final JTextField[] txt = {new JTextField(Double.toString(Main.a)),
                                   new JTextField(Double.toString(Main.b)),
                                   new JTextField(Double.toString(Main.c)),
@@ -67,7 +68,7 @@ public class Rossler_x_y_scatter extends JDialog
         JPanel xrange = new JPanel();
         xrange.setOpaque(false);
         xrange.setPreferredSize(new Dimension(120, 20));
-        xrange.add(new JLabel("dx"));
+        xrange.add(new JLabel("dx'"));
         final JTextField txtxmin = new JTextField(Double.toString(Main.xmin));
         final JTextField txtxmax = new JTextField(Double.toString(Main.xmax));
         txtxmin.setPreferredSize(new Dimension(40, 18));
@@ -78,7 +79,7 @@ public class Rossler_x_y_scatter extends JDialog
         JPanel yrange = new JPanel();
         yrange.setOpaque(false);
         yrange.setPreferredSize(new Dimension(120, 20));
-        yrange.add(new JLabel("dy"));
+        yrange.add(new JLabel("dy'"));
         final JTextField txtymin = new JTextField(Double.toString(Main.ymin));
         final JTextField txtymax = new JTextField(Double.toString(Main.ymax));
         txtymin.setPreferredSize(new Dimension(40, 18));
@@ -155,11 +156,12 @@ public class Rossler_x_y_scatter extends JDialog
                 if (Main.z0 != Double.parseDouble(txt[5].getText())) changed = true;
                 Main.z0 = Double.parseDouble(txt[5].getText());
                 if (Main.zc != Double.parseDouble(txt[6].getText())) changed = true;
-                Main.zc = Double.parseDouble(txt[6].getText());
-                Main.xmin = Double.parseDouble(txtxmin.getText());
-                Main.xmax = Double.parseDouble(txtxmax.getText());
-                Main.ymin = Double.parseDouble(txtymin.getText());
-                Main.ymax = Double.parseDouble(txtymax.getText());
+                Main.zc = Double.parseDouble(txt[6].getText());         // transformed coordinates
+                Main.xmin = Double.parseDouble(txtxmin.getText());      // transformed coordinates
+                Main.xmax = Double.parseDouble(txtxmax.getText());      // transformed coordinates
+                Main.ymin = Double.parseDouble(txtymin.getText());      // transformed coordinates
+                Main.ymax = Double.parseDouble(txtymax.getText());      // transformed coordinates
+                setTitle(" Rossler System - x'-y' Scatter (" + Main.project_phi + ", " + Main.project_theta + ") (" + ScatterActivity.delt + ")");
                 btnRun.setEnabled(false);
                 ScatterActivity activity = new ScatterActivity(changed);
                 activity.execute();
@@ -177,7 +179,10 @@ public class Rossler_x_y_scatter extends JDialog
 
         addWindowListener(new WindowAdapter() {
             @Override public void windowClosing(WindowEvent ev)
-                {Main.save_prefs();}
+                {
+                    Main.save_prefs();
+                    Main.euler_slider.dispose();
+                }
             });
 
         for (JTextField tx: txt)
@@ -220,17 +225,25 @@ class ScatterActivity extends SwingWorker<Void, Point>
     protected Void doInBackground() throws Exception
     {
         int Nloop = 10000;
-        double xc, yc;                      // interpolated (x,y) at z = zc
+        Point2D.Double pt2old;          // projected, old, (x', y') using Euler angles
+        Point2D.Double pt2new;          // projected, new, (x', y') using Euler angles
+        double xc, yc;                  // interpolated, projected (x', y')
         double xold = 0, yold = 0, zold = Main.zc;
 
-        System.out.println("init, " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+        System.out.println("init, " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + zp(pt3[0], pt3[1], pt3[2]));
         for (int i = 0; i < Nloop; i++)
         {
             Main.runge_kutta_rossler3(pt3, delt, Main.a, Main.b, Main.c);
-            if ((zold - Main.zc)*delt < 0 && (pt3[2] - Main.zc)*delt >= 0)
+            //System.out.println("old = " + zold + ", " + zp(xold, yold, zold));
+            //System.out.println("new = " + pt3[2] + ", " + zp(pt3[0], pt3[1], pt3[2]));
+            if ((zp(xold, yold, zold) - Main.zc)*delt < 0 && (zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*delt >= 0)
             {
-                xc = ((pt3[2] - Main.zc)*xold + (Main.zc - zold)*pt3[0])/(pt3[2] - zold);
-                yc = ((pt3[2] - Main.zc)*yold + (Main.zc - zold)*pt3[1])/(pt3[2] - zold);
+                pt2old = Main.project_2D(xold, yold, zold);
+                pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
+                //System.out.println("old pt2 = " + Main.project_2D(xold, yold, zold));
+                //System.out.println("new pt2 = " + pt2);
+                xc = ((zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*pt2old.x + (Main.zc - zp(xold, yold, zold))*pt2new.x)/(zp(pt3[0], pt3[1], pt3[2]) - zp(xold, yold, zold));
+                yc = ((zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*pt2old.y + (Main.zc - zp(xold, yold, zold))*pt2new.y)/(zp(pt3[0], pt3[1], pt3[2]) - zp(xold, yold, zold));
                 System.out.println("cross , " + xc + ", " + yc + ", " + Main.zc);
                 if (xc > Main.xmin && xc < Main.xmax && yc > Main.ymin && yc < Main.ymax)
                     publish(new Point((int) ((xc - Main.xmin)/(Main.xmax - Main.xmin)*Rossler_x_y_scatter.image.getWidth()),
@@ -243,8 +256,16 @@ class ScatterActivity extends SwingWorker<Void, Point>
             Rossler_x_y_scatter.lblImage.repaint();
             //System.out.println(i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         }
+        //System.out.println("final, " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         //Rossler_x_y_scatter.lblImage.repaint();
         return null;
+    }
+
+    private static double zp(double x, double y, double z)      // transformed z'
+    {
+        double phi_rad = Main.project_phi*Math.PI/180;
+        double theta_rad = Main.project_theta*Math.PI/180;
+        return (x*Math.sin(phi_rad) - y*Math.cos(phi_rad))*Math.sin(theta_rad) + z*Math.cos(theta_rad);
     }
 
     @Override protected void process(List<Point> points)
