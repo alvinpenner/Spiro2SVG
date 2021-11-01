@@ -19,8 +19,9 @@ import java.io.FileWriter;
 public class Rossler_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = -0.02; // 0.02;
+    private final static double DEFAULT_DELT = 0.02; // 0.00978987577656; // 0.02;
     private final static int N = 500000; //50000;            // total # of iterations 160000
+    //private final static int N = 500;           // fix fix test only !!!
     private static double[] pt6_old;
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     //protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
@@ -85,6 +86,7 @@ public class Rossler_y_vs_x extends JDialog
         JPanel[] spacerPanel = new JPanel[4];
         JPanel[] dataPanel = new JPanel[lbl.length];
         JButton btnRun = new JButton("Run");
+        JButton btnFit = new JButton("Fit Response");
 
         for (int i = 0; i < spacerPanel.length; i++)
         {
@@ -96,7 +98,7 @@ public class Rossler_y_vs_x extends JDialog
         for (int i = 0; i < dataPanel.length; i++)
         {
             dataPanel[i] = new JPanel();
-            dataPanel[i].setPreferredSize(new Dimension(130, 24));
+            dataPanel[i].setPreferredSize(new Dimension(130, 22));
             dataPanel[i].setOpaque(false);
             lbl[i].setPreferredSize(new Dimension(40, 18));
             dataPanel[i].add(lbl[i]);
@@ -106,7 +108,7 @@ public class Rossler_y_vs_x extends JDialog
 
         printChk.setOpaque(false);
         JPanel printPanel = new JPanel();
-        printPanel.setPreferredSize(new Dimension(130, 28));
+        printPanel.setPreferredSize(new Dimension(130, 24));
         printPanel.setOpaque(false);
         printPanel.add(printChk);
 
@@ -131,21 +133,21 @@ public class Rossler_y_vs_x extends JDialog
         radioPanel.add(ddu2Radio);
 
         JPanel xrangePanel = new JPanel();
-        xrangePanel.setPreferredSize(new Dimension(130, 24));
+        xrangePanel.setPreferredSize(new Dimension(130, 20));
         xrangePanel.setOpaque(false);
         lblxrange = new JLabel("x = ");
         lblxrange.setPreferredSize(new Dimension(110, 18));
         xrangePanel.add(lblxrange);
 
         JPanel yrangePanel = new JPanel();
-        yrangePanel.setPreferredSize(new Dimension(130, 24));
+        yrangePanel.setPreferredSize(new Dimension(130, 20));
         yrangePanel.setOpaque(false);
         lblyrange = new JLabel("y = ");
         lblyrange.setPreferredSize(new Dimension(110, 18));
         yrangePanel.add(lblyrange);
 
         JPanel zrangePanel = new JPanel();
-        zrangePanel.setPreferredSize(new Dimension(130, 24));
+        zrangePanel.setPreferredSize(new Dimension(130, 20));
         zrangePanel.setOpaque(false);
         lblzrange = new JLabel("z = ");
         lblzrange.setPreferredSize(new Dimension(110, 18));
@@ -172,6 +174,7 @@ public class Rossler_y_vs_x extends JDialog
         parmsPanel.add(zrangePanel);
         parmsPanel.add(spacerPanel[2]);
         parmsPanel.add(dataPanel[9]);
+        parmsPanel.add(btnFit);
 
         parmsPanel.setMaximumSize(new Dimension(140, 3000));
         parmsPanel.setPreferredSize(new Dimension(140, 3000));
@@ -193,7 +196,7 @@ public class Rossler_y_vs_x extends JDialog
                     if (txt[i].getText().isEmpty())
                         txt[i].setText("0");
                 if (phaseRadio.isSelected())                                // normal phase space
-                    setTitle(" Rossler System - phase y' vs. x' (" + Main.project_phi + ", " + Main.project_theta + ") (" + delt + ")");
+                    setTitle(" Rossler System - phase y' vs. x' (" + Main.project_phi + ", " + Main.project_theta + ") (" + String.format(" %.6f", delt) + ")");
                 else if (ddcRadio.isSelected())                             // ddc phase space
                     setTitle(" Rossler System - dy/dc vs. dx/dc");
                 else if (ddu3Radio.isSelected())
@@ -212,15 +215,23 @@ public class Rossler_y_vs_x extends JDialog
                 Main.y0 = Double.parseDouble(txt[4].getText());
                 if (Main.z0 != Double.parseDouble(txt[5].getText())) changed = true;
                 Main.z0 = Double.parseDouble(txt[5].getText());
-                if (Main.dx0dc != Double.parseDouble(txt[6].getText())) changed = true;
+                //if (Main.dx0dc != Double.parseDouble(txt[6].getText())) changed = true;
                 Main.dx0dc = Double.parseDouble(txt[6].getText());
-                if (Main.dy0dc != Double.parseDouble(txt[7].getText())) changed = true;
+                //if (Main.dy0dc != Double.parseDouble(txt[7].getText())) changed = true;
                 Main.dy0dc = Double.parseDouble(txt[7].getText());
-                if (Main.dz0dc != Double.parseDouble(txt[8].getText())) changed = true;
+                //if (Main.dz0dc != Double.parseDouble(txt[8].getText())) changed = true;
                 Main.dz0dc = Double.parseDouble(txt[8].getText());
                 phase_space(changed, (int) Double.parseDouble(txt[9].getText()));
                 //System.out.println("btnRun " + phasePanel.getSize());
                 //System.out.println("btnRun " + parmsPanel.getSize());
+            }
+        });
+
+        btnFit.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                fit_response();
             }
         });
 
@@ -246,13 +257,14 @@ public class Rossler_y_vs_x extends JDialog
                     }
                 }
             });
+        //System.out.println("dataPanel = " + dataPanel[0].getSize());
     }
 
     private void phase_space(boolean ch, int Period)
     {
         double Tnew, Tsum;        // time of peak z
         GregorianCalendar now = new GregorianCalendar();
-        PrintWriter out = null;
+        PrintWriter fout = null;
         double[] pt6 = new double[] {Main.x0, Main.y0, Main.z0, Main.dx0dc, Main.dy0dc, Main.dz0dc};
         double xmin, xmax, ymin, ymax, zmin, zmax;
         Point2D.Double pt2;                             // projected (x', y') using Euler angles
@@ -260,25 +272,24 @@ public class Rossler_y_vs_x extends JDialog
         String lblhdr;
         String fmt = "%.3f";
 
-        if (false)
-            try
-            {
-                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Rossler_Output_" + Main.a + "_" + Main.b + "_" + Main.c + "_" + delt + ".csv", true);
-                out = new PrintWriter(fw);
-                out.println("iT, x, y, z");
-                out.println("Rossler x y z vs. i, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
-            }
-            catch (java.io.IOException e)
-                {System.out.println("Rossler_Output.csv save error = " + e);}
-
         if (Period == 0)
             delt = DEFAULT_DELT;
-        //else
-        //    Nloop = 1000*Period;
         if (ch)
             iT = 0;
         else
             System.arraycopy(pt6_old, 0, pt6, 0, pt6.length);   // re-use previous run
+        if (false)
+            try
+            {
+                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Rossler_Output_" + Main.a + "_" + Main.b + "_" + Main.c + "_" + String.format(" %.6f", delt) + ".csv", true);
+                fout = new PrintWriter(fw);
+                fout.println("Rossler x y z vs. i, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + N);
+                fout.println("iT,x,y,z,xdot,ydot,zdot,v_phi,v_theta,x2dot,y2dot,z2dot,kx,ky,kz,v_psi");
+                fout.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+            }
+            catch (java.io.IOException e)
+                {System.out.println("Rossler_Output.csv save error = " + e);}
+
         if (ch || printChk.isSelected() || first)
         {
             if (phaseRadio.isSelected())
@@ -340,12 +351,29 @@ public class Rossler_y_vs_x extends JDialog
                 path1.lineTo(pt2.x, pt2.y);
                 //if (j <= 1000)
                 //    System.out.println(j + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
-                if (out != null && true)
-                    out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                if (fout != null && true)
+                    gen_rdot_r2dot(fout, pt6[0], pt6[1], pt6[2]);
                 if (printChk.isSelected() && Period > 0 && j >= Nloop - Period) // transfer last cycle
                     Main.gen_array(j - Nloop + Period, Period, delt, pt6[0], pt6[1], pt6[2]);
                 //if (printChk.isSelected() && Period == 0 && j >= Nloop - 288*30)
                 //    System.out.println(iT + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                if (j == Nloop - 1)
+                {
+                    //PrintWriter pout = new PrintWriter(System.out);
+                    System.out.print("end = ," + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                    double xdot = -pt6[1] - pt6[2];
+                    double ydot =  pt6[0] + Main.a*pt6[1];
+                    double zdot =  Main.b + pt6[2]*(pt6[0] - Main.c);
+                    System.out.println(", " + Math.atan2(xdot, -ydot)*180/Math.PI
+                                     + ", " + Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot))*180/Math.PI);
+                    Main.final_Period = Period;
+                    Main.final_delt = delt;
+                    Main.final_x = pt6[0];
+                    Main.final_y = pt6[1];
+                    Main.final_z = pt6[2];
+                    //gen_rdot_r2dot(fout, pt6[0], pt6[1], pt6[2]);
+                    //pout.close();
+                }
             }
             else if (ddcRadio.isSelected())                        // ddc tangent phase space
             {
@@ -371,18 +399,22 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt6[5] < zmin) zmin = pt6[5];
                 path1.lineTo(pt6[3], pt6[4]);
                 if (printChk.isSelected() && j == Period - 1)                   // one-shot response after the first cycle
+                //if (printChk.isSelected() && j == N - 1)      // fix fix bug bug test code             // one-shot response after the first cycle
                 {
                     System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
                     double xdot = -pt6[1] - pt6[2];
                     double ydot =  pt6[0] + Main.a*pt6[1];
                     double zdot =  Main.b + pt6[2]*(pt6[0] - Main.c);
                     double v = Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot);
-                    System.out.println(iT + ", " + xdot/v + ", " + ydot/v + ", " + zdot/v);
+                    System.out.println(iT + ", " + xdot/v + ", " + ydot/v + ", " + zdot/v
+                                          + ", " + Math.atan2(xdot, -ydot)*180/Math.PI
+                                          + ", " + Math.acos(zdot/v)*180/Math.PI);
+                    System.out.println("ddu3 range, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
                 }
-                if (out != null && true && j <= 30000)
-                    out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
-                //if (printChk.isSelected() && Period > 0 && j >= Nloop - Period) // continuous response over last cycle
-                //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
+                if (fout != null && true && j <= 30000)
+                    fout.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
+                if (printChk.isSelected() && Period > 0 && j >= Nloop - 2*Period) // continuous response over last cycle
+                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
             }
             else if (ddu2Radio.isSelected())               // Lyapunov response (2-D)
             {
@@ -396,8 +428,8 @@ public class Rossler_y_vs_x extends JDialog
                 path1.lineTo(pt6[3], pt6[4]);
                 //if (printChk.isSelected() && Period > 0 && j >= Nloop - Period) // continuous response over last cycle
                 //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
-                if (out != null && true && j >= (30000 - 1) && j < 60000)
-                    out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4]);
+                if (fout != null && true && j >= (30000 - 1) && j < 60000)
+                    fout.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4]);
             }
             if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt6[2])
             {
@@ -431,10 +463,8 @@ public class Rossler_y_vs_x extends JDialog
                 if (iT % Period == 0)
                     System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
         }
-        if (printChk.isSelected() && ddu3Radio.isSelected())
-            System.out.println("\nddu range, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
-        if (out != null)
-            out.close();
+        if (fout != null)
+            fout.close();
         System.arraycopy(pt6, 0, pt6_old, 0, pt6.length);               // save
         AffineTransform at = new AffineTransform((phasePanel.getWidth() - 8)/(xmax - xmin),
                                           0, 0, -(phasePanel.getHeight() - 8)/(ymax - ymin),
@@ -452,6 +482,106 @@ public class Rossler_y_vs_x extends JDialog
         yaxis = new Line2D.Double(-xmin*phasePanel.getWidth()/(xmax - xmin), 0, -xmin*phasePanel.getWidth()/(xmax - xmin), phasePanel.getHeight());
         phasePanel.repaint();
     }
+
+    private static void fit_response()
+    {
+        // collect data to fit third-order response, after one cycle,
+        // to a change in the (x', y') plane, perpendicular to velocity
+
+        double incr = 0.01;
+        double xdot = -Main.final_y - Main.final_z;
+        double ydot =  Main.final_x + Main.a*Main.final_y;
+        double zdot =  Main.b + Main.final_z*(Main.final_x - Main.c);
+        double[] pt3;
+
+        Main.project_phi = Math.atan2(xdot, -ydot)*180/Math.PI;
+        Main.project_theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot))*180/Math.PI;
+        Point2D.Double pt2 = Main.project_2D(Main.final_x, Main.final_y, Main.final_z);
+        double zp = Main.project_zp(Main.final_x, Main.final_y, Main.final_z);
+
+        System.out.println("Neimark-Sacker - measure cubic model response after one cycle");
+        System.out.println("incr   = " + incr);
+        System.out.println("Period = " + Main.final_Period);
+        System.out.println("delt   = " + Main.final_delt);
+        System.out.println("x      = " + Main.final_x);
+        System.out.println("y      = " + Main.final_y);
+        System.out.println("z      = " + Main.final_z);
+        System.out.println("phi    = " + Main.project_phi);
+        System.out.println("theta  = " + Main.project_theta);
+        System.out.println("x'     = " + pt2.x);
+        System.out.println("y'     = " + pt2.y);
+        System.out.println("z'     = " + zp);
+
+        for (int i = -2; i < 3; i++)        // increment x' by i*incr
+            for (int j = -2; j < 3; j++)    // increment y' by j*incr
+            {
+                pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i, incr*j, "x"),
+                                    Main.final_y + Main.invert_from_xp_yp(incr*i, incr*j, "y"),
+                                    Main.final_z + Main.invert_from_xp_yp(incr*i, incr*j, "z")};
+                System.out.println("org   , " + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                // loop through one cycle
+                for (int k = 0; k < Main.final_Period; k++)
+                {
+                    Main.runge_kutta_rossler3(pt3, Main.final_delt, Main.a, Main.b, Main.c);
+                    if (k < 2 || k > Main.final_Period - 3)
+                        System.out.println("---   , " + (k + 1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                }
+                pt2 = Main.project_2D(pt3[0], pt3[1], pt3[2]);
+                zp = Main.project_zp(pt3[0], pt3[1], pt3[2]);
+                System.out.println("prime ," + i + ", " + j + ", " + pt2.x + ", " + pt2.y + ", " + zp);
+            }
+    }
+
+    private void gen_rdot_r2dot(PrintWriter fout, double x, double y, double z)
+    {
+        // generate rdot and r2dot, velocity and acceleration
+        // calculate curvature vector as a cross-product
+        // generate Euler angles of velocity and curvature (phi, theta)
+
+        fout.print(iT + ", " + x + ", " + y + ", " + z);
+        double xdot = -y - z;
+        double ydot =  x + Main.a*y;
+        double zdot =  Main.b + z*(x - Main.c);
+        fout.print(", " + xdot + ", " + ydot + ", " + zdot);
+        double phi = Math.atan2(xdot, -ydot);
+        double theta = Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
+        fout.print(", " + phi*180/Math.PI + ", " + theta*180/Math.PI);
+
+        double x2dot = -ydot - zdot;
+        double y2dot =  xdot + Main.a*ydot;
+        double z2dot =  zdot*(x - Main.c) + z*xdot;
+        fout.print(", " + x2dot + ", " + y2dot + ", " + z2dot);
+        double kx = ydot*z2dot - zdot*y2dot;
+        double ky = zdot*x2dot - xdot*z2dot;
+        double kz = xdot*y2dot - ydot*x2dot;
+        fout.print(", " + kx + ", " + ky + ", " + kz);
+        //fout.print(", " + Math.asin(kz/Math.sqrt(kx*kx + ky*ky + kz*kz)/Math.sin(theta))*180/Math.PI);
+        //fout.print(", " + Math.asin((-kx*Math.sin(phi) + ky*Math.cos(phi))/Math.sqrt(kx*kx + ky*ky + kz*kz)/Math.cos(theta))*180/Math.PI);
+        double psi = Math.acos((kx*Math.cos(phi) + ky*Math.sin(phi))/Math.sqrt(kx*kx + ky*ky + kz*kz));
+        //Main.project_phi = phi*180/Math.PI;
+        //Main.project_theta = theta*180/Math.PI;
+        //Main.project_psi = psi*180/Math.PI;
+        //Point2D.Double pt2 = Main.project_2D(x, y, z);
+        //fout.print(", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(x, y, z));
+        fout.println(", " + psi*180/Math.PI);
+        //fout.println(", " + Math.atan2(kx, -ky)*180/Math.PI + ", " + Math.acos(kz/Math.sqrt(kx*kx + ky*ky + kz*kz))*180/Math.PI);
+
+        // test code
+/*
+        Main.project_phi = phi*180/Math.PI;
+        Main.project_theta = theta*180/Math.PI;
+        Main.project_psi = psi*180/Math.PI;
+        Main.zc = Main.project_zp(x, y, z);
+        Point2D.Double pt2 = Main.project_2D(x, y, z);
+        Main.xc = pt2.x;
+        Main.yc = pt2.y;
+        fout.println("x'_y'_z', " + Main.xc + "," + Main.yc + "," + Main.zc);
+        //pt2 = Main.project_2D(0, 1, 0, psi);
+        //fout.println(pt2.x + "," + pt2.y + "," + Main.project_zp(0, 1, 0));
+        //pt2 = Main.project_2D(0, 0, 1, psi);
+        //fout.println(pt2.x + "," + pt2.y + "," + Main.project_zp(0, 0, 1));
+*/
+}
 
     private double dtdc(double[] pt6)          // two-dimensional (dx, dy)
     {

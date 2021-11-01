@@ -19,7 +19,7 @@ public class Rossler_z_bifurcate extends JDialog
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
     protected static double scan_start, scan_end;
-    protected static double Tmin = 3, Tmax = 7;
+    protected static double Tmin = 5.5, Tmax = 7.5;
 
     public Rossler_z_bifurcate(Image img)
     {
@@ -280,6 +280,8 @@ class BifurcateActivity extends SwingWorker<Void, Point>
                     {
                         Tdiff = Tnew - Told;
                         if (delt*Tdiff > Rossler_z_bifurcate.Tmin && delt*Tdiff < Rossler_z_bifurcate.Tmax && j > Ninit)
+                            //if ((i > 20 && Rossler_z_bifurcate.scan_end > Rossler_z_bifurcate.scan_start)
+                            //||  (i < 640 && Rossler_z_bifurcate.scan_end < Rossler_z_bifurcate.scan_start))
                             publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.Tmax - delt*(Tnew - Told))/(Rossler_z_bifurcate.Tmax - Rossler_z_bifurcate.Tmin))));
                         //if (c == 3)
                         //    System.out.println(c + ", " + (j - 2) + ", " + Tnew + ", " + (Tnew - Told));

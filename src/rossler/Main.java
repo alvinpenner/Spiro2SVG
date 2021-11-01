@@ -29,9 +29,11 @@ public class Main
     protected static double cstart, cend;               // bifurcate range
     protected static double x0, y0, z0;                 // initial values
     protected static double dx0dc, dy0dc, dz0dc;        // initial values
-    protected static double zc;                         // z' crossover value for x-y scatter (transformed)
+    protected static double xc, yc, zc;                 // x', y', z' crossover value for x-y scatter (transformed)
     protected static double xmin, xmax, ymin, ymax;     // (x', y') plot range for x_y_scatter (transformed)
     protected static double project_phi, project_theta; // Euler angles
+    protected static double project_psi;
+    protected static double final_x, final_y, final_z, final_delt, final_Period;
     protected static String type;
     protected static final String VERSION_NO = "0.1";
     protected static Rossler_y_vs_x plot_y_vs_x;
@@ -315,9 +317,46 @@ public class Main
     {
         double phi_rad = project_phi*Math.PI/180;
         double theta_rad = project_theta*Math.PI/180;
-        double xp = x*Math.cos(phi_rad) + y*Math.sin(phi_rad);
-        double yp = (-x*Math.sin(phi_rad) + y*Math.cos(phi_rad))*Math.cos(theta_rad) + z*Math.sin(theta_rad);
+        double psi_rad = project_psi*Math.PI/180;
+        //psi_rad += Math.PI;                           // test code fix fix bug bug
+        double xp = x*(Math.cos(phi_rad)*Math.cos(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad))
+                  + y*(Math.sin(phi_rad)*Math.cos(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad))
+                  + z*Math.sin(theta_rad)*Math.sin(psi_rad);
+        double yp = x*(-Math.cos(phi_rad)*Math.sin(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad))
+                  + y*(-Math.sin(phi_rad)*Math.sin(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad))
+                  + z*Math.sin(theta_rad)*Math.cos(psi_rad);
         return new Point2D.Double(xp, yp);
+    }
+
+    protected static double project_zp(double x, double y, double z)      // transformed z'
+    {
+        double phi_rad = project_phi*Math.PI/180;
+        double theta_rad = project_theta*Math.PI/180;
+        return (x*Math.sin(phi_rad) - y*Math.cos(phi_rad))*Math.sin(theta_rad) + z*Math.cos(theta_rad);
+    }
+
+    protected static double invert_from_xp_yp(double xp, double yp, String to)     // back transform from (x', y', z')
+    {
+        double phi_rad = project_phi*Math.PI/180;
+        double theta_rad = project_theta*Math.PI/180;
+        double psi_rad = project_psi*Math.PI/180;
+        double [][] T = new double[][] {{ Math.cos(phi_rad)*Math.cos(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad),
+                                          Math.sin(phi_rad)*Math.cos(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad),
+                                          Math.sin(theta_rad)*Math.sin(psi_rad)},
+                                        {-Math.cos(phi_rad)*Math.sin(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad),
+                                         -Math.sin(phi_rad)*Math.sin(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad),
+                                          Math.sin(theta_rad)*Math.cos(psi_rad)},
+                                        { Math.sin(phi_rad)*Math.sin(theta_rad),
+                                         -Math.cos(phi_rad)*Math.sin(theta_rad),
+                                          Math.cos(theta_rad)}};
+        if (to.equals("x"))
+            return T[0][0]*xp + T[1][0]*yp;
+        else if (to.equals("y"))
+            return T[0][1]*xp + T[1][1]*yp;
+        else if (to.equals("z"))
+            return T[0][2]*xp + T[1][2]*yp;
+        else
+            return Double.NaN;
     }
 
     private static void gen_M2D(double x, double y, double z)
@@ -673,6 +712,8 @@ public class Main
                 x0 = Double.parseDouble(pgmProp.getProperty("x0", "0"));
                 y0 = Double.parseDouble(pgmProp.getProperty("y0", "0"));
                 z0 = Double.parseDouble(pgmProp.getProperty("z0", "0"));
+                xc = Double.parseDouble(pgmProp.getProperty("xc", "0"));
+                yc = Double.parseDouble(pgmProp.getProperty("yc", "0"));
                 zc = Double.parseDouble(pgmProp.getProperty("zc", "1"));
                 xmin = Double.parseDouble(pgmProp.getProperty("xmin", "-2"));
                 xmax = Double.parseDouble(pgmProp.getProperty("xmax", "2"));
@@ -683,8 +724,7 @@ public class Main
                 dz0dc = Double.parseDouble(pgmProp.getProperty("dz0dc", "0"));
                 project_phi = Double.parseDouble(pgmProp.getProperty("project_phi", "0"));
                 project_theta = Double.parseDouble(pgmProp.getProperty("project_theta", "0"));
-                //project_phi = 10.01;
-                //project_theta = 11.9;
+                project_psi = Double.parseDouble(pgmProp.getProperty("project_psi", "0"));
             }
             else                                    // factory default
             {
@@ -701,6 +741,8 @@ public class Main
                 x0 = 0;
                 y0 = 0;
                 z0 = 0;
+                xc = 0;
+                yc = 0;
                 zc = 1;
                 xmin = -2;
                 xmax = 2;
@@ -711,6 +753,7 @@ public class Main
                 dz0dc = 0;
                 project_phi = 0;
                 project_theta = 0;
+                project_psi = 0;
             }
         }
         catch (IOException e)
@@ -732,6 +775,8 @@ public class Main
         pgmProp.setProperty("x0", "" + x0);
         pgmProp.setProperty("y0", "" + y0);
         pgmProp.setProperty("z0", "" + z0);
+        pgmProp.setProperty("xc", "" + xc);
+        pgmProp.setProperty("yc", "" + yc);
         pgmProp.setProperty("zc", "" + zc);
         pgmProp.setProperty("xmin", "" + xmin);
         pgmProp.setProperty("xmax", "" + xmax);
@@ -742,6 +787,7 @@ public class Main
         pgmProp.setProperty("dz0dc", "" + dz0dc);
         pgmProp.setProperty("project_phi", "" + project_phi);
         pgmProp.setProperty("project_theta", "" + project_theta);
+        pgmProp.setProperty("project_psi", "" + project_psi);
         try
             {pgmProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "RosslerPrefs.ini"), "Rossler System v" + VERSION_NO + " Prefs");}
         catch (IOException e)

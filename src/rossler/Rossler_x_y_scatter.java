@@ -7,6 +7,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.geom.Point2D;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.util.List;
 import javax.swing.*;
 
@@ -15,9 +17,11 @@ public class Rossler_x_y_scatter extends JDialog
     protected static final BufferedImage image = new BufferedImage(400, 400, BufferedImage.TYPE_3BYTE_BGR);
     private static final Graphics2D DC = image.createGraphics();
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
-//    protected static JCheckBox reverseChk = new JCheckBox("reverse time");
     protected static JButton btnRun = new JButton("Run");
-    protected static JButton btnClear = new JButton("Clr");
+    private static JButton btnClear = new JButton("Clr");
+    private static JButton btnOrient = new JButton("Re-orient");
+    protected static double del_xp = 0, del_yp = 0;
+    private boolean first = true;
 
     public Rossler_x_y_scatter(Image img)
     {
@@ -28,6 +32,7 @@ public class Rossler_x_y_scatter extends JDialog
         setIconImage(img);
         setSize(570, 450);
         setLocationByPlatform(true);
+        String fmt = "%.3f";
 
         final JLabel[] lbl = {new JLabel("a"),
                               new JLabel("b"),
@@ -57,20 +62,19 @@ public class Rossler_x_y_scatter extends JDialog
         {
             dataPanel[i] = new JPanel();
             dataPanel[i].setOpaque(false);
+            dataPanel[i].setPreferredSize(new Dimension(125, 24));
             lbl[i].setPreferredSize(new Dimension(40, 18));
             dataPanel[i].add(lbl[i]);
             txt[i].setPreferredSize(new Dimension(70, 18));
             dataPanel[i].add(txt[i]);
         }
 
-//        reverseChk.setOpaque(false);
-
         JPanel xrange = new JPanel();
         xrange.setOpaque(false);
         xrange.setPreferredSize(new Dimension(120, 20));
         xrange.add(new JLabel("dx'"));
-        final JTextField txtxmin = new JTextField(Double.toString(Main.xmin));
-        final JTextField txtxmax = new JTextField(Double.toString(Main.xmax));
+        final JTextField txtxmin = new JTextField(String.format(fmt, Main.xmin));
+        final JTextField txtxmax = new JTextField(String.format(fmt, Main.xmax));
         txtxmin.setPreferredSize(new Dimension(40, 18));
         txtxmax.setPreferredSize(new Dimension(40, 18));
         xrange.add(txtxmin);
@@ -80,19 +84,30 @@ public class Rossler_x_y_scatter extends JDialog
         yrange.setOpaque(false);
         yrange.setPreferredSize(new Dimension(120, 20));
         yrange.add(new JLabel("dy'"));
-        final JTextField txtymin = new JTextField(Double.toString(Main.ymin));
-        final JTextField txtymax = new JTextField(Double.toString(Main.ymax));
+        final JTextField txtymin = new JTextField(String.format(fmt, Main.ymin));
+        final JTextField txtymax = new JTextField(String.format(fmt, Main.ymax));
         txtymin.setPreferredSize(new Dimension(40, 18));
         txtymax.setPreferredSize(new Dimension(40, 18));
         yrange.add(txtymin);
         yrange.add(txtymax);
 
-        JPanel posnPanel = new JPanel();
+        JPanel posnPanel = new JPanel();                // live display of (x',y')
         posnPanel.setOpaque(false);
         final JLabel lblposn = new JLabel();
         lblposn.setBorder(BorderFactory.createEtchedBorder());
         lblposn.setPreferredSize(new Dimension(105, 20));
         posnPanel.add(lblposn);
+
+        JPanel pnl_del_xp_yp = new JPanel();                // increment initial (x',y')
+        pnl_del_xp_yp.setOpaque(false);
+        pnl_del_xp_yp.setPreferredSize(new Dimension(120, 20));
+        pnl_del_xp_yp.add(new JLabel("del '"));
+        final JTextField txt_del_xp = new JTextField("" + del_xp);
+        final JTextField txt_del_yp = new JTextField("" + del_yp);
+        txt_del_xp.setPreferredSize(new Dimension(40, 18));
+        txt_del_yp.setPreferredSize(new Dimension(40, 18));
+        pnl_del_xp_yp.add(txt_del_xp);
+        pnl_del_xp_yp.add(txt_del_yp);
 
         parmsPanel.removeAll();
         parmsPanel.setBackground(new Color(200, 221, 242));
@@ -104,13 +119,15 @@ public class Rossler_x_y_scatter extends JDialog
         parmsPanel.add(dataPanel[5]);
         parmsPanel.add(spacerPanel[0]);
         parmsPanel.add(dataPanel[6]);
-//        parmsPanel.add(reverseChk);
         parmsPanel.add(spacerPanel[1]);
         parmsPanel.add(btnRun);
         parmsPanel.add(btnClear);
         parmsPanel.add(xrange);
         parmsPanel.add(yrange);
         parmsPanel.add(posnPanel);
+        parmsPanel.add(pnl_del_xp_yp);
+        //parmsPanel.add(spacerPanel[2]);
+        //parmsPanel.add(btnOrient);            // fix fix bug bug (to be removed)
         parmsPanel.setMaximumSize(new Dimension(140, 3000));
         parmsPanel.setPreferredSize(new Dimension(140, 3000));
         parmsPanel.setBorder(BorderFactory.createEtchedBorder());
@@ -143,11 +160,11 @@ public class Rossler_x_y_scatter extends JDialog
                 for (int i = 0; i < txt.length; i++)
                     if (txt[i].getText().isEmpty())
                         txt[i].setText("0");
-                if (Main.a != Double.parseDouble(txt[0].getText())) changed = true;
+                //if (Main.a != Double.parseDouble(txt[0].getText())) changed = true;
                 Main.a = Double.parseDouble(txt[0].getText());
-                if (Main.b != Double.parseDouble(txt[1].getText())) changed = true;
+                //if (Main.b != Double.parseDouble(txt[1].getText())) changed = true;
                 Main.b = Double.parseDouble(txt[1].getText());
-                if (Main.c != Double.parseDouble(txt[2].getText())) changed = true;
+                //if (Main.c != Double.parseDouble(txt[2].getText())) changed = true;
                 Main.c = Double.parseDouble(txt[2].getText());
                 if (Main.x0 != Double.parseDouble(txt[3].getText())) changed = true;
                 Main.x0 = Double.parseDouble(txt[3].getText());
@@ -155,16 +172,21 @@ public class Rossler_x_y_scatter extends JDialog
                 Main.y0 = Double.parseDouble(txt[4].getText());
                 if (Main.z0 != Double.parseDouble(txt[5].getText())) changed = true;
                 Main.z0 = Double.parseDouble(txt[5].getText());
-                if (Main.zc != Double.parseDouble(txt[6].getText())) changed = true;
+                //if (Main.zc != Double.parseDouble(txt[6].getText())) changed = true;
                 Main.zc = Double.parseDouble(txt[6].getText());         // transformed coordinates
                 Main.xmin = Double.parseDouble(txtxmin.getText());      // transformed coordinates
                 Main.xmax = Double.parseDouble(txtxmax.getText());      // transformed coordinates
                 Main.ymin = Double.parseDouble(txtymin.getText());      // transformed coordinates
                 Main.ymax = Double.parseDouble(txtymax.getText());      // transformed coordinates
+                if (del_xp != Double.parseDouble(txt_del_xp.getText())) changed = true;
+                del_xp = Double.parseDouble(txt_del_xp.getText());
+                if (del_yp != Double.parseDouble(txt_del_yp.getText())) changed = true;
+                del_yp = Double.parseDouble(txt_del_yp.getText());
                 setTitle(" Rossler System - x'-y' Scatter (" + Main.project_phi + ", " + Main.project_theta + ") (" + ScatterActivity.delt + ")");
                 btnRun.setEnabled(false);
-                ScatterActivity activity = new ScatterActivity(changed);
+                ScatterActivity activity = new ScatterActivity(changed || first);
                 activity.execute();
+                first = false;
             }
         });
         btnClear.addActionListener(new AbstractAction()
@@ -173,7 +195,20 @@ public class Rossler_x_y_scatter extends JDialog
             {
                 DC.clearRect(0, 0, image.getWidth(), image.getHeight());
                 lblImage.repaint();
-                //ScatterActivity.pt3 = new double[] {Main.x0, Main.y0, Main.z0};
+            }
+        });
+        btnOrient.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                System.out.println("ScatterActivity = " + ScatterActivity.pt3_cross[0] + ", " + ScatterActivity.pt3_cross[1] + ", " + ScatterActivity.pt3_cross[2]);
+                Point2D.Double pt2_cross = Main.project_2D(ScatterActivity.pt3_cross[0], ScatterActivity.pt3_cross[1], ScatterActivity.pt3_cross[2]);
+                System.out.println("ScatterActivity = " + pt2_cross.x + ", " + pt2_cross.y + ", " + Main.project_zp(ScatterActivity.pt3_cross[0], ScatterActivity.pt3_cross[1], ScatterActivity.pt3_cross[2]));
+                txt[6].setText(String.format(" %.4f", Main.project_zp(ScatterActivity.pt3_cross[0], ScatterActivity.pt3_cross[1], ScatterActivity.pt3_cross[2])));      // refresh zc'
+                txtxmin.setText(String.format(" %.3f", pt2_cross.x - (Main.xmax - Main.xmin)/2));
+                txtxmax.setText(String.format(" %.3f", pt2_cross.x + (Main.xmax - Main.xmin)/2));
+                txtymin.setText(String.format(" %.3f", pt2_cross.y - (Main.ymax - Main.ymin)/2));
+                txtymax.setText(String.format(" %.3f", pt2_cross.y + (Main.ymax - Main.ymin)/2));
             }
         });
 
@@ -204,51 +239,119 @@ public class Rossler_x_y_scatter extends JDialog
                     }
                 }
             });
+        //System.out.println("dataPanel = " + dataPanel[0].getSize());
     }
 }
 
 class ScatterActivity extends SwingWorker<Void, Point>
 {
-    protected static double[] pt3 = new double[] {Main.x0, Main.y0, Main.z0};
-    protected static double delt = -0.02;
-    private static Color clr = Color.BLACK;             // new Color(40, 40, 136);
+    protected static double delt = -0.002; // -0.02;
+    protected static double[] pt3_cross = new double[3];
+    private static double[] pt3 = new double[3];
+    private static double xold = 0, yold = 0, zold = Main.zc;
+    private static Color clr = Color.BLACK;            // new Color(40, 40, 136);
+    private static PrintWriter fout = null;
+    private static int iT;                             // # iterations
 
     public ScatterActivity(boolean chg)
     {
         if (chg)
+        {
+            iT = 0;
+            System.out.println("reset, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi + ", " + Main.zc + ", " + delt);
+            System.out.println(" ,iT,x,y,z,x',y',z',tc,phi,theta");
             System.arraycopy(new double[] {Main.x0, Main.y0, Main.z0}, 0, pt3, 0, pt3.length);
-//        if (Rossler_x_y_scatter.reverseChk.isSelected() && delt > 0)
-//            delt = -delt;
-//        System.out.println(Rossler_x_y_scatter.reverseChk.isSelected() + ", " + delt);
+            // back-transform del (x',y') into del (x,y,z)
+            pt3[0] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, "x");
+            pt3[1] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, "y");
+            pt3[2] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, "z");
+            Point2D.Double pt2 = Main.project_2D(pt3[0], pt3[1], pt3[2]);
+            System.out.println("init  , " + iT + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt3[0], pt3[1], pt3[2]));
+            // test velocity direction test code only, to be deleted
+/*
+            System.out.print("test1 , " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+            double xdot = -pt3[1] - pt3[2];
+            double ydot =  pt3[0] + Main.a*pt3[1];
+            double zdot =  Main.b + pt3[2]*(pt3[0] - Main.c);
+            System.out.println(", " + xdot + ", " + ydot + ", " + zdot + ", " + Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot));
+            Point2D.Double pt2 = Main.project_2D(xdot, ydot, zdot);
+            System.out.println("test2 , " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(xdot, ydot, zdot));
+            System.out.println(Math.atan2(xdot, -ydot)*180/Math.PI
+                      + ", " + Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot))*180/Math.PI);
+*/
+        }
+
+        if (false)
+            try
+            {
+                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\x_y_scatter_Output_" + Main.a + "_" + Main.b + "_" + Main.c + "_" + Main.project_phi + "_" + Main.project_theta + "_" + delt + ".csv", true);
+                fout = new PrintWriter(fw);
+                //fout.println("x_y_scatter, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Main.project_phi + ", " + Main.project_theta + ", " + delt);
+                //fout.println("iT,x,y,z,xdot,ydot,zdot,v_phi,v_theta,x2dot,y2dot,z2dot,kx,ky,kz,k_phi,k_theta");
+            }
+            catch (java.io.IOException e)
+                {System.out.println("Rossler_Output.csv save error = " + e);}
     }
 
     protected Void doInBackground() throws Exception
     {
-        int Nloop = 10000;
+        int Nloop = 10000*10;
         Point2D.Double pt2old;          // projected, old, (x', y') using Euler angles
         Point2D.Double pt2new;          // projected, new, (x', y') using Euler angles
+        double zpold, zpnew;            // projected z'
         double xc, yc;                  // interpolated, projected (x', y')
-        double xold = 0, yold = 0, zold = Main.zc;
 
-        System.out.println("init, " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + zp(pt3[0], pt3[1], pt3[2]));
         for (int i = 0; i < Nloop; i++)
         {
+            iT++;
             Main.runge_kutta_rossler3(pt3, delt, Main.a, Main.b, Main.c);
             //System.out.println("old = " + zold + ", " + zp(xold, yold, zold));
             //System.out.println("new = " + pt3[2] + ", " + zp(pt3[0], pt3[1], pt3[2]));
-            if ((zp(xold, yold, zold) - Main.zc)*delt < 0 && (zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*delt >= 0)
+            //if ((Main.project_zp(xold, yold, zold) - Main.zc)*delt < 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*delt >= 0)
+            //System.out.println(i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+            //System.out.println("test z , " + iT + ", " + xold + ", " + yold + ", " + zold + ", " + Main.project_zp(xold, yold, zold) + ", " + Main.project_zp(pt3[0], pt3[1], pt3[2]) + ", " + Main.zc);
+            if (true && (Main.project_zp(xold, yold, zold) - Main.zc)*delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*delt > 0)
             {
                 pt2old = Main.project_2D(xold, yold, zold);
                 pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
-                //System.out.println("old pt2 = " + Main.project_2D(xold, yold, zold));
-                //System.out.println("new pt2 = " + pt2);
-                xc = ((zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*pt2old.x + (Main.zc - zp(xold, yold, zold))*pt2new.x)/(zp(pt3[0], pt3[1], pt3[2]) - zp(xold, yold, zold));
-                yc = ((zp(pt3[0], pt3[1], pt3[2]) - Main.zc)*pt2old.y + (Main.zc - zp(xold, yold, zold))*pt2new.y)/(zp(pt3[0], pt3[1], pt3[2]) - zp(xold, yold, zold));
-                System.out.println("cross , " + xc + ", " + yc + ", " + Main.zc);
+                zpold = Main.project_zp(xold, yold, zold);
+                zpnew = Main.project_zp(pt3[0], pt3[1], pt3[2]);
+                //System.out.println("zp = ," + zpold + ", " + zpnew);
+                //System.out.println("old = ," + xold + ", " + yold + ", " + zold);
+                //System.out.println("new = ," + i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                xc = ((zpnew - Main.zc)*pt2old.x + (Main.zc - zpold)*pt2new.x)/(zpnew - zpold);
+                yc = ((zpnew - Main.zc)*pt2old.y + (Main.zc - zpold)*pt2new.y)/(zpnew - zpold);
+                //xdot = -yc - Main.zc;
+                //ydot =  xc + Main.a*yc;
+                //zdot =  Main.b + Main.zc*(xc - Main.c);
+                //System.out.println("cross , " + iT + ", " + xc + ", " + yc + ", " + (iT + (Main.zc - zpold)/(zpnew - zpold))
+                //                       + ", " + xdot + ", " + ydot + ", " + zdot
+                //                       + ", " + Math.atan2(xdot, -ydot)*180/Math.PI
+                //                       + ", " + Math.acos(zdot/Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot))*180/Math.PI);
+                //System.out.println("z cross , " + iT + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + xc + ", " + yc + ", " + (iT + (Main.zc - zpold)/(zpnew - zpold))); // original code
+                System.out.println("z inter , " + iT + ", " + ((zpnew - Main.zc)*xold + (Main.zc - zpold)*pt3[0])/(zpnew - zpold)
+                                                     + ", " + ((zpnew - Main.zc)*yold + (Main.zc - zpold)*pt3[1])/(zpnew - zpold)
+                                                     + ", " + ((zpnew - Main.zc)*zold + (Main.zc - zpold)*pt3[2])/(zpnew - zpold)
+                                                     + ", " + xc + ", " + yc + ", " + (iT + (Main.zc - zpold)/(zpnew - zpold)));
+                pt3_cross[0] = pt3[0];
+                pt3_cross[1] = pt3[1];
+                pt3_cross[2] = pt3[2];
+                if (fout != null)
+                    fout.println(iT + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + xc + ", " + yc);
                 if (xc > Main.xmin && xc < Main.xmax && yc > Main.ymin && yc < Main.ymax)
                     publish(new Point((int) ((xc - Main.xmin)/(Main.xmax - Main.xmin)*Rossler_x_y_scatter.image.getWidth()),
                                       (int) ((yc - Main.ymax)/(Main.ymin - Main.ymax)*Rossler_x_y_scatter.image.getHeight())));
                 //Rossler_x_y_scatter.lblImage.repaint();
+            }
+            if (false && iT % 500 == 0)
+            {
+                pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
+                System.out.println("t cross , " + iT + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + pt2new.x + ", " + pt2new.y + ", " + Main.project_zp(pt3[0], pt3[1], pt3[2]));
+                if (fout != null)
+                    fout.println(iT + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + pt2new.x + ", " + pt2new.y + ", " + Main.project_zp(pt3[0], pt3[1], pt3[2]));
+                if (pt2new.x > Main.xmin && pt2new.x < Main.xmax && pt2new.y > Main.ymin && pt2new.y < Main.ymax)
+                    publish(new Point((int) ((pt2new.x - Main.xmin)/(Main.xmax - Main.xmin)*Rossler_x_y_scatter.image.getWidth()),
+                                      (int) ((pt2new.y - Main.ymax)/(Main.ymin - Main.ymax)*Rossler_x_y_scatter.image.getHeight())));
             }
             xold = pt3[0];
             yold = pt3[1];
@@ -256,16 +359,8 @@ class ScatterActivity extends SwingWorker<Void, Point>
             Rossler_x_y_scatter.lblImage.repaint();
             //System.out.println(i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         }
-        //System.out.println("final, " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
-        //Rossler_x_y_scatter.lblImage.repaint();
+        //System.out.println("final , " + pt3_cross[0] + ", " + pt3_cross[1] + ", " + pt3_cross[2]);
         return null;
-    }
-
-    private static double zp(double x, double y, double z)      // transformed z'
-    {
-        double phi_rad = Main.project_phi*Math.PI/180;
-        double theta_rad = Main.project_theta*Math.PI/180;
-        return (x*Math.sin(phi_rad) - y*Math.cos(phi_rad))*Math.sin(theta_rad) + z*Math.cos(theta_rad);
     }
 
     @Override protected void process(List<Point> points)
@@ -280,5 +375,7 @@ class ScatterActivity extends SwingWorker<Void, Point>
     @Override protected void done()
     {
         Rossler_x_y_scatter.btnRun.setEnabled(true);
+        if (fout != null)
+            fout.close();
     }
 }
