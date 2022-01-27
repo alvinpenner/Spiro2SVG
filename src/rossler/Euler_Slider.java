@@ -4,7 +4,7 @@ package rossler;
 // slider for Euler angles phi, theta
 
 import java.awt.*;
-import java.awt.geom.Point2D;
+//import java.awt.geom.Point2D;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -34,9 +34,9 @@ public class Euler_Slider extends JDialog
         slider_theta.setPaintLabels(true);
         slider_theta.setBorder(BorderFactory.createEtchedBorder());
 
-        final JSlider slider_psi = new JSlider(JSlider.HORIZONTAL, 0, 180, (int) Main.project_psi);
-        slider_psi.setMajorTickSpacing(10);
-        slider_psi.setMinorTickSpacing(1);
+        final JSlider slider_psi = new JSlider(JSlider.HORIZONTAL, 0, 360, (int) Main.project_psi);
+        slider_psi.setMajorTickSpacing(15);
+        slider_psi.setMinorTickSpacing(5);
         slider_psi.setPaintTicks(true);
         slider_psi.setPaintLabels(true);
         slider_psi.setBorder(BorderFactory.createEtchedBorder());

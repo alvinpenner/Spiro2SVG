@@ -140,8 +140,8 @@ public class Rossler_x_y_scatter extends JDialog
         {
             @Override public void mouseMoved(MouseEvent e)
             {
-                lblposn.setText(String.format(" %.3f", Main.xmin + e.getX()*(Main.xmax - Main.xmin)/image.getWidth())
-                        + "," + String.format(" %.3f", Main.ymax + e.getY()*(Main.ymin - Main.ymax)/image.getHeight()));
+                lblposn.setText(String.format(" %.4f", Main.xmin + e.getX()*(Main.xmax - Main.xmin)/image.getWidth())
+                        + "," + String.format(" %.4f", Main.ymax + e.getY()*(Main.ymin - Main.ymax)/image.getHeight()));
             }
         });
         scatterPanel.add(lblImage);
@@ -245,7 +245,7 @@ public class Rossler_x_y_scatter extends JDialog
 
 class ScatterActivity extends SwingWorker<Void, Point>
 {
-    protected static double delt = -0.002; // -0.02;
+    protected static double delt = -0.0049888; // -0.02;
     protected static double[] pt3_cross = new double[3];
     private static double[] pt3 = new double[3];
     private static double xold = 0, yold = 0, zold = Main.zc;
@@ -262,9 +262,9 @@ class ScatterActivity extends SwingWorker<Void, Point>
             System.out.println(" ,iT,x,y,z,x',y',z',tc,phi,theta");
             System.arraycopy(new double[] {Main.x0, Main.y0, Main.z0}, 0, pt3, 0, pt3.length);
             // back-transform del (x',y') into del (x,y,z)
-            pt3[0] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, "x");
-            pt3[1] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, "y");
-            pt3[2] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, "z");
+            pt3[0] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, 0, "x");
+            pt3[1] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, 0, "y");
+            pt3[2] += Main.invert_from_xp_yp(Rossler_x_y_scatter.del_xp, Rossler_x_y_scatter.del_yp, 0, "z");
             Point2D.Double pt2 = Main.project_2D(pt3[0], pt3[1], pt3[2]);
             System.out.println("init  , " + iT + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt3[0], pt3[1], pt3[2]));
             // test velocity direction test code only, to be deleted

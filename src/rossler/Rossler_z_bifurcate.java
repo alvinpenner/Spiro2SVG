@@ -19,7 +19,7 @@ public class Rossler_z_bifurcate extends JDialog
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
     protected static double scan_start, scan_end;
-    protected static double Tmin = 5.5, Tmax = 7.5;
+    protected static double Tmin = -6, Tmax = -4;
 
     public Rossler_z_bifurcate(Image img)
     {
@@ -122,9 +122,9 @@ public class Rossler_z_bifurcate extends JDialog
             @Override public void mouseMoved(MouseEvent e)
             {
                 if (scan_end > scan_start)
-                    lblposn.setText(String.format(" %.4f", scan_start + e.getX()*(scan_end - scan_start)/image.getWidth()) + ", " + String.format("%.3f", Tmax + e.getY()*(Tmin - Tmax)/image.getHeight()));
+                    lblposn.setText(String.format(" %.5f", scan_start + e.getX()*(scan_end - scan_start)/image.getWidth()) + ", " + String.format("%.3f", Tmax + e.getY()*(Tmin - Tmax)/image.getHeight()));
                 else
-                    lblposn.setText(String.format(" %.4f", scan_end + e.getX()*(scan_start - scan_end)/image.getWidth()) + ", " + String.format("%.3f", Tmax + e.getY()*(Tmin - Tmax)/image.getHeight()));
+                    lblposn.setText(String.format(" %.5f", scan_end + e.getX()*(scan_start - scan_end)/image.getWidth()) + ", " + String.format("%.3f", Tmax + e.getY()*(Tmin - Tmax)/image.getHeight()));
             }
         });
         bifurcatePanel.add(lblImage);
@@ -234,7 +234,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     {
         // use peaks in y, pt3[1], to detect period
         int N = 400000;                             // # of iterations per c
-        double delt = 0.005;
+        double delt = -0.005;
         int Ninit = 0*1152;                      // # approx 10 Tx cycles to initiallize limit cycle
         double scan;                                // horizontal axis
         double[] zlist = new double[4];             // previous z values
@@ -262,6 +262,12 @@ class BifurcateActivity extends SwingWorker<Void, Point>
                     Main.runge_kutta_rossler3(pt3, delt, Main.astart, Main.bstart, scan);
                 //if (i == 210)
                 //    System.out.println("scan all, " + i + ", " + j + ", " + pt3[1]);
+                if (i == 500 && j == 10)
+                    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                if (i == 300 && j == 10)
+                    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                if (i == 100 && j == 10)
+                    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[1])
                 {
                     Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[1] - zlist[2]);

@@ -23,6 +23,7 @@ import java.util.Properties;
 public class Main
 {
     private static Properties pgmProp = new Properties();
+    protected static boolean skew_transform = false;
     protected static double a, b, c;                    // parameters
     protected static double astart, aend;               // bifurcate range
     protected static double bstart, bend;               // bifurcate range
@@ -34,6 +35,7 @@ public class Main
     protected static double project_phi, project_theta; // Euler angles
     protected static double project_psi;
     protected static double final_x, final_y, final_z, final_delt, final_Period;
+    protected static double final_Re_V21, final_Im_V21; // skew transform first-order response to 'normal' form
     protected static String type;
     protected static final String VERSION_NO = "0.1";
     protected static Rossler_y_vs_x plot_y_vs_x;
@@ -318,14 +320,26 @@ public class Main
         double phi_rad = project_phi*Math.PI/180;
         double theta_rad = project_theta*Math.PI/180;
         double psi_rad = project_psi*Math.PI/180;
-        //psi_rad += Math.PI;                           // test code fix fix bug bug
-        double xp = x*(Math.cos(phi_rad)*Math.cos(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad))
-                  + y*(Math.sin(phi_rad)*Math.cos(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad))
-                  + z*Math.sin(theta_rad)*Math.sin(psi_rad);
-        double yp = x*(-Math.cos(phi_rad)*Math.sin(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad))
-                  + y*(-Math.sin(phi_rad)*Math.sin(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad))
-                  + z*Math.sin(theta_rad)*Math.cos(psi_rad);
-        return new Point2D.Double(xp, yp);
+        double xp =  x*Math.cos(phi_rad)
+                  +  y*Math.sin(phi_rad);
+        double yp = -x*Math.sin(phi_rad)*Math.cos(theta_rad)
+                  +  y*Math.cos(phi_rad)*Math.cos(theta_rad)
+                  +  z*Math.sin(theta_rad);
+        double xpp =  Math.cos(psi_rad)*xp + Math.sin(psi_rad)*yp;
+        double ypp = -Math.sin(psi_rad)*xp + Math.cos(psi_rad)*yp;
+        if (skew_transform)              // transform first-order response into 'normal' form
+        {
+            // apply skew transform V_inverse from Book Chaos III, p. 66
+            //double[][] xy2D = new double[][] {{ -1.7841497755881142 , 0.6713612244348759 }, { -6.973231134200858 , 2.0764691595691893 }};
+            //double alpha = (xy2D[1][1] - xy2D[0][0])/2/xy2D[0][1];
+            //double beta = Math.sqrt(-(xy2D[1][1] - xy2D[0][0])*(xy2D[1][1] - xy2D[0][0]) - 4*xy2D[0][1]*xy2D[1][0])/2/xy2D[0][1];
+            //System.out.println("xy2D, " + xy2D[0][0] + ", " + xy2D[0][1] + ", " + xy2D[1][0] + ", " + xy2D[1][1] + ", " + alpha + ", " + beta);
+            xp = (Main.final_Re_V21 - Main.final_Im_V21)*xpp - ypp;
+            yp = (-Main.final_Re_V21 - Main.final_Im_V21)*xpp + ypp;
+            xpp = -xp/2.0/Main.final_Im_V21;
+            ypp = -yp/2.0/Main.final_Im_V21;
+        }
+        return new Point2D.Double(xpp, ypp);
     }
 
     protected static double project_zp(double x, double y, double z)      // transformed z'
@@ -335,26 +349,41 @@ public class Main
         return (x*Math.sin(phi_rad) - y*Math.cos(phi_rad))*Math.sin(theta_rad) + z*Math.cos(theta_rad);
     }
 
-    protected static double invert_from_xp_yp(double xp, double yp, String to)     // back transform from (x', y', z')
+    protected static double invert_from_xp_yp(double xp, double yp, double zp, String to)     // back transform from (x', y', z')
     {
         double phi_rad = project_phi*Math.PI/180;
         double theta_rad = project_theta*Math.PI/180;
         double psi_rad = project_psi*Math.PI/180;
-        double [][] T = new double[][] {{ Math.cos(phi_rad)*Math.cos(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad),
-                                          Math.sin(phi_rad)*Math.cos(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.sin(psi_rad),
-                                          Math.sin(theta_rad)*Math.sin(psi_rad)},
-                                        {-Math.cos(phi_rad)*Math.sin(psi_rad) - Math.sin(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad),
-                                         -Math.sin(phi_rad)*Math.sin(psi_rad) + Math.cos(phi_rad)*Math.cos(theta_rad)*Math.cos(psi_rad),
-                                          Math.sin(theta_rad)*Math.cos(psi_rad)},
+        double [][] T = new double[][] {{ Math.cos(phi_rad),
+                                          Math.sin(phi_rad),
+                                          0},
+                                        {-Math.sin(phi_rad)*Math.cos(theta_rad),
+                                          Math.cos(phi_rad)*Math.cos(theta_rad),
+                                          Math.sin(theta_rad)},
                                         { Math.sin(phi_rad)*Math.sin(theta_rad),
                                          -Math.cos(phi_rad)*Math.sin(theta_rad),
                                           Math.cos(theta_rad)}};
+        double xpp, ypp;
+        if (skew_transform)
+        {
+            // apply skew transform V from Book Chaos III, p. 66
+            //double[][] xy2D = new double[][] {{ -1.7841497755881142 , 0.6713612244348759 }, { -6.973231134200858 , 2.0764691595691893 }};
+            //double alpha = (xy2D[1][1] - xy2D[0][0])/2/xy2D[0][1];
+            //double beta = Math.sqrt(-(xy2D[1][1] - xy2D[0][0])*(xy2D[1][1] - xy2D[0][0]) - 4*xy2D[0][1]*xy2D[1][0])/2/xy2D[0][1];
+            //System.out.println("xy2D, " + xy2D[0][0] + ", " + xy2D[0][1] + ", " + xy2D[1][0] + ", " + xy2D[1][1] + ", " + alpha + ", " + beta);
+            xpp = xp + yp;
+            ypp = (Main.final_Re_V21 + Main.final_Im_V21)*xp + (Main.final_Re_V21 - Main.final_Im_V21)*yp;
+            xp = xpp;
+            yp = ypp;
+        }
+        xpp = Math.cos(psi_rad)*xp - Math.sin(psi_rad)*yp;
+        ypp = Math.sin(psi_rad)*xp + Math.cos(psi_rad)*yp;
         if (to.equals("x"))
-            return T[0][0]*xp + T[1][0]*yp;
+            return T[0][0]*xpp + T[1][0]*ypp + T[2][0]*zp;
         else if (to.equals("y"))
-            return T[0][1]*xp + T[1][1]*yp;
+            return T[0][1]*xpp + T[1][1]*ypp + T[2][1]*zp;
         else if (to.equals("z"))
-            return T[0][2]*xp + T[1][2]*yp;
+            return T[0][2]*xpp + T[1][2]*ypp + T[2][2]*zp;
         else
             return Double.NaN;
     }
@@ -489,10 +518,11 @@ public class Main
                 Moutdot01[i] = -(phi2dot*Math.cos(theta) - phidot*Math.sin(theta)*thetadot
                              + thetadot*(Math.sin(theta) - Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.cos(phi)*Math.sin(theta))
                              + phidot*(Math.sin(phi)*Math.sin(theta) + a*Math.cos(phi)*Math.cos(phi)*Math.cos(theta) - a*Math.sin(phi)*Math.sin(phi)*Math.cos(theta)));
-                v[i + Period] = -Math.sin(theta)*gen_z[i];            // original code for d/dc
-                //v[i + Period] = (a*gen_z[i] + a - c)*Math.sin(theta);   // attempt to emulate trace {J)
+                //v[i + Period] = -Math.sin(theta)*gen_z[i];              // original code for d/dc
                 //v[i + Period] = Math.sin(theta);                        // new code for d/db
-                v[i + 2*Period] = -Math.cos(theta)*gen_z[i];
+                v[i] = Math.sin(phi)*gen_y[i];                          // new code for d/da
+                v[i + Period] = Math.cos(theta)*Math.cos(phi)*gen_y[i]; // new code for d/da
+                v[i + 2*Period] = -Math.cos(theta)*gen_z[i];            // not used anymore (part of original 3D system)
                 //System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i]);
                 //gen_M2D(gen_x[i], gen_y[i], gen_z[i]);
             }
@@ -573,6 +603,10 @@ public class Main
                             System.out.print("," + Mout[vari][varj][i]);
                         System.out.println("])");
                     }
+                System.out.print("b0 = np.array([" + v[0]);
+                for (int i = 1; i < Period; i++)
+                    System.out.print(", " + v[i]);
+                System.out.println("])");
                 System.out.print("b1 = np.array([" + v[Period]);
                 for (int i = 1; i < Period; i++)
                     System.out.print(", " + v[i + Period]);
