@@ -334,10 +334,10 @@ public class Main
             //double alpha = (xy2D[1][1] - xy2D[0][0])/2/xy2D[0][1];
             //double beta = Math.sqrt(-(xy2D[1][1] - xy2D[0][0])*(xy2D[1][1] - xy2D[0][0]) - 4*xy2D[0][1]*xy2D[1][0])/2/xy2D[0][1];
             //System.out.println("xy2D, " + xy2D[0][0] + ", " + xy2D[0][1] + ", " + xy2D[1][0] + ", " + xy2D[1][1] + ", " + alpha + ", " + beta);
-            xp = (Main.final_Re_V21 - Main.final_Im_V21)*xpp - ypp;
-            yp = (-Main.final_Re_V21 - Main.final_Im_V21)*xpp + ypp;
-            xpp = -xp/2.0/Main.final_Im_V21;
-            ypp = -yp/2.0/Main.final_Im_V21;
+            xp = (final_Re_V21 - final_Im_V21)*xpp - ypp;
+            yp = (-final_Re_V21 - final_Im_V21)*xpp + ypp;
+            xpp = -xp/2.0/final_Im_V21;
+            ypp = -yp/2.0/final_Im_V21;
         }
         return new Point2D.Double(xpp, ypp);
     }
@@ -372,7 +372,7 @@ public class Main
             //double beta = Math.sqrt(-(xy2D[1][1] - xy2D[0][0])*(xy2D[1][1] - xy2D[0][0]) - 4*xy2D[0][1]*xy2D[1][0])/2/xy2D[0][1];
             //System.out.println("xy2D, " + xy2D[0][0] + ", " + xy2D[0][1] + ", " + xy2D[1][0] + ", " + xy2D[1][1] + ", " + alpha + ", " + beta);
             xpp = xp + yp;
-            ypp = (Main.final_Re_V21 + Main.final_Im_V21)*xp + (Main.final_Re_V21 - Main.final_Im_V21)*yp;
+            ypp = (final_Re_V21 + final_Im_V21)*xp + (final_Re_V21 - final_Im_V21)*yp;
             xp = xpp;
             yp = ypp;
         }

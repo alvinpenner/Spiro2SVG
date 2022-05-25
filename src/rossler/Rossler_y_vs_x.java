@@ -20,11 +20,11 @@ import java.io.File;
 public class Rossler_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = 0.02; // 0.005; // .001223734471716991;
-    private final static int N = 500000;             // total # of iterations 160000
+    private final static double DEFAULT_DELT = 0.02;    // 0.005; // .001223734471716991;
+    private final static int N = 500000;                // total # of iterations 160000
     //private final static int N = 6624*75;             // total # of iterations 160000
-    //private final static int N = 4000;             // fix fix test only !!!
     private static double[] pt6_old;
+    private static double eig, angle;                   // first-order response
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     //protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     protected Line2D.Double xaxis = new Line2D.Double(0, 0, 0, 0);
@@ -62,7 +62,7 @@ public class Rossler_y_vs_x extends JDialog
         else
             setTitle(" Rossler System - phase y' vs. x'");
         setIconImage(img);
-        setSize(610 + 100, 493 + 100 + 65);
+        setSize(610 + 135, 493 + 135 + 65);
         setLocationByPlatform(true);
 
         final JLabel[] lbl = {new JLabel("a"),
@@ -89,6 +89,7 @@ public class Rossler_y_vs_x extends JDialog
         JPanel[] dataPanel = new JPanel[lbl.length];
         JButton btnRun = new JButton("Run");
         JButton btnFitLinear = new JButton("Fit Linear");
+        JButton btnLinearUniform = new JButton("Linear Uniform");
         JButton btnFitCubic = new JButton("Fit Cubic");
 
         for (int i = 0; i < spacerPanel.length; i++)
@@ -178,6 +179,7 @@ public class Rossler_y_vs_x extends JDialog
         parmsPanel.add(spacerPanel[2]);
         parmsPanel.add(dataPanel[9]);
         parmsPanel.add(btnFitLinear);
+        parmsPanel.add(btnLinearUniform);
         parmsPanel.add(btnFitCubic);
 
         parmsPanel.setMaximumSize(new Dimension(140, 3000));
@@ -200,7 +202,7 @@ public class Rossler_y_vs_x extends JDialog
                     if (txt[i].getText().isEmpty())
                         txt[i].setText("0");
                 if (phaseRadio.isSelected())                                // normal phase space
-                    setTitle(" Rossler System - phase y' vs. x' (" + Main.project_phi + ", " + Main.project_theta + ") (" + String.format(" %.6f", delt) + ")");
+                    setTitle(" Rossler System - phase y' vs. x' (" + String.format("%.4f", Main.project_phi) + ", " + String.format("%.4f", Main.project_theta) + ", " + Double.toString(Main.project_psi) + ") (" + String.format(" %.6f", delt) + ")");
                 else if (ddcRadio.isSelected())                             // ddc phase space
                     setTitle(" Rossler System - dy/dc vs. dx/dc");
                 else if (ddu3Radio.isSelected())
@@ -236,6 +238,15 @@ public class Rossler_y_vs_x extends JDialog
             public void actionPerformed(ActionEvent event)
             {
                 fit_linear_response();
+                setTitle(" Rossler System - phase y' vs. x' (" + String.format("%.4f", Main.project_phi) + ", " + String.format("%.4f", Main.project_theta) + ", " + Double.toString(Main.project_psi) + ") (" + String.format(" %.6f", Main.final_delt) + ")");
+            }
+        });
+
+        btnLinearUniform.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                fit_linear_uniform();
             }
         });
 
@@ -513,23 +524,34 @@ public class Rossler_y_vs_x extends JDialog
         phasePanel.repaint();
     }
 
-    private static void fit_linear_response()
+    protected static void fit_linear_response()
     {
         // collect data to fit first-order response, after one cycle,
         // to a change in the (x, y, z) space, using runge_kutta_rossler6_ddu3
 
         double[][] M = new double[2][2];
-        //double[] xfer = new double[] {0.849, 0.6, 2.0, 1000, 0.004902218142892439, -0.2232916147900874, -1.1959655735484451, 0.36289817334207225};
-        //Main.a = xfer[0];
-        //Main.b = xfer[1];
-        //Main.c = xfer[2];
-        //Main.final_x = xfer[5];                 // emergency initiallization only
-        //Main.final_y = xfer[6];
-        //Main.final_z = xfer[7];
-        //Main.final_Period = xfer[3];
-        //Main.final_delt = xfer[4];
+        //double[] xfer = new double[] {0.849, 0.6018, 2.0, 2400, -0.0020471164547495166, 2.6849001618094372, -1.1439999019642204, 3.036339134085159};
+        //double[] xfer = new double[] {0.85, 0.6018, 2.0, 2400, -0.0020450777377757036, 2.2702741689085024, -2.4815181841064016, 0.6853905939587694};
+        //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, -0.0020395574528625335, 0.20132279598260672, -0.7745162686808151, 0.9962229102135204};
+        //double[] xfer = new double[] {0.614, 0.6, 1.25, 2400, -0.0020438634385907496, 0.15269785271686556, -0.8605327001131522, 0.8700192447772629};
+        //double[] xfer = new double[] {0.614, 0.6, 1.25, 480, 0.010219317196403203, 0.7671919228020011, -0.7640693851662826, 1.4111457192514334};
+        //double[] xfer = new double[] {0.614, 0.6, 1.25, 2500, 0.0019621089010658493, 0.1526369391508889, -0.8648954643212351, 0.8659408980845922};
+        //double[] xfer = new double[] {0.6156, 0.6, 1.25, 2500, 0.001957694636454919, 0.16856451015236784, -0.8790816254831765, 0.8712855944424082};
+        //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2500, 0.0019631483769110302, 0.14895150728061218, -0.8615515776624472, 0.8647183170080577};
+        double[] xfer = new double[] {0.613615, 0.6, 1.25, 2400, 0.0020449462259348994, 0.14904317050291274, -0.8569829974422363, 0.8689988111468419};
+        //double[] xfer = new double[] {0.613612788, 0.6, 1.25, 2500, 0.0019631483769110302, 0.14895150728061218, -0.8615515776624472, 0.8647183170080577};
+        //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 1.0727371201489548, -1.0179184419750524, 1.3046631553824795};
+        Main.a = xfer[0];
+        Main.b = xfer[1];
+        Main.c = xfer[2];
+        Main.final_x = xfer[5];                 // emergency initiallization only
+        Main.final_y = xfer[6];
+        Main.final_z = xfer[7];
+        Main.final_Period = xfer[3];
+        Main.final_delt = xfer[4];
+        Main.final_delt *= -1;                  // temporarily reverse the direction of time
 
-        Main.skew_transform = false;        // default = false, try to detect "non-uniformity"
+        Main.skew_transform = false;            // default = false, try to detect "non-uniformity"
         double incr = 1;
         double xdot = -Main.final_y - Main.final_z;
         double ydot =  Main.final_x + Main.a*Main.final_y;
@@ -562,7 +584,6 @@ public class Rossler_y_vs_x extends JDialog
                 Main.runge_kutta_rossler6_ddu3(pt6, Main.final_delt, Main.c);
             Point2D.Double pt2 = Main.project_2D(pt6[3], pt6[4], pt6[5]);   // final (dxdu', dydu', dzdu')
             double zp = Main.project_zp(pt6[3], pt6[4], pt6[5]);
-            //System.out.print("[" + pt6[3] + ", " + pt6[4] + ", " + pt6[5] + "]");
             System.out.print("[" + pt2.x + ", " + pt2.y + ", " + zp + "]");
             if (i < 2)
             {
@@ -573,15 +594,19 @@ public class Rossler_y_vs_x extends JDialog
         }
         System.out.println("])");
         System.out.println("\nfinal x_y_z , " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
-        double eig = Math.sqrt(M[0][0]*M[1][1] - M[0][1]*M[1][0]);
-        double angle = Math.acos((M[0][0] + M[1][1])/2/eig);
+        eig = Math.sqrt(M[0][0]*M[1][1] - M[0][1]*M[1][0]);
+        angle = Math.acos((M[0][0] + M[1][1])/2/eig);
         System.out.println("|eig|, angle = " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
         Main.final_Re_V21 = (M[1][1] - M[0][0])/2/M[0][1];          // define the skew-transform matrix
         Main.final_Im_V21 = Math.sqrt(-(M[1][1] - M[0][0])*(M[1][1] - M[0][0]) - 4*M[0][1]*M[1][0])/2/M[0][1];
-        System.out.println("ellipse phi = " + Math.atan((M[1][1] - M[0][0])/(M[0][1] + M[1][0]))*180/Math.PI/2);
         double sqr = Math.sqrt((M[0][1] + M[1][0])*(M[0][1] + M[1][0]) + (M[1][1] - M[0][0])*(M[1][1] - M[0][0]));
-        System.out.println(("ellipse a/b = " + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr))));
+        System.out.println("ellipse phi_a/b = ," + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", "
+                                                 + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
         System.out.println("Re_V21, Im_V21 = " + Main.project_psi + ", " + Main.final_Re_V21 + ", " + Main.final_Im_V21);
+//        System.out.println("summary, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + eig + ", " + angle*180/Math.PI + ", " + Main.final_Re_V21 + ", " + Main.final_Im_V21 + ", " + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", " + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
+        System.out.println("summary, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + + Main.final_Period + ", " + Main.final_delt + ", " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
+        //System.out.println("summary, " + M[0][0] + ", " + M[0][1] + ", " + Main.final_Re_V21);
+        //System.out.println("summary, " + M[1][0] + ", " + M[1][1] + ", " + Main.final_Im_V21);
 
         // test transforms (test code, to be deleted)
 
@@ -594,6 +619,67 @@ public class Rossler_y_vs_x extends JDialog
 //        System.out.println("orig  = " + testx + ", " + testy + ", " + testz);
 //        System.out.println("prime = " + testpt2.x + ", " + testpt2.y + ", " + testzp);
 //        System.out.println("back  = " + Main.invert_from_xp_yp(testpt2.x, testpt2.y, testzp, "x") + ", " + Main.invert_from_xp_yp(testpt2.x, testpt2.y, testzp, "y") + ", " + Main.invert_from_xp_yp(testpt2.x, testpt2.y, testzp, "z"));
+    }
+
+    protected static void fit_linear_uniform()
+    {
+        // calculate first-order response, during one cycle,
+        // assume that the output has already been made uniform, by running 'fit_linear_response()'
+        // generate file output of a first-order S matrix
+
+        if (Main.final_Re_V21 == 0 || Main.final_Im_V21 == 0 || Main.project_phi == 0 || Main.project_theta == 0
+        ||  Main.final_Period == 0 || eig == 0 || angle == 0 || Main.skew_transform)
+        {
+            System.out.println("Bad data in 'fit_linear_uniform()'");
+            return;
+        }
+        double[] pt6 = new double[6];
+        Point2D.Double pt2;
+        Main.skew_transform = true;                 // make the linear response "uniform"
+        double xdot = -Main.final_y - Main.final_z;
+        double ydot =  Main.final_x + Main.a*Main.final_y;
+        double zdot =  Main.b + Main.final_z*(Main.final_x - Main.c);
+        double v = Math.sqrt(xdot*xdot + ydot*ydot + zdot*zdot);
+        //double deleig = -Math.log(eig)/Main.final_Period;
+        //double delangle = (angle + 2*Math.PI)/Main.final_Period;
+        //double delx, dely;
+        //System.out.println(Math.exp(deleig) + ", " + delangle);
+        try
+        {
+            String fname = "C:\\Windows\\Temp\\Rossler_S_Matrix_" + Main.a + "_" + Main.b + "_" + Main.c + "_" + String.format("%.6f", Main.final_delt) + ".csv";
+            FileWriter fw = new FileWriter(fname, false);
+            PrintWriter fout = new PrintWriter(fw);
+            fout.println("Rossler S matrix, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt);
+            fout.println("phi_theta_psi, " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi);
+            fout.println("|eig|_angle, " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
+            fout.println("Re_V21_Im_V21, " + Main.final_Re_V21 + ", " + Main.final_Im_V21);
+            fout.println("");
+            fout.println("i,pt6[0],pt6[1],pt6[2],dxp,dyp,dzp");
+            for (int i = 0; i < 3; i++)         // initiallize dx/du, dy/du, or dz/du
+            {
+                if (i == 0)                                                     // initial (dxdu', dydu', dzdu')
+                    pt6 = new double[] {Main.final_x, Main.final_y, Main.final_z, Main.invert_from_xp_yp(1, 0, 0, "x"), Main.invert_from_xp_yp(1, 0, 0, "y"), Main.invert_from_xp_yp(1, 0, 0, "z")};
+                else if (i == 1)
+                    pt6 = new double[] {Main.final_x, Main.final_y, Main.final_z, Main.invert_from_xp_yp(0, 1, 0, "x"), Main.invert_from_xp_yp(0, 1, 0, "y"), Main.invert_from_xp_yp(0, 1, 0, "z")};
+                else
+                    pt6 = new double[] {Main.final_x, Main.final_y, Main.final_z, xdot/v, ydot/v, zdot/v};
+                fout.println("axis_" + i);
+                pt2 = Main.project_2D(pt6[3], pt6[4], pt6[5]);   // final (dxdu', dydu', dzdu')
+                fout.println("0" + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt6[3], pt6[4], pt6[5]));
+                for (int k = 1; k <= Main.final_Period; k++)                     // loop through one cycle
+                {
+                    Main.runge_kutta_rossler6_ddu3(pt6, Main.final_delt, Main.c);
+                    pt2 = Main.project_2D(pt6[3], pt6[4], pt6[5]);
+                    //delx = Math.exp(k*deleig)*( pt2.x*Math.cos(k*delangle) + pt2.y*Math.sin(k*delangle));
+                    //dely = Math.exp(k*deleig)*(-pt2.x*Math.sin(k*delangle) + pt2.y*Math.cos(k*delangle));
+                    //fout.println(k + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + delx + ", " + dely + ", " + Main.project_zp(pt6[3], pt6[4], pt6[5]));
+                    fout.println(k + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt6[3], pt6[4], pt6[5]));
+                }
+            }
+            fout.close();
+        }
+        catch (java.io.IOException e)
+            {System.out.println("Rossler_Output.csv save error = " + e);}
     }
 
     private static void fit_cubic_response()
@@ -611,7 +697,7 @@ public class Rossler_y_vs_x extends JDialog
         //Main.final_Period = xfer[3];
         //Main.final_delt = xfer[4];
 
-        //Main.skew_transform = true;             // make the linear response "uniform"
+        Main.skew_transform = true;             // make the linear response "uniform"
         double incr = 0.001;
         //double xdot = -Main.final_y - Main.final_z;
         //double ydot =  Main.final_x + Main.a*Main.final_y;
@@ -640,22 +726,24 @@ public class Rossler_y_vs_x extends JDialog
         System.out.println("x'_y'_z'    , " + pt2.x + ", " + pt2.y + ", " + zp + ",\\n\\");
         System.out.println("\\n\\");
         System.out.println("i,j,x',y',tc\"");
-
         System.out.print("data = np.array([");
-        for (int i = -2; i < 3; i++)        // increment x' by i*incr
-            for (int j = -2; j < 3; j++)    // increment y' by j*incr
+//        for (int i = -2; i < 3; i++)        // increment x' by i*incr
+//            for (int j = -2; j < 3; j++)    // increment y' by j*incr
+        for (int i = 0; i < 3; i++)         // increment r' radius by i*incr
+            for (int j = 0; j < 12; j++)    // increment angle by 30 degrees
+                if (i > 0 || j == 0)
             {
-                pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i, incr*j, 0, "x"),
-                                    Main.final_y + Main.invert_from_xp_yp(incr*i, incr*j, 0, "y"),
-                                    Main.final_z + Main.invert_from_xp_yp(incr*i, incr*j, 0, "z")};
+                pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i*Math.cos(j*Math.PI/6), incr*i*Math.sin(j*Math.PI/6), 0, "x"),
+                                    Main.final_y + Main.invert_from_xp_yp(incr*i*Math.cos(j*Math.PI/6), incr*i*Math.sin(j*Math.PI/6), 0, "y"),
+                                    Main.final_z + Main.invert_from_xp_yp(incr*i*Math.cos(j*Math.PI/6), incr*i*Math.sin(j*Math.PI/6), 0, "z")};
                 //System.out.println("org   , " + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 // loop through one cycle
-                for (int k = 0; k < Main.final_Period + 0*10; k++) // add 10 iterations just to be sure it crosses
+                for (int k = 0; k < Main.final_Period + 1*40; k++) // add 10 iterations just to be sure it crosses
                 {
                     Main.runge_kutta_rossler3(pt3, Main.final_delt, Main.a, Main.b, Main.c);
                     //if (k < 2 || k > Main.final_Period - 3)
                     //    System.out.println("---   , " + (k + 1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
-                    if (false && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
+                    if (true && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
                     {
                         pt2old = Main.project_2D(xold, yold, zold);
                         pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
@@ -667,19 +755,19 @@ public class Rossler_y_vs_x extends JDialog
                         xc = ((zpnew - zp)*pt2old.x + (zp - zpold)*pt2new.x)/(zpnew - zpold);
                         yc = ((zpnew - zp)*pt2old.y + (zp - zpold)*pt2new.y)/(zpnew - zpold);
                         System.out.print("[" + i + ", " + j + ", " + xc + ", " + yc + ", " + (k + (zp - zpold)/(zpnew - zpold)) + "]");
-                        if (i < 2 || j < 2)
+                        if (i < 2 || j < 11)
                             System.out.println(",");
                     }
                     xold = pt3[0];
                     yold = pt3[1];
                     zold = pt3[2];
                 }
-                if (true)                          // use last point (synchronize in time)
+                if (false)                          // use last point (synchronize in time)
                 {
                     pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
                     zpnew = Main.project_zp(pt3[0], pt3[1], pt3[2]);
                     System.out.print("[" + i + ", " + j + ", " + pt2new.x + ", " + pt2new.y + ", " + zpnew + "]");
-                    if (i < 2 || j < 2)
+                    if (i < 2 || j < 11)
                         System.out.println(",");
                 }
             }

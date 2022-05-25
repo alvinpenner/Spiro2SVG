@@ -44,8 +44,9 @@ public class stationary_pt
             //regula_falsi ();
             //calc_det(i*2*Math.PI/Period);
         }
-        gen_limit_array();
+        //gen_limit_array();
         //one_shot_calc();
+        regula_falsi_ba(1.020263121, -8.520878737);     // b/a as fxn of (eig, phi)
     }
 
     private static double regula_falsi ()
@@ -144,5 +145,38 @@ public class stationary_pt
                         - (x - c)*Math.sin(theta)*Math.sin(theta)
                         + (z - 1)*Math.sin(phi)*Math.sin(theta)*Math.cos(theta);
         System.out.println("\nMout :\n" + x + ", " + z + ", " + Mout00 + ", " + Mout01 + ", " + Mout10 + ", " + Mout11);
+    }
+
+    private static void regula_falsi_ba(double eig, double phi_set)
+    {
+        // for a cubic model of a N_S torus, calculate b/a required to produce a phase shift phi
+
+        double old_ba = 4.92115;
+        double new_ba = 4.92124;
+        double old_phi = calc_phi(old_ba, eig);
+        double new_phi = calc_phi(new_ba, eig);
+        double temp_ba;
+
+        System.out.println("eig, phi, b/a");
+        System.out.println(eig + ", " + old_phi + ", " + old_ba);
+        System.out.println(eig + ", " + new_phi + ", " + new_ba);
+        do
+        {
+            temp_ba = old_ba + (phi_set - old_phi)*(new_ba - old_ba)/(new_phi - old_phi);
+            old_ba = new_ba;
+            old_phi = new_phi;
+            new_ba = temp_ba;
+            new_phi = calc_phi(new_ba, eig);
+            System.out.println(eig + ", " + new_phi + ", " + new_ba);
+        } while (Math.abs(new_ba - old_ba) > 0.00000000001);
+    }
+
+    private static double calc_phi (double ba, double eig)
+    {
+        // see book Chaos IV - page 16
+        // for a cubic model of a Neimark-Sacker torus
+        // calculate phase shift phi as fxn of eig = (1 + alpha) and b/a
+        double sqr = Math.sqrt(1 + ba*ba - ba*ba*eig*eig);
+        return Math.atan(ba*(-eig + sqr)/(ba*ba*eig + sqr))*180/Math.PI;
     }
 }

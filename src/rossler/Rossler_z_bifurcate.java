@@ -19,7 +19,7 @@ public class Rossler_z_bifurcate extends JDialog
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
     protected static double scan_start, scan_end;
-    protected static double Tmin = -6, Tmax = -4;
+    protected static double Tmin = -5.1, Tmax = -4.7;
 
     public Rossler_z_bifurcate(Image img)
     {
