@@ -34,7 +34,8 @@ public class Main
     protected static double xmin, xmax, ymin, ymax;     // (x', y') plot range for x_y_scatter (transformed)
     protected static double project_phi, project_theta; // Euler angles
     protected static double project_psi;
-    protected static double final_x, final_y, final_z, final_delt, final_Period;
+    protected static double final_x, final_y, final_z, final_delt;
+    protected static int final_Period;
     protected static double final_Re_V21, final_Im_V21; // skew transform first-order response to 'normal' form
     protected static String type;
     protected static final String VERSION_NO = "0.1";

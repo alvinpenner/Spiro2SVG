@@ -101,5 +101,6 @@ public class Euler_Slider extends JDialog
                 //Rossler_x_y_scatter.txtymax.setText(String.format(fmt, - pt_trans_new.y + mid));
             }
         });
+        slider_psi.setSnapToTicks(true);    // snap psi to nearest 5 degrees
     }
 }
