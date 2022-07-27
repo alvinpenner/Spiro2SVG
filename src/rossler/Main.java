@@ -687,7 +687,7 @@ public class Main
         return solve_cubic(3*coef[2]/4/coef[3], 2*coef[1]/4/coef[3], coef[0]/4/coef[3]);
     }
 
-    private static double solve_cubic(double p, double q, double r)
+    protected static double solve_cubic(double p, double q, double r)
     {
         // see Math CRC book, page 392
 
@@ -722,7 +722,7 @@ public class Main
         }
         else
         {
-//            System.out.println("1 cubic d > 0 : " + (Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3));
+            //System.out.println("1 cubic d > 0 : " + (Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3));
             return Math.cbrt(-cub/2 + Math.sqrt(cud)) + Math.cbrt(-cub/2 - Math.sqrt(cud)) - p/3;
         }
     }
