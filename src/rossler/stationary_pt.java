@@ -25,6 +25,7 @@ public class stationary_pt
     private static final double delz = Math.atan2(w, -a);
     private static double old_phase = 3.11;
     private static double old_det;
+    private static double AHa, AHb, AHc;
 
     public static void main (String[] args)
     {
@@ -34,6 +35,7 @@ public class stationary_pt
         //delx = delx - delz;
         //dely = dely - delz;
         //delz = 0;
+/*
         System.out.println("limit pt. a b c z0 w    , " + a + ", " + b + ", " + c + ", " + z0 + ", " + w);
         System.out.println("limit pt. absx absy absz, " + absx + ", " + absy + ", " + absz);
         System.out.println("limit pt. delx dely delz, " + delx + ", " + dely + ", " + delz);
@@ -47,6 +49,8 @@ public class stationary_pt
         //gen_limit_array();
         //one_shot_calc();
         regula_falsi_ba(1.020263121, -8.520878737);     // b/a as fxn of (eig, phi)
+*/
+        Andronov_Hopf_equilibrium();
     }
 
     private static double regula_falsi ()
@@ -178,5 +182,58 @@ public class stationary_pt
         // calculate phase shift phi as fxn of eig = (1 + alpha) and b/a
         double sqr = Math.sqrt(1 + ba*ba - ba*ba*eig*eig);
         return Math.atan(ba*(-eig + sqr)/(ba*ba*eig + sqr))*180/Math.PI;
+    }
+
+    private static void Andronov_Hopf_equilibrium()
+    {
+        // Barrio equilibrium Fig 5, calculate A-H 'b' as fxn of 'c'
+        // Jacobian eigenvalue must be imaginary
+
+        AHa = 0.3;
+        //AHb = 0.3;
+        AHc = 0.62;
+
+        System.out.println("a, b, c, z");
+        //for (AHc = 0.601; AHc > 0.599; AHc -= 0.00005)
+        //    regula_falsi_A_H();
+        for (AHb = 0.295; AHb < 0.3; AHb += 0.0005)
+            regula_falsi_A_H();
+    }
+
+    private static void regula_falsi_A_H()
+    {
+        double z, A, B, C;
+        double new_b, new_c, old_f, new_f;
+        double temp;
+
+        z = (AHc + Math.sqrt(AHc*AHc - 4*AHa*AHb))/2/AHa;
+        A = -(AHa*z - AHc + AHa);
+        B = 1 + z + AHa*(AHa*z - AHc);
+        C = -2*AHa*z + AHc;
+        old_f = C - A*B;
+        //new_b = AHb + 0.00001;
+        new_c = AHc + 0.0001;
+        //System.out.println("\n" + AHc + ", " + old_f);
+        do
+        {
+            //z = (AHc + Math.sqrt(AHc*AHc - 4*AHa*new_b))/2/AHa;
+            z = (new_c + Math.sqrt(new_c*new_c - 4*AHa*AHb))/2/AHa;
+            //A = -(AHa*z - AHc + AHa);
+            //B = 1 + z + AHa*(AHa*z - AHc);
+            //C = -2*AHa*z + AHc;
+            A = -(AHa*z - new_c + AHa);
+            B = 1 + z + AHa*(AHa*z - new_c);
+            C = -2*AHa*z + new_c;
+            new_f = C - A*B;
+            //temp = AHb - old_f*(new_b - AHb)/(new_f - old_f);
+            temp = AHc - old_f*(new_c - AHc)/(new_f - old_f);
+            //AHb = new_b;
+            AHc = new_c;
+            new_c = temp;
+            old_f = new_f;
+            //System.out.println(new_c + ", " + new_f + ", " + z);
+        //} while (Math.abs(new_b - AHb) > 0.00000000001);
+        } while (Math.abs(new_c - AHc) > 0.0000000001);
+        System.out.println(AHa + ", " + AHb + ", " + AHc + ", " + z);
     }
 }

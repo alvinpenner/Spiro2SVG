@@ -129,8 +129,8 @@ public final class Perturb_Torus
                 gen_time_sync_Cxy(i, j);
         System.out.println("])");
 
-        gen_quadratic_extrapolate_Cxy();        // enhance the t_sync result (numerical curve-fit)
-        gen_quadratic_response();               // calculate analytical partial derivatives
+        gen_TOF_extrapolate_Cxy();              // enhance the t_sync result (numerical curve-fit)
+        gen_cubic_response();                   // calculate analytical partial derivatives
         //gen_quadratic_Cxy(0, 0);              // temporary test code only!
         //integrate_state_i(1);
         //differentiate_state_i(2, 1000);
@@ -206,7 +206,7 @@ public final class Perturb_Torus
         System.out.println("end  , " + istate + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(accum_vec[0], accum_vec[1], accum_vec[2]));
     }
 
-    private static void partial_integrate(int ix, int iy, int tk)
+    private static void partial_integrate(int ix, int iy, int tk)   // test code only
     {
         // partial integration up to time tk
 
@@ -307,8 +307,8 @@ public final class Perturb_Torus
                     state_y2[k][i] += S[k][i][j]*y_accum_half[j];
                 state_y2[k][i] *= Main.final_delt;
             }
-            if (ix == 1 && iy == 1)
-                System.out.println("state_y2 , " + ix + ", " + iy + ", " + k + ", " + state_y2[k][0] + ", " + state_y2[k][1] + ", " + state_y2[k][2]);
+            //if (ix == 1 && iy == 1)
+            //    System.out.println("state_y2 , " + ix + ", " + iy + ", " + k + ", " + state_y2[k][0] + ", " + state_y2[k][1] + ", " + state_y2[k][2]);
         }
 
         // cubic component
@@ -394,12 +394,14 @@ public final class Perturb_Torus
             coeff[0][3] = pt2.x;
             coeff[1][3] = pt2.y;
             coeff[2][3] = zp;
+            //System.out.println("raw, " + ix + ", " + iy + ", " + pt2.x + ", " + pt2.y + ", " + zp);
         }
         if (ix == 0 && iy == 1)         // Cx03
         {
             coeff[0][6] = pt2.x;
             coeff[1][6] = pt2.y;
             coeff[2][6] = zp;
+            //System.out.println("raw, " + ix + ", " + iy + ", " + pt2.x + ", " + pt2.y + ", " + zp);
         }
         if (ix == 1 && iy == 2)
         {
@@ -416,9 +418,15 @@ public final class Perturb_Torus
             coeff[1][5] = (  6*coeff[1][3] - 1*pt2.y + 2*fy12 - 15*coeff[1][6])/6;
             coeff[2][5] = (  6*coeff[2][3] - 1*zp + 2*fz12 - 15*coeff[2][6])/6;
         }
+        //if (ix == -1 && iy == 1)
+        //    System.out.println("raw, " + ix + ", " + iy + ", " + pt2.x + ", " + pt2.y + ", " + zp);
+        //if (ix ==  1 && iy == 1)
+        //    System.out.println("raw, " + ix + ", " + iy + ", " + pt2.x + ", " + pt2.y + ", " + zp);
+        //if (ix ==  1 && iy == -1)
+        //    System.out.println("raw, " + ix + ", " + iy + ", " + pt2.x + ", " + pt2.y + ", " + zp);
     }
 
-    private static void gen_quadratic_extrapolate_Cxy()
+    private static void gen_TOF_extrapolate_Cxy()
     {
         // assume we have calculated second-order response, based on S matrix, during one cycle
         // then enhance the theory with a quadratic extrapolation
@@ -496,7 +504,7 @@ public final class Perturb_Torus
         System.out.println("])");
     }
 
-    private static void gen_quadratic_response()
+    private static void gen_cubic_response()
     {
         // assume we have calculated second-order (t-sync) response, based on S matrix, during one cycle
         // then define the partial derivatives of the output (x, y, z) response wrt input (x', y')
@@ -504,15 +512,11 @@ public final class Perturb_Torus
         double x0dot = -Main.final_y - Main.final_z;
         double y0dot =  Main.final_x + Main.a*Main.final_y;
         double z0dot =  Main.b + Main.final_z*(Main.final_x - Main.c);
-        double x02dot = -y0dot - z0dot;
-        double y02dot =  x0dot + Main.a*y0dot;
-        double z02dot =  z0dot*(Main.final_x - Main.c) + Main.final_z*x0dot;
-        double x03dot = -y02dot - z02dot;
-        double y03dot =  x02dot + Main.a*y02dot;
-        double z03dot =  z02dot*(Main.final_x - Main.c) + 2*z0dot*x0dot + Main.final_z*x02dot;
+        double[] P2dot = new double[] {-y0dot - z0dot, x0dot + Main.a*y0dot, z0dot*(Main.final_x - Main.c) + Main.final_z*x0dot};
+        double[] P3dot = new double[] {-P2dot[1] - P2dot[2], P2dot[0] + Main.a*P2dot[1], P2dot[2]*(Main.final_x - Main.c) + 2*z0dot*x0dot + Main.final_z*P2dot[0]};
         double[][] dPdi = new double[][] {{S[Main.final_Period][0][0], S[Main.final_Period][0][1]},                     // dP/di (redundant)
-                                           {S[Main.final_Period][1][0], S[Main.final_Period][1][1]},                    // used to calculate dPdot/di
-                                           {S[Main.final_Period][2][0], S[Main.final_Period][2][1]}};                   // row = (x,y,z), col = (i,j)
+                                          {S[Main.final_Period][1][0], S[Main.final_Period][1][1]},                     // used to calculate dPdot/di
+                                          {S[Main.final_Period][2][0], S[Main.final_Period][2][1]}};                    // row = (x,y,z), col = (i,j)
         double[][] dPdotdi = new double[][] {{-dPdi[1][0] - dPdi[2][0]       , -dPdi[1][1] - dPdi[2][1]},               // dPdot/di
                                              { dPdi[0][0] + Main.a*dPdi[1][0],  dPdi[0][1] + Main.a*dPdi[1][1]},
                                              { dPdi[2][0]*(Main.final_x - Main.c) + Main.final_z*dPdi[0][0], dPdi[2][1]*(Main.final_x - Main.c) + Main.final_z*dPdi[0][1]}};
@@ -523,10 +527,14 @@ public final class Perturb_Torus
         double[][] d2Pdidj = new double[3][3];                                  // row = (x,y,z), col = (ii,ij,jj)
         double[][] d2Pdotdidj = new double[3][3];                               // row = (x,y,z), col = (ii,ij,jj)
         double PdotPdot = x0dot*x0dot + y0dot*y0dot + z0dot*z0dot;
-        double PdotP2dot = x0dot*x02dot + y0dot*y02dot + z0dot*z02dot;
+        double PdotP2dot = x0dot*P2dot[0] + y0dot*P2dot[1] + z0dot*P2dot[2];
         double[] dalphadi = new double[] {-(x0dot*dPdi[0][0] + y0dot*dPdi[1][0] + z0dot*dPdi[2][0])/PdotPdot,
                                           -(x0dot*dPdi[0][1] + y0dot*dPdi[1][1] + z0dot*dPdi[2][1])/PdotPdot};
         double[] d2alphadidj = new double[3];
+        double[][] collect_Pdot = new double[3][7];     // i = (fx, fy, fz), j = (Cx20, Cx11, Cx02, Cx30, Cx21, Cx12, Cx03)
+        double[][] collect_P2dot = new double[3][7];    // terms proportional to P2dot
+        double[][] collect_P3dot = new double[3][7];    // terms proportional to P3dot
+        double[][] collect_Palldot = new double[3][7];
         int i;
 
         // summarize quadratic coeff
@@ -538,11 +546,11 @@ public final class Perturb_Torus
         System.out.println("\nd2Pdidj :");          // convert quadratic coeff from primed to org units
         for (i = 0; i < 3; i++)
         {
-            d2Pdidj[0][i] = Main.invert_from_xp_yp(coeff[0][i], coeff[1][i], coeff[2][i], "x");
+            d2Pdidj[0][i] = Main.invert_from_xp_yp(coeff[0][i], coeff[1][i], coeff[2][i], "x");     // terms proportional to P
             d2Pdidj[1][i] = Main.invert_from_xp_yp(coeff[0][i], coeff[1][i], coeff[2][i], "y");
             d2Pdidj[2][i] = Main.invert_from_xp_yp(coeff[0][i], coeff[1][i], coeff[2][i], "z");
-            d2Pdotdidj[0][i] = -d2Pdidj[1][i] - d2Pdidj[2][i];                  // time derivative
-            d2Pdotdidj[1][i] =  d2Pdidj[0][i] + Main.a*d2Pdidj[1][i];           // see Chaos IV, p. 40
+            d2Pdotdidj[0][i] = -d2Pdidj[1][i] - d2Pdidj[2][i];                                      // Pdot: time derivative
+            d2Pdotdidj[1][i] =  d2Pdidj[0][i] + Main.a*d2Pdidj[1][i];                               // see Chaos IV, p. 40
             d2Pdotdidj[2][i] =  Main.final_z*d2Pdidj[0][i] + (Main.final_x - Main.c)*d2Pdidj[2][i];
         }
         d2Pdotdidj[2][0] += S[Main.final_Period][0][0]*S[Main.final_Period][2][0];  // add quadratic M(S, S) term
@@ -555,16 +563,16 @@ public final class Perturb_Torus
             System.out.println(i + ", " + d2Pdotdidj[i][0] + ", " + d2Pdotdidj[i][1] + ", " + d2Pdotdidj[i][2]);
 
         System.out.println("\ndalphadi :");
-        System.out.println(-dalphadi[0] + ", " + -dalphadi[1]);
+        System.out.println(dalphadi[0] + ", " + dalphadi[1]);
         System.out.println("\nd2alphadidj :");
-        d2alphadidj[0] = 0.5*(2.0*(x0dot*d2Pdidj[0][0] + y0dot*d2Pdidj[1][0] + z0dot*d2Pdidj[2][0])
+        d2alphadidj[0] = - 0.5*(2.0*(x0dot*d2Pdidj[0][0] + y0dot*d2Pdidj[1][0] + z0dot*d2Pdidj[2][0])
                          + 2*dalphadi[0]*(x0dot*dPdotdi[0][0] + y0dot*dPdotdi[1][0] + z0dot*dPdotdi[2][0])
                          + dalphadi[0]*dalphadi[0]*PdotP2dot)/PdotPdot;
-        d2alphadidj[1] = ((x0dot*d2Pdidj[0][1] + y0dot*d2Pdidj[1][1] + z0dot*d2Pdidj[2][1])
+        d2alphadidj[1] = - ((x0dot*d2Pdidj[0][1] + y0dot*d2Pdidj[1][1] + z0dot*d2Pdidj[2][1])
                          + dalphadi[0]*(x0dot*dPdotdi[0][1] + y0dot*dPdotdi[1][1] + z0dot*dPdotdi[2][1])
                          + dalphadi[1]*(x0dot*dPdotdi[0][0] + y0dot*dPdotdi[1][0] + z0dot*dPdotdi[2][0])
                          + dalphadi[0]*dalphadi[1]*PdotP2dot)/PdotPdot;
-        d2alphadidj[2] = 0.5*(2.0*(x0dot*d2Pdidj[0][2] + y0dot*d2Pdidj[1][2] + z0dot*d2Pdidj[2][2])
+        d2alphadidj[2] = - 0.5*(2.0*(x0dot*d2Pdidj[0][2] + y0dot*d2Pdidj[1][2] + z0dot*d2Pdidj[2][2])
                          + 2*dalphadi[1]*(x0dot*dPdotdi[0][1] + y0dot*dPdotdi[1][1] + z0dot*dPdotdi[2][1])
                          + dalphadi[1]*dalphadi[1]*PdotP2dot)/PdotPdot;
         System.out.println(d2alphadidj[0] + ", " + d2alphadidj[1] + ", " + d2alphadidj[2]);
@@ -577,49 +585,89 @@ public final class Perturb_Torus
         for (i = 0; i < 3; i++)
             System.out.println(i + ", " + dP2dotdi[i][0] + ", " + dP2dotdi[i][1]);
 
-        System.out.println("\nCxy quadratic/cubic coeff (Type 1):");
-        for (i = 0; i < 3; i++)                     // Type 1: proportional to P0
+        System.out.println("\nCxy cubic coeff (Type t-sync):");
+        for (i = 0; i < 3; i++)                     // proportional to P
             System.out.println(i + ", " + coeff[i][0] + ", " + coeff[i][1] + ", " + coeff[i][2] + ", " + coeff[i][3] + ", " + coeff[i][4] + ", " + coeff[i][5] + ", " + coeff[i][6]);
 
-        double[][] coeff2 = new double[3][3];       // i = (fx, fy, fz), j = (Cxx, Cxy< Cyy)
-        System.out.println("\nCxy quadratic coeff (Type 2):");
-        for (i = 0; i < 3; i++)                     // Type 2: proportional to dalpha*dP0dot
+        //double[][] coeff2 = new double[3][3];       // i = (fx, fy, fz), j = (Cxx, Cxy< Cyy)
+        //System.out.println("\nCxy cubic coeff (Type Pdot):");
+        for (i = 0; i < 3; i++)                                                 // proportional to Pdot
         {
-            coeff2[i][0] = dalphadi[0]*dPdotdi[i][0];
-            coeff2[i][1] = dalphadi[0]*dPdotdi[i][1] + dalphadi[1]*dPdotdi[i][0];
-            coeff2[i][2] = dalphadi[1]*dPdotdi[i][1];
+            collect_Pdot[i][0] =                             dalphadi[0]*dPdotdi[i][0];
+            collect_Pdot[i][1] = dalphadi[0]*dPdotdi[i][1] + dalphadi[1]*dPdotdi[i][0];
+            collect_Pdot[i][2] = dalphadi[1]*dPdotdi[i][1];
+            collect_Pdot[i][3] = dalphadi[0]*d2Pdotdidj[i][0]                                                               + d2alphadidj[0]*dPdotdi[i][0];
+            collect_Pdot[i][4] = dalphadi[0]*d2Pdotdidj[i][1] + dalphadi[1]*d2Pdotdidj[i][0] + d2alphadidj[0]*dPdotdi[i][1] + d2alphadidj[1]*dPdotdi[i][0];
+            collect_Pdot[i][5] = dalphadi[0]*d2Pdotdidj[i][2] + dalphadi[1]*d2Pdotdidj[i][1] + d2alphadidj[1]*dPdotdi[i][1] + d2alphadidj[2]*dPdotdi[i][0];
+            collect_Pdot[i][6] =                                dalphadi[1]*d2Pdotdidj[i][2] + d2alphadidj[2]*dPdotdi[i][1];
             //System.out.println(i + ", " + coeff2[i][0] + ", " + coeff2[i][1] + ", " + coeff2[i][2]);
         }
-        double[][] coeff2proj = new double[3][3];   // project coeff2 to primed coord
-        Point2D.Double pt2temp;
-        double zptemp;
-        for (i = 0; i < 3; i++)
+// to be redundant
+//        double[][] coeff2proj = new double[3][3];   // project coeff2 to primed coord
+//        Point2D.Double pt2temp;
+//        double zptemp;
+//        for (i = 0; i < 3; i++)
+//        {
+//            pt2temp = Main.project_2D(collect_Pdot[0][i], collect_Pdot[1][i], collect_Pdot[2][i]);
+//            zptemp = Main.project_zp (collect_Pdot[0][i], collect_Pdot[1][i], collect_Pdot[2][i]);
+//            coeff2proj[0][i] = pt2temp.x;
+//            coeff2proj[1][i] = pt2temp.y;
+//            coeff2proj[2][i] = zptemp;
+//        }
+//        for (i = 0; i < 3; i++)
+//            System.out.println(i + ", " + coeff2proj[i][0] + ", " + coeff2proj[i][1] + ", " + coeff2proj[i][2]);
+
+//        System.out.println("\nCxy quadratic coeff (Type 3):");
+//        pt2temp = Main.project_2D(P2dot[0], P2dot[1], P2dot[2]);
+//        zptemp  = Main.project_zp(P2dot[0], P2dot[1], P2dot[2]);
+//        System.out.println("x, " + pt2temp.x*dalphadi[0]*dalphadi[0]/2 + ", " + pt2temp.x*dalphadi[0]*dalphadi[1] + ", " + pt2temp.x*dalphadi[1]*dalphadi[1]/2);
+//        System.out.println("y, " + pt2temp.y*dalphadi[0]*dalphadi[0]/2 + ", " + pt2temp.y*dalphadi[0]*dalphadi[1] + ", " + pt2temp.y*dalphadi[1]*dalphadi[1]/2);
+//        System.out.println("z, " + zptemp*dalphadi[0]*dalphadi[0]/2 + ", " + zptemp*dalphadi[0]*dalphadi[1] + ", " + zptemp*dalphadi[1]*dalphadi[1]/2);
+// end of redundant
+        for (i = 0; i < 3; i++)                                                 // proportional to P2dot
         {
-            pt2temp = Main.project_2D(coeff2[0][i], coeff2[1][i], coeff2[2][i]);
-            zptemp = Main.project_zp (coeff2[0][i], coeff2[1][i], coeff2[2][i]);
-            coeff2proj[0][i] = pt2temp.x;
-            coeff2proj[1][i] = pt2temp.y;
-            coeff2proj[2][i] = zptemp;
+            collect_P2dot[i][0] = dalphadi[0]*dalphadi[0]*P2dot[i]/2;
+            collect_P2dot[i][1] = dalphadi[0]*dalphadi[1]*P2dot[i];
+            collect_P2dot[i][2] = dalphadi[1]*dalphadi[1]*P2dot[i]/2;
+            collect_P2dot[i][3] =  dalphadi[0]*d2alphadidj[0]*P2dot[i]                               + dalphadi[0]*dalphadi[0]*dP2dotdi[i][0]/2;
+            collect_P2dot[i][4] = (dalphadi[0]*d2alphadidj[1] + dalphadi[1]*d2alphadidj[0])*P2dot[i] + dalphadi[0]*dalphadi[0]*dP2dotdi[i][1]/2 + dalphadi[0]*dalphadi[1]*dP2dotdi[i][0];
+            collect_P2dot[i][5] = (dalphadi[0]*d2alphadidj[2] + dalphadi[1]*d2alphadidj[1])*P2dot[i] + dalphadi[0]*dalphadi[1]*dP2dotdi[i][1]   + dalphadi[1]*dalphadi[1]*dP2dotdi[i][0]/2;
+            collect_P2dot[i][6] =                               dalphadi[1]*d2alphadidj[2]*P2dot[i]                                             + dalphadi[1]*dalphadi[1]*dP2dotdi[i][1]/2;
+        }
+        for (i = 0; i < 3; i++)                                                 // proportional to P3dot
+        {
+            collect_P3dot[i][0] = 0;
+            collect_P3dot[i][1] = 0;
+            collect_P3dot[i][2] = 0;
+            collect_P3dot[i][3] = dalphadi[0]*dalphadi[0]*dalphadi[0]*P3dot[i]/6;
+            collect_P3dot[i][4] = dalphadi[0]*dalphadi[0]*dalphadi[1]*P3dot[i]/2;
+            collect_P3dot[i][5] = dalphadi[0]*dalphadi[1]*dalphadi[1]*P3dot[i]/2;
+            collect_P3dot[i][6] = dalphadi[1]*dalphadi[1]*dalphadi[1]*P3dot[i]/6;
         }
         for (i = 0; i < 3; i++)
-            System.out.println(i + ", " + coeff2proj[i][0] + ", " + coeff2proj[i][1] + ", " + coeff2proj[i][2]);
-
-        System.out.println("\nCxy quadratic coeff (Type 3):");
-        pt2temp = Main.project_2D(x02dot, y02dot, z02dot);
-        zptemp = Main.project_zp (x02dot, y02dot, z02dot);
-        System.out.println("x, " + pt2temp.x*dalphadi[0]*dalphadi[0]/2 + ", " + pt2temp.x*dalphadi[0]*dalphadi[1] + ", " + pt2temp.x*dalphadi[1]*dalphadi[1]/2);
-        System.out.println("y, " + pt2temp.y*dalphadi[0]*dalphadi[0]/2 + ", " + pt2temp.y*dalphadi[0]*dalphadi[1] + ", " + pt2temp.y*dalphadi[1]*dalphadi[1]/2);
-        System.out.println("z, " + zptemp*dalphadi[0]*dalphadi[0]/2 + ", " + zptemp*dalphadi[0]*dalphadi[1] + ", " + zptemp*dalphadi[1]*dalphadi[1]/2);
-
+            for (int j = 0; j < 7; j++)
+                collect_Palldot[i][j] = collect_Pdot[i][j] + collect_P2dot[i][j] + collect_P3dot[i][j];
         System.out.println("\nCxy coeff (final):");
         Point2D.Double pt2eig = Main.project_2D(S[Main.final_Period][0][0], S[Main.final_Period][1][0], S[Main.final_Period][2][0]);
+//        System.out.print(Main.project_psi + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt);
+//        System.out.print(",0," + pt2eig.x + ",0, " + (coeff[0][0] + coeff2proj[0][0] + pt2temp.x*dalphadi[0]*dalphadi[0]/2) + ", " + (coeff[0][1] + coeff2proj[0][1] + pt2temp.x*dalphadi[0]*dalphadi[1]) + ", " + (coeff[0][2] + coeff2proj[0][2] + pt2temp.x*dalphadi[1]*dalphadi[1]/2) + ", " + coeff[0][3] + ", " + coeff[0][4] + ", " + coeff[0][5] + ", " + coeff[0][6]);
+//        System.out.println(",0," + pt2eig.y + ",0, " + (coeff[1][0] + coeff2proj[1][0] + pt2temp.y*dalphadi[0]*dalphadi[0]/2) + ", " + (coeff[1][1] + coeff2proj[1][1] + pt2temp.y*dalphadi[0]*dalphadi[1]) + ", " + (coeff[1][2] + coeff2proj[1][2] + pt2temp.y*dalphadi[1]*dalphadi[1]/2) + ", " + coeff[1][3] + ", " + coeff[1][4] + ", " + coeff[1][5] + ", " + coeff[1][6]);
+
         System.out.print(Main.project_psi + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt);
-        //System.out.print(",0," + pt2eig.x + ",0, " + (coeff[0][0] + tempout[0][0] + pt2temp.x*vec[0]) + ", " + (coeff[0][1] + tempout[0][1] + pt2temp.x*vec[1]) + ", " + (coeff[0][2] + tempout[0][2] + pt2temp.x*vec[2]) + ",0,0,0,0");
-        //System.out.println(",0," + pt2eig.y + ",0, " + (coeff[1][0] + tempout[1][0] + pt2temp.y*vec[0]) + ", " + (coeff[1][1] + tempout[1][1] + pt2temp.y*vec[1]) + ", " + (coeff[1][2] + tempout[1][2] + pt2temp.y*vec[2]) + ",0,0,0,0");
-        //System.out.print(",0," + pt2eig.x + ",0, " + coeff[0][0] + ", " + coeff[0][1] + ", " + coeff[0][2] + ", " + coeff[0][3] + ", " + coeff[0][4] + ", " + coeff[0][5] + ", " + coeff[0][6]);    // temporary fudge
-        //System.out.println(",0," + pt2eig.y + ",0, " + coeff[1][0] + ", " + coeff[1][1] + ", " + coeff[1][2] + ", " + coeff[1][3] + ", " + coeff[1][4] + ", " + coeff[1][5] + ", " + coeff[1][6]);  // temporary fudge
-        System.out.print(",0," + pt2eig.x + ",0, " + (coeff[0][0] + coeff2proj[0][0] + pt2temp.x*dalphadi[0]*dalphadi[0]/2) + ", " + (coeff[0][1] + coeff2proj[0][1] + pt2temp.x*dalphadi[0]*dalphadi[1]) + ", " + (coeff[0][2] + coeff2proj[0][2] + pt2temp.x*dalphadi[1]*dalphadi[1]/2) + ", " + coeff[0][3] + ", " + coeff[0][4] + ", " + coeff[0][5] + ", " + coeff[0][6]);
-        System.out.println(",0," + pt2eig.y + ",0, " + (coeff[1][0] + coeff2proj[1][0] + pt2temp.y*dalphadi[0]*dalphadi[0]/2) + ", " + (coeff[1][1] + coeff2proj[1][1] + pt2temp.y*dalphadi[0]*dalphadi[1]) + ", " + (coeff[1][2] + coeff2proj[1][2] + pt2temp.y*dalphadi[1]*dalphadi[1]/2) + ", " + coeff[1][3] + ", " + coeff[1][4] + ", " + coeff[1][5] + ", " + coeff[1][6]);
+        System.out.print(",0," + pt2eig.x + ",0");
+        Point2D.Double pt2temp;
+        for (i = 0; i < 7; i++)
+        {
+            pt2temp = Main.project_2D(collect_Palldot[0][i], collect_Palldot[1][i], collect_Palldot[2][i]);
+            System.out.print(", " + (coeff[0][i] + pt2temp.x));
+        }
+        System.out.print(",0," + pt2eig.y + ",0");
+        for (i = 0; i < 7; i++)
+        {
+            pt2temp = Main.project_2D(collect_Palldot[0][i], collect_Palldot[1][i], collect_Palldot[2][i]);
+            System.out.print(", " + (coeff[1][i] + pt2temp.y));
+        }
+        System.out.println();
     }
 
     private static void invert_S(int row)

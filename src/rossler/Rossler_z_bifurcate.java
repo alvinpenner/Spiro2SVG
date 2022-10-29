@@ -19,7 +19,8 @@ public class Rossler_z_bifurcate extends JDialog
     protected static JButton btnRun = new JButton("Run");
     protected static JButton btnClear = new JButton("Clr");
     protected static double scan_start, scan_end;
-    protected static double Tmin = -5.1, Tmax = -4.7;
+    protected static double Tmin = -5.45, Tmax = -4.45;
+    //protected static double Tmin = 4.45, Tmax = 5.45;
 
     public Rossler_z_bifurcate(Image img)
     {
@@ -72,14 +73,14 @@ public class Rossler_z_bifurcate extends JDialog
         JPanel rangePanel = new JPanel();
         rangePanel.setOpaque(false);
         JLabel lblrange = new JLabel("Tau = " + Tmin + " - " + Tmax);
-        lblrange.setPreferredSize(new Dimension(95, 20));
+        lblrange.setPreferredSize(new Dimension(100, 20));
         rangePanel.add(lblrange);
 
         JPanel posnPanel = new JPanel();
         posnPanel.setOpaque(false);
         final JLabel lblposn = new JLabel();
         lblposn.setBorder(BorderFactory.createEtchedBorder());
-        lblposn.setPreferredSize(new Dimension(95, 20));
+        lblposn.setPreferredSize(new Dimension(100, 20));
         posnPanel.add(lblposn);
 
         parmsPanel.removeAll();
@@ -103,17 +104,20 @@ public class Rossler_z_bifurcate extends JDialog
         parmsPanel.setPreferredSize(new Dimension(140, 3000));
         parmsPanel.setBorder(BorderFactory.createEtchedBorder());
 
-        int ulx = 20;
+        int ulx = 20 + 450;
         int uly = 350;
         DC.setBackground(Color.white);
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
         DC.setFont(new Font( "SansSerif", Font.BOLD, 12 ));
         DC.setColor(new Color(40, 40, 136));
-        DC.drawLine(ulx, uly, ulx + 10, uly);
-        DC.drawString("increasing", ulx + 20, uly + 5);
+        DC.drawLine(ulx, uly - 20, ulx + 10, uly - 20);
+        DC.drawString("increasing", ulx + 20, uly - 15);
         DC.setColor(new Color(255, 128, 0));
+        DC.drawLine(ulx, uly + 0, ulx + 10, uly + 0);
+        DC.drawString("decreasing", ulx + 20, uly + 5);
+        DC.setColor(new Color(0, 0, 0));
         DC.drawLine(ulx, uly + 20, ulx + 10, uly + 20);
-        DC.drawString("decreasing", ulx + 20, uly + 25);
+        DC.drawString("cubic model", ulx + 20, uly + 25);
         DC.setColor(Color.white);
 
         lblImage.setBorder(BorderFactory.createEtchedBorder());
@@ -234,7 +238,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
     {
         // use peaks in y, pt3[1], to detect period
         int N = 400000;                             // # of iterations per c
-        double delt = -0.005;
+        double delt = -0.005;                        // normally negative
         int Ninit = 0*1152;                      // # approx 10 Tx cycles to initiallize limit cycle
         double scan;                                // horizontal axis
         double[] zlist = new double[4];             // previous z values
@@ -260,14 +264,12 @@ class BifurcateActivity extends SwingWorker<Void, Point>
                     Main.runge_kutta_rossler3(pt3, delt, Main.astart, scan, Main.cstart);
                 else
                     Main.runge_kutta_rossler3(pt3, delt, Main.astart, Main.bstart, scan);
-                //if (i == 210)
-                //    System.out.println("scan all, " + i + ", " + j + ", " + pt3[1]);
-                if (i == 500 && j == 10)
-                    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                //if (i == 500 && j == 10)
+                //    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 if (i == 300 && j == 10)
                     System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
-                if (i == 100 && j == 10)
-                    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                //if (i == 100 && j == 10)
+                //    System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[1])
                 {
                     Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[1] - zlist[2]);
@@ -300,6 +302,25 @@ class BifurcateActivity extends SwingWorker<Void, Point>
             }
             Rossler_z_bifurcate.lblImage.repaint();
         }
+
+        // paint a theoretical envelope (normally disabled)
+
+        clr = new Color(0, 0, 0);
+        double av = -4.895;
+        double start = (0.61563 - Rossler_z_bifurcate.scan_start)/(Rossler_z_bifurcate.scan_end - Rossler_z_bifurcate.scan_start)*Rossler_z_bifurcate.image.getWidth();
+        double end = (0.613613 - Rossler_z_bifurcate.scan_start)/(Rossler_z_bifurcate.scan_end - Rossler_z_bifurcate.scan_start)*Rossler_z_bifurcate.image.getWidth();
+        double b = 4.92;
+        for (int i = 0; i < Rossler_z_bifurcate.image.getWidth(); i++)
+            if (i >= start && i <= end)
+            {
+                double alpha = 0.02043*(i - start)/(end - start);
+                double theo = 0.4*Math.sqrt(1 + alpha - Math.sqrt(1 + b*b - b*b*(1 + alpha)*(1 + alpha)));
+                //System.out.println(i + ", " + alpha + ", " + (- av + theo));
+                if (- av + theo < -Rossler_z_bifurcate.Tmin)
+                    publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.Tmax - av + theo)/(Rossler_z_bifurcate.Tmax - Rossler_z_bifurcate.Tmin))));
+                if (- av - theo > -Rossler_z_bifurcate.Tmax)
+                    publish(new Point(i, (int) (Rossler_z_bifurcate.image.getHeight()*(Rossler_z_bifurcate.Tmax - av - theo)/(Rossler_z_bifurcate.Tmax - Rossler_z_bifurcate.Tmin))));
+            }
         return null;
     }
 
@@ -317,6 +338,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
 
     @Override protected void done()
     {
+        Rossler_z_bifurcate.lblImage.repaint();
         Rossler_z_bifurcate.btnRun.setEnabled(true);
     }
 }

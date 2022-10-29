@@ -21,7 +21,7 @@ public class Rossler_y_vs_x extends JDialog
 {
     private boolean first = true;
     private final static double DEFAULT_DELT = 0.02;    // 0.005; // .001223734471716991;
-    private final static int N = 500000;                // total # of iterations 160000
+    private final static int N = 480000;                // total # of iterations 160000
     //private final static int N = 6624*75;             // total # of iterations 160000
     private static double[] pt6_old;
     private static double eig, angle;                   // first-order response
@@ -531,21 +531,42 @@ public class Rossler_y_vs_x extends JDialog
         // to a change in the (x, y, z) space, using runge_kutta_rossler6_ddu3
 
         double[][] M = new double[2][2];
-        //double[] xfer = new double[] {0.849, 0.6018, 2.0, 2400, -0.0020471164547495166, 2.6849001618094372, -1.1439999019642204, 3.036339134085159};
-        //double[] xfer = new double[] {0.85, 0.6018, 2.0, 2400, -0.0020450777377757036, 2.2702741689085024, -2.4815181841064016, 0.6853905939587694};
-        //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, -0.0020395574528625335, 0.20132279598260672, -0.7745162686808151, 0.9962229102135204};
-        //double[] xfer = new double[] {0.614, 0.6, 1.25, 2400, -0.0020438634385907496, 0.15269785271686556, -0.8605327001131522, 0.8700192447772629};
+        //double[] xfer = new double[] {0.8475, 0.6, 2.0, 2400, 0.002045685610183913, 2.7792546555929794, -1.2277175829196465, 2.9101772988508485};
+        //double[] xfer = new double[] {0.84190, 0.59, 2.0, 2400, 0.0020321339745981207, 2.32059658980927, -0.8485003749147986, 3.515665813849232};
+        //double[] xfer = new double[] {0.84192, 0.59, 2.0, 2400, 0.0020320893106168156, 2.84772250612556, -1.2630065015865268, 2.9076520146213745};
+        //double[] xfer = new double[] {0.848, 0.6018, 2.0, 2400, 0.0020491121506988103, 3.074569698559594, -1.8633039841465269, 1.8026220073366606};
+        //double[] xfer = new double[] {0.8484, 0.6018, 2.0, 2500, 0.0019663861357734525, 2.354907117802819, -0.892886695902259, 3.3797137892723295};
+        //double[] xfer = new double[] {0.849, 0.6018, 2.0, 2400, 0.0020471164547495166, 2.741538523820649, -1.197415664183056, 2.951294913869168};
+        //double[] xfer = new double[] {0.8493, 0.6018, 2.0, 2400, 0.0020465094608093123, 3.013772875361961, -1.5742013537827195, 2.30657089928223};
+        //double[] xfer = new double[] {0.8483, 0.6018, 2.0, 2400, 0.0020485178260750037, 3.0173316830218306, -1.5789207124022282, 2.2953108811103995};
+        //double[] xfer = new double[] {0.8492, 0.6018, 2.0, 2500, 0.0019648437369485885, 2.34511116788451, -0.8889898118445804, 3.38661715735611};
+        //double[] xfer = new double[] {0.8476, 0.6018, 2.0, 2500, 0.0019679029217163522, 0.09536624520817999, -1.579300031673738, 0.32683653610549074};
+        //double[] xfer = new double[] {0.8486, 0.6018, 2.0, 2500, 0.0019660029788507332, 2.352444315329206, -0.8918955133940338, 3.3814619126442818};
+        //double[] xfer = new double[] {0.85, 0.6018, 2.0, 2400, 0.0020450777377757036, 2.2702741689085024, -2.4815181841064016, 0.6853905939587694};
+        //double[] xfer = new double[] {0.6154, 0.6, 1.25, 2500, 0.001958255038616749, 0.943436061311421, -0.8801316636610237, 1.3939058197338807};
+        //double[] xfer = new double[] {0.6152, 0.6, 1.25, 2400, 0.0020404301233040785, 1.1021570263574632, -1.0697358812222264, 1.2582782496952685};
+        //double[] xfer = new double[] {0.61535, 0.6, 1.25, 2400, 0.0020399945248164965, 1.0408280966384564, -0.9731256685650206, 1.3390957887692634};
+        //double[] xfer = new double[] {0.61455, 0.6, 1.25, 2400, 0.002042301013948591, 1.045805952303036, -0.9724592171925505, 1.33788244951892};
+        //double[] xfer = new double[] {0.6142, 0.6, 1.25, 2400, 0.002043297429904907, 1.0479769853341947, -0.9722469347640545, 1.3372799587873525};
+        //double[] xfer = new double[] {0.61436, 0.6, 1.25, 2400, 0.002042842863915326, 0.9585504551259202, -0.8846192577991049, 1.3909892432494375};
+        //double[] xfer = new double[] {0.615, 0.6, 1.25, 2400, 0.002041008652432798, 1.1053031693677278, -1.0747243349326034, 1.2530723349641284};
         //double[] xfer = new double[] {0.613, 0.6, 1.25, 1000.0, -0.00491197867733379, 1.0803402502099697, -1.0065396774688258, 1.3078939309021518};
         //double[] xfer = new double[] {0.614, 0.6, 1.25, 2500, 0.0019621089010658493, 0.1526369391508889, -0.8648954643212351, 0.8659408980845922};
-        //double[] xfer = new double[] {0.6156, 0.6, 1.25, 2500, 0.001957694636454919, 0.16856451015236784, -0.8790816254831765, 0.8712855944424082};
-        //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2500, 0.0019631483769110302, 0.14895150728061218, -0.8615515776624472, 0.8647183170080577};
+        //double[] xfer = new double[] {0.6156, 0.6, 1.25, 2400, 0.0020392652462394504, 0.3224917019058715, -1.150200373750082, 0.7301173767526574};
+//        //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2500, 0.0019631483769110302, 0.14895150728061218, -0.8615515776624472, 0.8647183170080577};
         //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2400, 0.0020449462259348994, 0.14904317050291274, -0.8569829974422363, 0.8689988111468419};
+        double[] xfer = new double[] {0.61362, 0.6, 1.25, 2400, 0.002044932220316744, 0.15212507446654686, -0.8291541692640159, 0.8971886609340222};
+        //double[] xfer = new double[] {0.61362, 0.6, 1.25, 2400, 0.002044932220316744, 0.18453458108987852, -0.9923157637384835, 0.7722880712515645};
         //double[] xfer = new double[] {0.613612788, 0.6, 1.25, 2500, 0.0019631483769110302, 0.14895150728061218, -0.8615515776624472, 0.8647183170080577};
         //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 1.0727371201489548, -1.0179184419750524, 1.3046631553824795};
         //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 0.6062959213425169, -1.320068706969935, 0.7425192346784949};
-        //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2400, 0.0020449462259342285, 0.9381569246713202, -0.8632546219063394, 1.3996349102427919};
-        double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 0.9980865296029361, -0.9283243327845676, 1.3690760769937402};
+        //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2400, 0.0020449462259342285, 1.034450798924672, -0.9516501511131881, 1.3506453448473772};
+        //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 1.0727371201489548, -1.0179184419750524, 1.3046631553824795};
         //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400*2, 0.00203955745286074/2, 0.9980865296029361, -0.9283243327845676, 1.3690760769937402};
+        //double[] xfer = new double[] {0.61465, 0.6, 1.25, 2400, 0.002042014926546927, 1.073065448368517, -1.010296410713409, 1.3088652634252895};
+        //double[] xfer = new double[] {0.61445, 0.6, 1.25, 2400, 0.0020425864773399565, 1.0742955273651251, -1.0103094893478959, 1.3083703787600285};
+        //double[] xfer = new double[] {0.61415, 0.6, 1.25, 2400, 0.0020434391601832, 0.30280341144849077, -1.140230754847078, 0.7220977493765032};
+
         Main.a = xfer[0];
         Main.b = xfer[1];
         Main.c = xfer[2];
@@ -603,16 +624,24 @@ public class Rossler_y_vs_x extends JDialog
         System.out.println("])");
         System.out.println("\nfinal x_y_z , " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
         eig = Math.sqrt(M[0][0]*M[1][1] - M[0][1]*M[1][0]);
-        angle = Math.acos((M[0][0] + M[1][1])/2/eig);
-        System.out.println("|eig|_angle , " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
-        Main.final_Re_V21 = (M[1][1] - M[0][0])/2/M[0][1];          // define the skew-transform matrix
-        Main.final_Im_V21 = Math.sqrt(-(M[1][1] - M[0][0])*(M[1][1] - M[0][0]) - 4*M[0][1]*M[1][0])/2/M[0][1];
-        double sqr = Math.sqrt((M[0][1] + M[1][0])*(M[0][1] + M[1][0]) + (M[1][1] - M[0][0])*(M[1][1] - M[0][0]));
-        System.out.println("ellipse phi_a/b = ," + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", "
-                                                 + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
-        System.out.println("Re_V21, Im_V21 = , " + Main.project_psi + ", " + Main.final_Re_V21 + ", " + Main.final_Im_V21);
-//        System.out.println("summary, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + eig + ", " + angle*180/Math.PI + ", " + Main.final_Re_V21 + ", " + Main.final_Im_V21 + ", " + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", " + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
-        System.out.println("summary, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + + Main.final_Period + ", " + Main.final_delt + ", " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
+        if (Math.abs(M[0][0] + M[1][1]) < 2*eig)
+        {
+            angle = Math.acos((M[0][0] + M[1][1])/2/eig);
+            System.out.println("|eig|_angle , " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
+            Main.final_Re_V21 = (M[1][1] - M[0][0])/2/M[0][1];          // define the skew-transform matrix
+            Main.final_Im_V21 = Math.sqrt(-(M[1][1] - M[0][0])*(M[1][1] - M[0][0]) - 4*M[0][1]*M[1][0])/2/M[0][1];
+            double sqr = Math.sqrt((M[0][1] + M[1][0])*(M[0][1] + M[1][0]) + (M[1][1] - M[0][0])*(M[1][1] - M[0][0]));
+            System.out.println("ellipse phi_a/b = ," + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", "
+                                                     + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
+            System.out.println("Re_V21, Im_V21 = , " + Main.project_psi + ", " + Main.final_Re_V21 + ", " + Main.final_Im_V21);
+//            System.out.println("summary, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + eig + ", " + angle*180/Math.PI + ", " + Main.final_Re_V21 + ", " + Main.final_Im_V21 + ", " + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", " + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
+            System.out.println("summary, " + Main.a + ", " + Main.b + ", " + Main.c + ", " + + Main.final_Period + ", " + Main.final_delt + ", " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
+        }
+        else
+        {
+            System.out.println("real eigenvalues, " + (M[0][0] + M[1][1] - Math.sqrt((M[1][1] - M[0][0])*(M[1][1] - M[0][0]) + 4*M[0][1]*M[1][0]))/2
+                                             + ", " + (M[0][0] + M[1][1] + Math.sqrt((M[1][1] - M[0][0])*(M[1][1] - M[0][0]) + 4*M[0][1]*M[1][0]))/2);
+        }
         //System.out.println("summary, " + M[0][0] + ", " + M[0][1] + ", " + Main.final_Re_V21);
         //System.out.println("summary, " + M[1][0] + ", " + M[1][1] + ", " + Main.final_Im_V21);
 
@@ -629,7 +658,7 @@ public class Rossler_y_vs_x extends JDialog
 //        System.out.println("back  = " + Main.invert_from_xp_yp(testpt2.x, testpt2.y, testzp, "x") + ", " + Main.invert_from_xp_yp(testpt2.x, testpt2.y, testzp, "y") + ", " + Main.invert_from_xp_yp(testpt2.x, testpt2.y, testzp, "z"));
     }
 
-    protected static void fit_linear_uniform()          // OBSOLETE, May 25, 2022 (replaced with class Perturb_Torus)
+    protected static void fit_linear_uniform_obsolete()          // OBSOLETE, May 25, 2022 (replaced with class Perturb_Torus)
     {
         // calculate first-order response, during one cycle,
         // assume that the output has already been made uniform, by running 'fit_linear_response()'
