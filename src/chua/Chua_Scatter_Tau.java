@@ -1,12 +1,11 @@
 
-package rossler;
+package chua;
 
 /*
- * this is file : \Documents\NetBeansProjects\RosslerSystem\src\rossler\Scatter_Tau.java
- * see demo     : \Documents\NetBeansProjects\ButtonDemoProject\ButtonDemo.java
+ * this is file : \Documents\NetBeansProjects\ChuaOscillator\src\chua\Chua_Scatter_Tau.java
  * see jdk file : \APP\Java\Demos\jdk_Demos\ButtonDemo.java
  *
- * calculate the new angle in the Rossler scatter plot in the x'-y' plane, versus the old
+ * calculate the new angle in the Chua scatter plot in the x'-y' plane, versus the old
  * scatter angle is measured once per period of the limit cycle.
  * this allows a measurement of the average increment in scatter angle
  * which can be used to calculate the modulation period of the N-S torus
@@ -20,7 +19,7 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class Scatter_Tau extends JDialog
+public class Chua_Scatter_Tau extends JDialog
 {
     private static final BufferedImage image = new BufferedImage(360, 360, BufferedImage.TYPE_3BYTE_BGR);
     private static final Graphics2D DC = image.createGraphics();
@@ -28,20 +27,19 @@ public class Scatter_Tau extends JDialog
     private static JSlider slider_end;
     private static JButton btnCalc = new JButton("Calc");
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
-    private static final String fDir = "\\APP\\Java\\RosslerSystem\\scatter_period\\";
-    //private static final String fDir = "\\Windows\\Temp\\";
-    //private static final String fName = "scatter_angle_0.8493_0.6018_2.0_new";
-    //private static final String fName = "scatter_angle_0.613613_0.6_1.25";
-    private static final String fName = "scatter_angle_0.6154_0.6_1.25";
-    //private static final String fName = "test_angle";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    //private static final String fName = "scatter_angle_99.98_530999600";
+    private static final String fDir = "\\Windows\\Temp\\";
+    private static final String fName = "Chua_scatter_530999600_99.98";
+    //private static final String fName = "scatter_angle_0.6154_0.6_1.25";
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static double[] angles; //, times;
     private static int Nfinal = 0;
-    private static double a, b, c, Period, delt, eig, angle, x0, y0;
+    private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0;
 
-    public Scatter_Tau()
+    public Chua_Scatter_Tau()
     {
-        setTitle("Rossler System - Modulation Period of x'-y' Scatter");
+        setTitle("Chua System - Modulation Period of x'-y' Scatter");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(530, 650);
         setLocationByPlatform(true);
@@ -141,7 +139,6 @@ public class Scatter_Tau extends JDialog
         double[] diff = new double[nend - nstart - 1];
         int[] count = new int[360 + 90];             // number of points at each start angle (padded by 90)
         double[] average = new double[360 + 90];     // average increment at each start angle
-        double av_inc = 0;
         double total_inc = 0;
 
         //System.out.println("org angles");
@@ -172,15 +169,6 @@ public class Scatter_Tau extends JDialog
             if (count[i] > 0)
                 System.out.println(i + ", " + count[i] + ", " + average[i]);
 
-        //double tempsum = 0;
-        //double countsum = 0;
-        //for (i = 0; i < 360; i++)
-        //{
-        //    countsum += count[i];
-        //    tempsum += count[i]*average[i];
-        //}
-        //System.out.println(countsum + ", " + tempsum/countsum);
-
         i = 0;
         while (count[i] == 0) i++;
         istart = i;                         // find nonzero start angle
@@ -190,6 +178,7 @@ public class Scatter_Tau extends JDialog
             System.out.println("BAD data: istart too large : " + istart);
             return;
         }
+/*
         for (i = 0; i <= istart; i++)       // append blanks to end of data
         {
             count[360 + i] = count[i];
@@ -217,20 +206,8 @@ public class Scatter_Tau extends JDialog
             count[i] = count[360 + i];
             average[i] = average[360 + i];
         }
-        //System.out.println("final");
-        //for (i = 0; i < 360; i++)
-        //    System.out.println(i + ", " + count[i] + ", " + average[i]);
-        for (i = 0; i < 360; i++)
-            av_inc += 1.0/average[i];
-            //av_inc += average[i];
-        av_inc = 360.0/av_inc;
-        //av_inc = av_inc/360;
-        //System.out.println(fName.substring(14) + ", " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + av_inc);
-        System.out.println(fName.substring(14) + ", " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1));
-        //double diffsum = 0;
-        //for (i = 0; i < diff.length; i++)
-        //    diffsum += diff[i];
-        //System.out.println("scatter_tau, " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + av_inc + ", " + diffsum/diff.length);
+*/
+        System.out.println(fName.substring(13) + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + (int) Nhdr + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1));
     }
 
     private static void load_angles()
@@ -253,38 +230,36 @@ public class Scatter_Tau extends JDialog
                 istr.close();
                 angles = new double[Nestimate];
                 //times = new double[Nestimate];
-                //System.out.println("angles len = " + angles.length);
+                System.out.println("angles len = " + angles.length);
 
                 istr = new BufferedReader(new FileReader(fDir + fName + ".csv"));
-                for (i = 0; i < 5; i++)
+                for (i = 0; i < 2; i++)
                     str = istr.readLine();
-                a = Double.parseDouble(str.split(",")[1]);
-                b = Double.parseDouble(str.split(",")[2]);
-                c = Double.parseDouble(str.split(",")[3]);
+                alpha = Double.parseDouble(str.split(",")[1]);
+                beta  = Double.parseDouble(str.split(",")[2]);
+                gamma = Double.parseDouble(str.split(",")[3]);
+                a     = Double.parseDouble(str.split(",")[4]);
+                c     = Double.parseDouble(str.split(",")[5]);
+                delt  = Double.parseDouble(str.split(",")[6]);
                 str = istr.readLine();
-                Period = Double.parseDouble(str.split(",")[1]);
-                delt = Double.parseDouble(str.split(",")[2]);
-                for (i = 0; i < 9; i++)
-                    str = istr.readLine();
-                eig = Double.parseDouble(str.split(",")[1]);
-                angle = Double.parseDouble(str.split(",")[2]);
-//                for (i = 0; i < 7; i++)
-//                    str = istr.readLine();
-                while (!istr.readLine().startsWith(" ,iT,x,y,z,x")) {}  // loop until after this line
-                str = istr.readLine();                                  // should start with "init"
-                x0 = Double.parseDouble(str.split(",")[5]);
-                y0 = Double.parseDouble(str.split(",")[6]);
-                System.out.println("init,        " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + x0 + ", " + y0);
-                System.out.println("scatter_tau, a, b, c, Period, delt, eig, angle, av_inc");
+                Nhdr  = Double.parseDouble(str.split(",")[1]);
+                eig   = Double.parseDouble(str.split(",")[2]);
+                angle = Double.parseDouble(str.split(",")[3]);
+                //while (!istr.readLine().startsWith(" ,iT,x,y,z,x")) {}  // loop until after this line
+                str = istr.readLine();                                    // should start with "init x0 y0"
+                x0 = Double.parseDouble(str.split(",")[1]);
+                y0 = Double.parseDouble(str.split(",")[2]);
+                str = istr.readLine();                                  // dummy
+                System.out.println("scatter_tau, " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + (int) Nhdr + ", " + eig + ", " + angle + ", " + x0 + ", " + y0);
+                System.out.println("Nfinal, x, y, r, angle");
                 while (istr.ready())                                    // should start with "z inter"
                 {
                     str = istr.readLine();
-                    x = Double.parseDouble(str.split(",")[5]);
-                    y = Double.parseDouble(str.split(",")[6]);
+                    x = Double.parseDouble(str.split(",")[1]);
+                    y = Double.parseDouble(str.split(",")[2]);
                     r = Math.sqrt((x - x0)*(x - x0) + (y - y0)*(y - y0));
-                    //times[Nfinal] = Double.parseDouble(str.split(",")[7]);
                     angles[Nfinal] = (Math.atan2(y - y0, x - x0)*180.0/Math.PI + 360.0) % 360;
-                    System.out.println(Nfinal + "," + str.split(",")[1] + "," + str.split(",")[2] + "," + str.split(",")[3] + "," + str.split(",")[4] + ", " + r + ", " + angles[Nfinal] + "," + str.split(",")[7]);
+                    System.out.println(Nfinal + "," + x + "," + y + "," + r + ", " + angles[Nfinal]);
                     Nfinal++;
                 }
             }
@@ -310,7 +285,7 @@ public class Scatter_Tau extends JDialog
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 load_angles();
-                Scatter_Tau dlg = new Scatter_Tau();
+                Chua_Scatter_Tau dlg = new Chua_Scatter_Tau();
             }
         });
     }
