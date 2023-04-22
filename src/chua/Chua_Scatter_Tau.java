@@ -27,19 +27,40 @@ public class Chua_Scatter_Tau extends JDialog
     private static JSlider slider_end;
     private static JButton btnCalc = new JButton("Calc");
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
-    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    //private static final JLabel lblPosn = new JLabel("posn");
+    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
     //private static final String fName = "scatter_angle_99.98_530999600";
-    private static final String fDir = "\\Windows\\Temp\\";
-    private static final String fName = "Chua_scatter_530999600_99.98";
-    //private static final String fName = "scatter_angle_0.6154_0.6_1.25";
+    //private static final String fDir = "\\Windows\\Temp\\";
+    //private static final String fName = "Chua_scatter_530998000_0.021_0.0_99.98";
+    //private static final String fName = "Chua_scatter_56640000_0.0010_0.0_99.994822_3";
+    //private static final String fName = "Chua_scatter_384960000_0.0010_0.0_99.9948_800_1200";
+    //private static final String fName = "Chua_scatter_180000000_0.0010_0.0_99.99481_100_1200";
+    //private static final String fName = "Chua_scatter_423840000_0.0010_0.0_99.99482_100_1200";
+    //private static final String fName = "Chua_scatter_237600000_5.0E-4_0.0_99.9944_100_1200";
+    //private static final String fName = "Chua_scatter_121440000_0.0010_0.0_99.994_100_1400";
+    //private static final String fName = "Chua_scatter_320640000_0.0010_0.0_99.992_100_800";
+    //private static final String fName = "Chua_scatter_530880000_0.0010_0.0_99.99_100_400";
+    //private static final String fName = "Chua_scatter_757920000_0.0010_0.0_99.988_100_400";
+    //private static final String fName = "Chua_scatter_997920000_0.0010_0.0_99.986_100_400";
+    //private static final String fName = "Chua_scatter_1396320000_0.0010_0.0_99.983_100_400";
+    //private static final String fName = "Chua_scatter_1958880000_0.0010_0.0_99.98_100_600";
+    //private static final String fName = "Chua_scatter_478080000_0.0010_0.0_99.978_100_800";
+    //private static final String fName = "Chua_scatter_478080000_5.0E-4_0.0_99.978_0_1200";
+    //private static final String fName = "Chua_scatter_347998212_0.0050_0.0_99.98_0_800";
+    private static final String fName = "Chua_scatter_69598071_0.0020_0.0_99.9948_0_1100";
+    //private static final String fName = "Chua_scatter_347997600_1.0E-4_0.0_99.98_0_1200";
+    //private static final String fName = "Chua_scatter_1141920000_0.0010_0.0_99.977_100_1200";
+    //private static final String fName = "Chua_scatter_1609920000_0.0010_0.0_99.977_100_1200";
+
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static double[] angles; //, times;
     private static int Nfinal = 0;
-    private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0;
+    private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0, xstat, ystat;
+    private static int range = 30;
 
     public Chua_Scatter_Tau()
     {
-        setTitle("Chua System - Modulation Period of x'-y' Scatter");
+        setTitle("Chua System - Modulation Period of x'-y' Scatter (range = " + range + ")");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(530, 650);
         setLocationByPlatform(true);
@@ -79,6 +100,7 @@ public class Chua_Scatter_Tau extends JDialog
         final JPanel pnlfooter = new JPanel();
         pnlfooter.setOpaque(false);
         pnlfooter.add(btnCalc);
+        //pnlfooter.add(lblPosn);
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         getContentPane().setBackground(new Color(200, 221, 242));
         getContentPane().add(pnlfile);
@@ -102,6 +124,7 @@ public class Chua_Scatter_Tau extends JDialog
 
         slider_end.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
+                slider_start.setValue(slider_end.getValue() - 5000);
                 refresh_graph();
             }
         });
@@ -118,15 +141,21 @@ public class Chua_Scatter_Tau extends JDialog
     {
         lblfile.setText("file = '" + fName + "' (" + slider_start.getValue() + ", " + slider_end.getValue() + ")");
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
-        DC.setColor(new Color(255, 128, 0));
-        DC.drawLine(0, image.getHeight() - 1, image.getWidth() - 1, 0);
+        //DC.setColor(new Color(255, 128, 0));
+        //DC.drawLine(0, image.getHeight() - 1, image.getWidth() - 1, 0);
         DC.setColor(new Color(0, 64, 192));
-        DC.drawLine(0, image.getHeight() - 1 - (int) angle, image.getHeight() - 1 - (int) angle, 0);
-        DC.drawLine(image.getHeight() - 1 - (int) angle, image.getHeight() - 1, image.getHeight() - 1, image.getHeight() - 1 - (int) angle);
+        //DC.drawLine(0, image.getHeight() - 1 - (int) angle, image.getHeight() - 1 - (int) angle, 0);
+        //DC.drawLine(image.getHeight() - 1 - (int) angle, image.getHeight() - 1, image.getHeight() - 1, image.getHeight() - 1 - (int) angle);
+        DC.drawLine(0, image.getHeight() - 1 - (int) (angle*360/range), image.getWidth() - 1, image.getHeight() - 1 - (int) (angle*360/range));
+
         for (int i = slider_start.getValue(); i < slider_end.getValue() - 1; i++)
         {
-            //System.out.println(i + ", " + angles[i] + ", " + angles[i + 1]);
-            image.setRGB((int) angles[i], image.getHeight() - 1 - (int) angles[i + 1], Color.BLACK.getRGB());
+            //System.out.println(i + ", " + angles[i] + ", " + angles[i + 1] + ", " + ((angles[i + 1] - angles[i] + 360) % 360)*360/range);
+            //image.setRGB((int) angles[i], image.getHeight() - 1 - (int) angles[i + 1], Color.BLACK.getRGB());
+            if (((angles[i + 1] - angles[i] + 360) % 360)*360/range > 360)
+                System.out.println("BAD DATA at " + i + ", " + angles[i] + ", " + angles[i + 1]);
+            else
+                image.setRGB((int) angles[i], image.getHeight() - 1 - (int) (((angles[i + 1] - angles[i] + 360) % 360)*360/range), Color.BLACK.getRGB());
         }
         lblImage.repaint();
     }
@@ -135,11 +164,12 @@ public class Chua_Scatter_Tau extends JDialog
     {
         // calculate the distribution frequency of the increment angles[i+1] - angles[i]
 
-        int i, istart, iend;
+        int i;          // , istart, iend;
         double[] diff = new double[nend - nstart - 1];
         int[] count = new int[360 + 90];             // number of points at each start angle (padded by 90)
         double[] average = new double[360 + 90];     // average increment at each start angle
         double total_inc = 0;
+        double nwrap = 0, totalwrap = 0;
 
         //System.out.println("org angles");
         //for (i = nstart; i <= nend; i++)
@@ -147,6 +177,13 @@ public class Chua_Scatter_Tau extends JDialog
         for (i = 0; i < diff.length; i++)
         {
             diff[i] = (angles[nstart + i + 1] - angles[nstart + i] + 360) % 360;
+            //System.out.println(i + ", " + angles[nstart + i] + ", " + total_inc);
+            if ((total_inc + diff[i]) % 360 < total_inc % 360)
+            {
+                nwrap = i;
+                totalwrap = total_inc;
+                //System.out.println(",,," + nwrap + ", " + totalwrap + ", " + totalwrap/nwrap);
+            }
             total_inc += diff[i];
         }
         //for (i = 0; i < diff.length; i++)
@@ -166,9 +203,11 @@ public class Chua_Scatter_Tau extends JDialog
                 average[i] = average[i]/count[i];
 
         for (i = 0; i < 360; i++)
-            if (count[i] > 0)
+            if (count[i] > 0 && !true)
                 System.out.println(i + ", " + count[i] + ", " + average[i]);
 
+        System.out.println("calc_dist, " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap);
+/*
         i = 0;
         while (count[i] == 0) i++;
         istart = i;                         // find nonzero start angle
@@ -178,7 +217,7 @@ public class Chua_Scatter_Tau extends JDialog
             System.out.println("BAD data: istart too large : " + istart);
             return;
         }
-/*
+
         for (i = 0; i <= istart; i++)       // append blanks to end of data
         {
             count[360 + i] = count[i];
@@ -207,7 +246,6 @@ public class Chua_Scatter_Tau extends JDialog
             average[i] = average[360 + i];
         }
 */
-        System.out.println(fName.substring(13) + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + (int) Nhdr + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1));
     }
 
     private static void load_angles()
@@ -249,8 +287,13 @@ public class Chua_Scatter_Tau extends JDialog
                 str = istr.readLine();                                    // should start with "init x0 y0"
                 x0 = Double.parseDouble(str.split(",")[1]);
                 y0 = Double.parseDouble(str.split(",")[2]);
+                xstat = Double.parseDouble(str.split(",")[3]);
+                ystat = Double.parseDouble(str.split(",")[4]);
+                System.out.println("stat1 = " + (Math.atan2(-ystat - y0, -xstat - x0)*180.0/Math.PI + 360.0) % 360);
+                System.out.println("stat2 = " + (Math.atan2(-y0, -x0)*180.0/Math.PI + 360.0) % 360);
+                System.out.println("stat3 = " + (Math.atan2(ystat - y0, xstat - x0)*180.0/Math.PI + 360.0) % 360);
                 str = istr.readLine();                                  // dummy
-                System.out.println("scatter_tau, " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + (int) Nhdr + ", " + eig + ", " + angle + ", " + x0 + ", " + y0);
+                System.out.println("scatter_tau, " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + (int) Nhdr + ", " + eig + ", " + angle + ", " + x0 + ", " + y0 + ", " + xstat + ", " + ystat);
                 System.out.println("Nfinal, x, y, r, angle");
                 while (istr.ready())                                    // should start with "z inter"
                 {
@@ -259,6 +302,7 @@ public class Chua_Scatter_Tau extends JDialog
                     y = Double.parseDouble(str.split(",")[2]);
                     r = Math.sqrt((x - x0)*(x - x0) + (y - y0)*(y - y0));
                     angles[Nfinal] = (Math.atan2(y - y0, x - x0)*180.0/Math.PI + 360.0) % 360;
+                    //angles[Nfinal] = 360 - angles[Nfinal];                     // fix fix bug bug reverse direction temporarily
                     System.out.println(Nfinal + "," + x + "," + y + "," + r + ", " + angles[Nfinal]);
                     Nfinal++;
                 }

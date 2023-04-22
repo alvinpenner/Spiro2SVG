@@ -19,6 +19,7 @@ public class Chua_x_y_scatter extends JDialog
     protected static final JLabel lblImage = new JLabel(new ImageIcon(image));
     protected static JButton btnRun = new JButton("Run");
     private static JButton btnClear = new JButton("Clr");
+    protected static JCheckBox printChk = new JCheckBox("  print  ");
     private static JButton btnUniform = new JButton("Set-Uniform");
     protected static double del_xp = 0, del_yp = 0;
     protected static String first_order_hdr;             // # iterations, eig, angle
@@ -31,7 +32,7 @@ public class Chua_x_y_scatter extends JDialog
         Main.type = "scatter";
         setTitle(" Chua Oscillator - x'-y' Scatter (" + String.format("%.4f", Main.project_phi) + ", " + String.format("%.4f", Main.project_theta) + ", " + Double.toString(Main.project_psi) + ") (" + ScatterActivity.delt + ")");
         setIconImage(img);
-        setSize(570, 450 + 24);
+        setSize(570, 450 + 24 + 28);
         setLocationByPlatform(true);
         String fmt = "%.3f";
 
@@ -72,6 +73,7 @@ public class Chua_x_y_scatter extends JDialog
             dataPanel[i].add(txt[i]);
         }
 
+        printChk.setOpaque(false);
         JPanel xrange = new JPanel();
         xrange.setOpaque(false);
         xrange.setPreferredSize(new Dimension(120, 20));
@@ -126,6 +128,7 @@ public class Chua_x_y_scatter extends JDialog
         parmsPanel.add(spacerPanel[1]);
         parmsPanel.add(btnRun);
         parmsPanel.add(btnClear);
+        parmsPanel.add(printChk);
         parmsPanel.add(xrange);
         parmsPanel.add(yrange);
         parmsPanel.add(posnPanel);
@@ -160,6 +163,11 @@ public class Chua_x_y_scatter extends JDialog
         {
             public void actionPerformed(ActionEvent event)
             {
+                if (first_order_hdr == null)
+                {
+                    System.out.println("'first_order_hdr' is not initialized");
+                    return;
+                }
                 boolean changed = false;
                 for (int i = 0; i < txt.length; i++)
                     if (txt[i].getText().isEmpty())
@@ -193,6 +201,13 @@ public class Chua_x_y_scatter extends JDialog
                 ScatterActivity activity = new ScatterActivity(changed || first);
                 activity.execute();
                 first = false;
+                Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
+                DC.setColor(Color.BLUE);
+                //System.out.println("pstat = " + pstat);
+                DC.drawLine((int) ((-pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                            (int) ((-pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
+                            (int) ( (pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                            (int) ( (pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
             }
         });
         btnClear.addActionListener(new AbstractAction()
@@ -270,7 +285,8 @@ class ScatterActivity extends SwingWorker<Void, Point>
         if (true)
             try
             {
-                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_scatter_" + Chua_x_y_scatter.first_order_hdr.split(",")[0] + "_" + Main.alpha + "_" + Main.beta + "_" + Main.gamma + "_" + Main.a + "_" + Main.c + ".csv", true);
+                //FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_scatter_" + Chua_x_y_scatter.first_order_hdr.split(",")[0] + "_" + Main.alpha + "_" + Main.beta + "_" + Main.gamma + "_" + Main.a + "_" + Main.c + ".csv", true);
+                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_scatter_" + Chua_x_y_scatter.first_order_hdr.split(",")[0] + "_" + Chua_x_y_scatter.del_xp + "_" + Chua_x_y_scatter.del_yp + "_" + Main.alpha + ".csv", true);
                 fout = new PrintWriter(fw);
             }
             catch (java.io.IOException e)
@@ -289,10 +305,11 @@ class ScatterActivity extends SwingWorker<Void, Point>
             pt3[2] += Main.invert_from_xp_yp(Chua_x_y_scatter.del_xp, Chua_x_y_scatter.del_yp, 0, "z");
             if (fout != null)
             {
+                Point2D.Double pstat = Main.project_stationary();           // projected stationary point (x', y')
                 fout.println("           , alpha, beta, gamma, a, c, delt, phi, theta, psi");
                 fout.println("x_y_scatter, " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + delt + ", " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi);
                 fout.println("scatter hdr, " + Chua_x_y_scatter.first_order_hdr);
-                fout.println("init x0 y0 ," + pt2.x + ", " + pt2.y);
+                fout.println("init x0 y0 ," + pt2.x + ", " + pt2.y + ", " + pstat.x + ", " + pstat.y);
                 fout.println("iter       , x', y'");
             }
         }
@@ -300,12 +317,13 @@ class ScatterActivity extends SwingWorker<Void, Point>
 
     protected Void doInBackground() throws Exception
     {
-        int Nloop = 10000*2000;
+        int Nloop = 5*10000*2000;
         Point2D.Double pt2old;          // projected, old, (x', y') using Euler angles
         Point2D.Double pt2new;          // projected, new, (x', y') using Euler angles
         double zpold, zpnew;            // projected z'
         double xc, yc;                  // interpolated, projected (x', y')
 
+        System.out.println("print = " + Chua_x_y_scatter.printChk.isSelected() + " at " + iter);
         for (int i = 0; i < Nloop; i++)
         {
             iter++;
@@ -326,7 +344,7 @@ class ScatterActivity extends SwingWorker<Void, Point>
                 //System.out.println("new = ," + i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 xc = ((zpnew - Main.zc)*pt2old.x + (Main.zc - zpold)*pt2new.x)/(zpnew - zpold);
                 yc = ((zpnew - Main.zc)*pt2old.y + (Main.zc - zpold)*pt2new.y)/(zpnew - zpold);
-                if (false)
+                if (true)
                 {
                     System.out.println("z inter , " + iter + ", " + ((zpnew - Main.zc)*xold + (Main.zc - zpold)*pt3[0])/(zpnew - zpold)
                                                            + ", " + ((zpnew - Main.zc)*yold + (Main.zc - zpold)*pt3[1])/(zpnew - zpold)
@@ -336,7 +354,7 @@ class ScatterActivity extends SwingWorker<Void, Point>
                 pt3_cross[0] = pt3[0];
                 pt3_cross[1] = pt3[1];
                 pt3_cross[2] = pt3[2];
-                if (fout != null)
+                if (fout != null && Chua_x_y_scatter.printChk.isSelected())
                     fout.println(iter + ", " + xc + ", " + yc);
                 if (xc > Main.xmin && xc < Main.xmax && yc > Main.ymin && yc < Main.ymax)
                     publish(new Point((int) ((xc - Main.xmin)/(Main.xmax - Main.xmin)*Chua_x_y_scatter.image.getWidth()),

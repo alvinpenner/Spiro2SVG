@@ -32,7 +32,8 @@ public class Scatter_Tau extends JDialog
     //private static final String fDir = "\\Windows\\Temp\\";
     //private static final String fName = "scatter_angle_0.8493_0.6018_2.0_new";
     //private static final String fName = "scatter_angle_0.613613_0.6_1.25";
-    private static final String fName = "scatter_angle_0.6154_0.6_1.25";
+    //private static final String fName = "scatter_angle_0.613612788_0.6_1.25";
+    private static final String fName = "scatter_angle_0.6156_0.6_1.25";
     //private static final String fName = "test_angle";
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static double[] angles; //, times;
@@ -104,6 +105,7 @@ public class Scatter_Tau extends JDialog
 
         slider_end.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
+                slider_start.setValue(slider_end.getValue() - 5000);
                 refresh_graph();
             }
         });
@@ -169,7 +171,7 @@ public class Scatter_Tau extends JDialog
                 average[i] = average[i]/count[i];
 
         for (i = 0; i < 360; i++)
-            if (count[i] > 0)
+            if (count[i] > 0 && !true)
                 System.out.println(i + ", " + count[i] + ", " + average[i]);
 
         //double tempsum = 0;
@@ -184,7 +186,7 @@ public class Scatter_Tau extends JDialog
         i = 0;
         while (count[i] == 0) i++;
         istart = i;                         // find nonzero start angle
-        System.out.println("calc_dist, " + nstart + ", " + nend + ", " + istart + ", " + total_inc);
+        //System.out.println(fName.substring(14) + ", " + nstart + ", " + nend + ", " + istart + ", " + total_inc);
         if (istart > count.length - 360)
         {
             System.out.println("BAD data: istart too large : " + istart);
@@ -226,7 +228,7 @@ public class Scatter_Tau extends JDialog
         av_inc = 360.0/av_inc;
         //av_inc = av_inc/360;
         //System.out.println(fName.substring(14) + ", " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + av_inc);
-        System.out.println(fName.substring(14) + ", " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1));
+        System.out.println("calc_dist, " + nstart + ", " + nend + ", " + a + ", " + b + ", " + c + ", " + Period + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1));
         //double diffsum = 0;
         //for (i = 0; i < diff.length; i++)
         //    diffsum += diff[i];

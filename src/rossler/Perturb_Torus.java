@@ -331,6 +331,7 @@ public final class Perturb_Torus
             M_vec[0] = 0;
             M_vec[1] = 0;
             M_vec[2] = state_y1[0]*state_y2[k][2] + state_y1[2]*state_y2[k][0];
+            //M_vec[2] = (state_y1[0] + state_y2[k][0])*(state_y1[2] + state_y2[k][2]);   // TEST CODE
             invert_S(k);                                            // calculate S_inverse
             for (i = 0; i < 3; i++)
             {
@@ -360,6 +361,7 @@ public final class Perturb_Torus
         // summary
 
         for (i = 0; i < 3; i++)
+            //state_final[i] = ix*S[Main.final_Period][i][0] + iy*S[Main.final_Period][i][1] + state_y3[i];
             state_final[i] = ix*S[Main.final_Period][i][0] + iy*S[Main.final_Period][i][1] + state_y2[Main.final_Period][i] + state_y3[i];
         pt2 = Main.project_2D(state_final[0], state_final[1], state_final[2]);   // final (dxdu', dydu', dzdu')
         zp  = Main.project_zp(state_final[0], state_final[1], state_final[2]);

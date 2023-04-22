@@ -20,13 +20,14 @@ import java.io.File;
 public class Rossler_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = 0.02;    // 0.005; // .001223734471716991;
-    private final static int N = 480000;                // total # of iterations 160000
+    private final static double DEFAULT_DELT = -0.002;    // 0.005; // .001223734471716991;
+    private final static int N = 280000; // 480000;                // total # of iterations 160000
     //private final static int N = 6624*75;             // total # of iterations 160000
     private static double[] pt6_old;
     private static double eig, angle;                   // first-order response
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
     //protected Path2D.Double path2 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);
+    protected Path2D.Double stataxis = new Path2D.Double(Path2D.WIND_NON_ZERO, 10);
     protected Line2D.Double xaxis = new Line2D.Double(0, 0, 0, 0);
     protected Line2D.Double yaxis = new Line2D.Double(0, 0, 0, 0);
     private static JCheckBox printChk = new JCheckBox("  print  ");
@@ -291,8 +292,9 @@ public class Rossler_y_vs_x extends JDialog
         PrintWriter fout = null;
         double[] pt6 = new double[] {Main.x0, Main.y0, Main.z0, Main.dx0dc, Main.dy0dc, Main.dz0dc};
         double xmin, xmax, ymin, ymax, zmin, zmax;
-        Point2D.Double pt2;                             // projected (x', y') using Euler angles
-        int Nloop = N;                                  // number of iterations
+        Point2D.Double pt2;                                     // projected (x', y') using Euler angles
+        Point2D.Double pstat;                                   // projected stationary point (x', y')
+        int Nloop = N;                                          // number of iterations
         String lblhdr;
         String fmt = "%.3f";
 
@@ -388,7 +390,8 @@ public class Rossler_y_vs_x extends JDialog
                 if (pt2.x < xmin) xmin = pt2.x;
                 if (pt2.y > ymax) ymax = pt2.y;
                 if (pt2.y < ymin) ymin = pt2.y;
-                path1.lineTo(pt2.x, pt2.y);
+                //if (j > Nloop - 10000)                      // fix fix temporary code
+                    path1.lineTo(pt2.x, pt2.y);
                 //if (j <= 1000)
                 //    System.out.println(j + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                 if (fout != null && true)
@@ -513,6 +516,12 @@ public class Rossler_y_vs_x extends JDialog
                                                 (xmax*4 + xmin*(4 - phasePanel.getWidth()))/(xmax - xmin),
                                                -(ymin*4 + ymax*(4 - phasePanel.getHeight()))/(ymax - ymin));
         path1.transform(at);
+        pstat = Main.project_stationary("+");
+        stataxis.moveTo(pstat.x, pstat.y);    // this is a line joining 2 stationary points
+        pstat = Main.project_stationary("-");
+        stataxis.lineTo(pstat.x, pstat.y);    // this line will be slightly off-center because of the border used in 'at'
+        stataxis.transform(at);
+
         //System.out.println("range, " + Main.c + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
         lblhdr = phaseRadio.isSelected() ? "x" : "dx";
         lblxrange.setText(lblhdr + " = " + String.format(fmt, xmin) + ", " + String.format(fmt, xmax));
@@ -917,5 +926,7 @@ class Plot_Phase_Panel extends JPanel
         g2.setPaint(Color.BLUE);
         g2.draw(Main.plot_y_vs_x.xaxis);
         g2.draw(Main.plot_y_vs_x.yaxis);
+        g2.setPaint(Color.DARK_GRAY);
+        g2.draw(Main.plot_y_vs_x.stataxis);
     }
 }

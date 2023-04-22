@@ -389,6 +389,19 @@ public class Main
             return Double.NaN;
     }
 
+    protected static Point2D.Double project_stationary(String sign)    // stationary points (x', y')
+    {
+        double zstat = Math.sqrt(c*c - 4*a*b);
+        if (sign.equals("+"))
+            zstat = (c + zstat)/2/a;
+        else
+            zstat = (c - zstat)/2/a;
+        double xstat = a*zstat;
+        double ystat = -zstat;
+        //System.out.println("pstat = " + xstat + ", " + ystat + ", " + zstat);
+        return project_2D(xstat, ystat, zstat);
+    }
+
     private static void gen_M2D(double x, double y, double z)
     {
         xdot = -y - z;

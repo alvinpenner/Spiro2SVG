@@ -16,16 +16,16 @@ public final class Chua_Perturb_Torus
     private static double[][] S_inv = new double[3][3];
     private static double[][] coeff = new double[3][7];     // i = (fx, fy, fz), j = (Cx20, Cx11, Cx02, Cx30, Cx21, Cx12, Cx03)
     private static double fx12 = 9999, fy12 = 9999, fz12 = 9999;
+    private static int Nrect = 2;                           // # of coordinates > 0 (for rectangular grid)
 
     protected static void calc_coeff()
     {
         // calculate first-order response, S matrix, during one cycle
         // assume that the output has already been made uniform, by running 'fit_linear_response()'
 
-        if (Main.final_Re_V21 == 0 || Main.final_Im_V21 == 0 || Main.project_phi == 0 || Main.project_theta == 0
-        ||  Main.final_Period == 0 || Main.skew_transform)          // || eig == 0 || angle == 0)
+        if (Chua_y_vs_x.first_order_hdr == null)
         {
-            System.out.println("Bad data in 'Perturb_Torus.calc_coeff()' : (" + Main.final_Re_V21 + ", " + Main.final_Im_V21 + ", " + Main.final_Period + ")");
+            System.out.println("Bad data in 'Perturb_Torus.calc_coeff()' : 'first_order_hdr' is not initialized");
             return;
         }
 
@@ -41,15 +41,15 @@ public final class Chua_Perturb_Torus
 
         System.out.println("\nPython output - Chua S matrix");
         System.out.println("cubic_hdr = \"\\n\\");
-        System.out.println("Neimark-Sacker - fit S-matrix perturbation theory response\\n\\");
-        System.out.println("incr        , 1.0, " + "\\n\\");
-        System.out.println("alpha_beta_gamma, " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ",\\n\\");
-        System.out.println("Period_delt ,     " + Main.final_Period + ", " + Main.final_delt + ",\\n\\");
-        System.out.println("x_y_z       ,     " + Main.final_x + ", " + Main.final_y + ", " + Main.final_z + ",\\n\\");
-        System.out.println("phi_theta_psi,    " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi + ",\\n\\");
-        System.out.println("Re_V21_Im_V21,    " + Main.final_Re_V21 + ", " + Main.final_Im_V21 + ",\\n\\");
+        System.out.println("Chua - Neimark-Sacker - fit S-matrix perturbation theory response\\n\\");
+        System.out.println("incr_iT_eig_angle, 1.0, " + Chua_y_vs_x.first_order_hdr + ", \\n\\");
+        System.out.println("alpha_beta_gamma , " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ",\\n\\");
+        System.out.println("Period_delt      , " + Main.final_Period + ", " + Main.final_delt + ",\\n\\");
+        System.out.println("x_y_z            , " + Main.final_x + ", " + Main.final_y + ", " + Main.final_z + ",\\n\\");
+        System.out.println("phi_theta_psi    , " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi + ",\\n\\");
+        System.out.println("Re_V21_Im_V21    , " + Main.final_Re_V21 + ", " + Main.final_Im_V21 + ",\\n\\");
         System.out.println("\\n\\");
-        System.out.println("i,j,x',y',z'\"");
+        System.out.println("i,j,x',y',tc\"");
         System.out.print("data = np.array([");
 
         for (int i = 0; i < 3; i++)         // initiallize dx/du, dy/du, or dz/du
@@ -92,9 +92,9 @@ public final class Chua_Perturb_Torus
                 //System.out.println(i + ", " + k + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);     // original S matrix
             }
         }
-        //System.out.println("\nlimit cycle xyz");
+        //System.out.println("\nlimit cycle xyz det S");
         //for (int k = 0; k < S.length; k++)
-        //    System.out.println(k + ", " + xyz[k][0] + ", " + xyz[k][1] + ", " + xyz[k][2]);
+        //    System.out.println(k + ", " + xyz[k][0] + ", " + xyz[k][1] + ", " + xyz[k][2] + ", " + det_S(k));
 
         //System.out.println("\nS matrix");
         //for (int i = 0; i < 3; i++)
@@ -132,8 +132,8 @@ public final class Chua_Perturb_Torus
         System.out.println("v     = " + v);
 */
         //System.out.println("gen_quadratic_Cxy");
-        for (int i = -2; i < 3; i++)                            // increment x' by i
-            for (int j = -2; j < 3; j++)                        // increment y' by j
+        for (int i = -Nrect; i < Nrect + 1; i++)                            // increment x' by i
+            for (int j = -Nrect; j < Nrect + 1; j++)                        // increment y' by j
                 gen_time_sync_Cxy(i, j);
         System.out.println("])");
 
@@ -277,21 +277,21 @@ public final class Chua_Perturb_Torus
         double zp;
         int i;
 
-        // quadratic component
+        // second-order perturbation (cubic coeff)
 
-        for (int k = 0; k < S.length; k++)                  // scan one limit cycle
+        for (int k = 0; k < S.length; k++)                      // scan one limit cycle
         {
             // linear combination of dx' and dy' response (col 0 and col 1)
 
             for (i = 0; i < 3; i++)
                 state_y1[i] = ix*S[k][i][0] + iy*S[k][i][1];    // perturbed state (first-order)
 
-            // form non-linear response M = (0, 0, dz*dx)
+            // form non-linear response M = (-alpha*a*x*x*x, 0, 0)
 
-            M_vec[0] = 0;
+            M_vec[0] = -Main.alpha*Main.a*state_y1[0]*state_y1[0]*state_y1[0];
             M_vec[1] = 0;
-            M_vec[2] = state_y1[0]*state_y1[2];
-            invert_S(k);                                            // calculate S_inverse
+            M_vec[2] = 0;
+            invert_S(k);                                        // calculate S_inverse
             for (i = 0; i < 3; i++)
             {
                 y_incr[i] = 0;
@@ -315,8 +315,12 @@ public final class Chua_Perturb_Torus
                     state_y2[k][i] += S[k][i][j]*y_accum_half[j];
                 state_y2[k][i] *= Main.final_delt;
             }
-            //if (ix == 1 && iy == 1)
-            //    System.out.println("state_y2 , " + ix + ", " + iy + ", " + k + ", " + state_y2[k][0] + ", " + state_y2[k][1] + ", " + state_y2[k][2]);
+            if (ix == 0 && iy == 1 && !true)
+            {
+                //pt2 = Main.project_2D(ix*S[k][0][0] + iy*S[k][0][1], ix*S[k][1][0] + iy*S[k][1][1], ix*S[k][2][0] + iy*S[k][2][1]);
+                pt2 = Main.project_2D(state_y2[k][0], state_y2[k][1], state_y2[k][2]);
+                System.out.println("state_y2 , " + ix + ", " + iy + ", " + k + ", " + pt2.x + ", " + pt2.y);
+            }
         }
 
         // cubic component
@@ -324,13 +328,13 @@ public final class Chua_Perturb_Torus
         for (int k = 0; k < S.length; k++)                          // scan one limit cycle
         {
             for (i = 0; i < 3; i++)
-                state_y1[i] = ix*S[k][i][0] + iy*S[k][i][1];        // perturbed state (first-order)
+                state_y1[i] = ix*S[k][i][0] + iy*S[k][i][1];    // perturbed state (first-order)
 
             // form non-linear response M = (0, 0, dz*dx)
 
-            M_vec[0] = 0;
+            M_vec[0] = -Main.alpha*Main.a*(state_y1[0] + state_y2[k][0])*(state_y1[0] + state_y2[k][0])*(state_y1[0] + state_y2[k][0]);
             M_vec[1] = 0;
-            M_vec[2] = state_y1[0]*state_y2[k][2] + state_y1[2]*state_y2[k][0];
+            M_vec[2] = 0;
             invert_S(k);                                            // calculate S_inverse
             for (i = 0; i < 3; i++)
             {
@@ -356,47 +360,54 @@ public final class Chua_Perturb_Torus
                 state_y3[i] += S[Main.final_Period][i][j]*y_accum_half[j];
             state_y3[i] *= Main.final_delt;
         }
+        //for (i = 0; i < 3; i++)
+        //    System.out.println("temporary out = " + i + ", " + ix + ", " + iy + ", " + state_y1[i] + ", " + state_y2[Main.final_Period][i] + ", " + state_y3[i]);
 
         // summary
 
         for (i = 0; i < 3; i++)
-            state_final[i] = ix*S[Main.final_Period][i][0] + iy*S[Main.final_Period][i][1] + state_y2[Main.final_Period][i] + state_y3[i];
+            //state_final[i] = ix*S[Main.final_Period][i][0] + iy*S[Main.final_Period][i][1] + state_y3[i];   // test CODE
+            state_final[i] = ix*S[Main.final_Period][i][0] + iy*S[Main.final_Period][i][1] + state_y2[Main.final_Period][i];
+            //state_final[i] = ix*S[Main.final_Period][i][0] + iy*S[Main.final_Period][i][1] + state_y2[Main.final_Period][i] + state_y3[i];
         pt2 = Main.project_2D(state_final[0], state_final[1], state_final[2]);   // final (dxdu', dydu', dzdu')
         zp  = Main.project_zp(state_final[0], state_final[1], state_final[2]);
         System.out.print("[" + ix + ", " + iy + ", " + pt2.x + ", " + pt2.y + ", " + zp + "]");
-        if (ix < 2 || iy < 2)
+        if (ix < Nrect || iy < Nrect)
             System.out.println(",");
 
-        // calculate t_sync version of quadratic coeff (Cx20, Cx11, Cx02)
+        // calculate t_sync version of quadratic coeff (Cx20, Cx11, Cx02) DISABLED !!!!!!!
 
         pt2 = Main.project_2D(state_y2[Main.final_Period][0], state_y2[Main.final_Period][1], state_y2[Main.final_Period][2]);
         zp  = Main.project_zp(state_y2[Main.final_Period][0], state_y2[Main.final_Period][1], state_y2[Main.final_Period][2]);
         if (ix == 1 && iy == 0)         // Cx20
         {
             //System.out.println("unprojected coeff (col 0) =, " + state_y2[Main.final_Period][0] + ", " + state_y2[Main.final_Period][1] + ", " + state_y2[Main.final_Period][2]);
-            coeff[0][0] = pt2.x;
-            coeff[1][0] = pt2.y;
-            coeff[2][0] = zp;
+            coeff[0][0] = 0*pt2.x;
+            coeff[1][0] = 0*pt2.y;
+            coeff[2][0] = 0*zp;
         }
         if (ix == 0 && iy == 1)         // Cx02
         {
             //System.out.println("unprojected coeff (col 2) =, " + state_y2[Main.final_Period][0] + ", " + state_y2[Main.final_Period][1] + ", " + state_y2[Main.final_Period][2]);
-            coeff[0][2] = pt2.x;
-            coeff[1][2] = pt2.y;
-            coeff[2][2] = zp;
+            coeff[0][2] = 0*pt2.x;
+            coeff[1][2] = 0*pt2.y;
+            coeff[2][2] = 0*zp;
         }
         if (ix == 1 && iy == 1)         // Cx11 (this must be chronologically the last to execute)
         {
             //System.out.println("unprojected coeff (col 1 RAW) =, " + state_y2[Main.final_Period][0] + ", " + state_y2[Main.final_Period][1] + ", " + state_y2[Main.final_Period][2]);
-            coeff[0][1] = pt2.x - coeff[0][0] - coeff[0][2];
-            coeff[1][1] = pt2.y - coeff[1][0] - coeff[1][2];
-            coeff[2][1] = zp - coeff[2][0] - coeff[2][2];
+            coeff[0][1] = 0; // pt2.x - coeff[0][0] - coeff[0][2];
+            coeff[1][1] = 0; // pt2.y - coeff[1][0] - coeff[1][2];
+            coeff[2][1] = 0; // zp - coeff[2][0] - coeff[2][2];
         }
 
         // calculate t_sync version of cubic coeff (Cx30, Cx21, Cx12, Cx03) (see Book IV, p.41)
 
-        pt2 = Main.project_2D(state_y3[0], state_y3[1], state_y3[2]);
-        zp  = Main.project_zp(state_y3[0], state_y3[1], state_y3[2]);
+        // use second-order perturbation theory, which generates a cubic function
+        pt2 = Main.project_2D(state_y2[Main.final_Period][0], state_y2[Main.final_Period][1], state_y2[Main.final_Period][2]);
+        zp  = Main.project_zp(state_y2[Main.final_Period][0], state_y2[Main.final_Period][1], state_y2[Main.final_Period][2]);
+        //pt2 = Main.project_2D(state_y3[0], state_y3[1], state_y3[2]);
+        //zp  = Main.project_zp(state_y3[0], state_y3[1], state_y3[2]);
         if (ix == 1 && iy == 0)         // Cx30
         {
             coeff[0][3] = pt2.x;
@@ -518,7 +529,6 @@ public final class Chua_Perturb_Torus
         // assume we have calculated second-order (t-sync) response, based on S matrix, during one cycle
         // then define the partial derivatives of the output (x, y, z) response wrt input (x', y')
 
-        System.out.println("WARNING: gen_cubic_response() is dased on Rossler code (obsolete)");
         double x0dot = Main.calc_xdot(Main.final_x, Main.final_y, Main.final_z);
         double y0dot = Main.calc_ydot(Main.final_x, Main.final_y, Main.final_z);
         double z0dot = Main.calc_zdot(Main.final_x, Main.final_y, Main.final_z);
@@ -598,9 +608,11 @@ public final class Chua_Perturb_Torus
         System.out.println("\nCxy cubic coeff (Type t-sync):");
         for (i = 0; i < 3; i++)                     // proportional to P
             System.out.println(i + ", " + coeff[i][0] + ", " + coeff[i][1] + ", " + coeff[i][2] + ", " + coeff[i][3] + ", " + coeff[i][4] + ", " + coeff[i][5] + ", " + coeff[i][6]);
-
-        //double[][] coeff2 = new double[3][3];       // i = (fx, fy, fz), j = (Cxx, Cxy< Cyy)
-        //System.out.println("\nCxy cubic coeff (Type Pdot):");
+        System.out.println("Cxy cubic coeff (t-sync) (summary):");
+        System.out.println(Chua_y_vs_x.first_order_hdr.split(",")[0] + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt
+                       + ", 0, 0, 0, " + coeff[0][0] + ", " + coeff[0][1] + ", " + coeff[0][2] + ", " + coeff[0][3] + ", " + coeff[0][4] + ", " + coeff[0][5] + ", " + coeff[0][6]
+                       + ", 0, 0, 0, " + coeff[1][0] + ", " + coeff[1][1] + ", " + coeff[1][2] + ", " + coeff[1][3] + ", " + coeff[1][4] + ", " + coeff[1][5] + ", " + coeff[1][6]);
+/*      z-sync calc (temporarily disabled)
         for (i = 0; i < 3; i++)                                                 // proportional to Pdot
         {
             collect_Pdot[i][0] =                             dalphadi[0]*dPdotdi[i][0];
@@ -610,7 +622,6 @@ public final class Chua_Perturb_Torus
             collect_Pdot[i][4] = dalphadi[0]*d2Pdotdidj[i][1] + dalphadi[1]*d2Pdotdidj[i][0] + d2alphadidj[0]*dPdotdi[i][1] + d2alphadidj[1]*dPdotdi[i][0];
             collect_Pdot[i][5] = dalphadi[0]*d2Pdotdidj[i][2] + dalphadi[1]*d2Pdotdidj[i][1] + d2alphadidj[1]*dPdotdi[i][1] + d2alphadidj[2]*dPdotdi[i][0];
             collect_Pdot[i][6] =                                dalphadi[1]*d2Pdotdidj[i][2] + d2alphadidj[2]*dPdotdi[i][1];
-            //System.out.println(i + ", " + coeff2[i][0] + ", " + coeff2[i][1] + ", " + coeff2[i][2]);
         }
         for (i = 0; i < 3; i++)                                                 // proportional to P2dot
         {
@@ -635,13 +646,10 @@ public final class Chua_Perturb_Torus
         for (i = 0; i < 3; i++)
             for (int j = 0; j < 7; j++)
                 collect_Palldot[i][j] = collect_Pdot[i][j] + collect_P2dot[i][j] + collect_P3dot[i][j];
-        System.out.println("\nCxy coeff (final):");
+        System.out.println("Cxy coeff (final):");
         Point2D.Double pt2eig = Main.project_2D(S[Main.final_Period][0][0], S[Main.final_Period][1][0], S[Main.final_Period][2][0]);
-//        System.out.print(Main.project_psi + ", " + Main.a + ", " + Main.b + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt);
-//        System.out.print(",0," + pt2eig.x + ",0, " + (coeff[0][0] + coeff2proj[0][0] + pt2temp.x*dalphadi[0]*dalphadi[0]/2) + ", " + (coeff[0][1] + coeff2proj[0][1] + pt2temp.x*dalphadi[0]*dalphadi[1]) + ", " + (coeff[0][2] + coeff2proj[0][2] + pt2temp.x*dalphadi[1]*dalphadi[1]/2) + ", " + coeff[0][3] + ", " + coeff[0][4] + ", " + coeff[0][5] + ", " + coeff[0][6]);
-//        System.out.println(",0," + pt2eig.y + ",0, " + (coeff[1][0] + coeff2proj[1][0] + pt2temp.y*dalphadi[0]*dalphadi[0]/2) + ", " + (coeff[1][1] + coeff2proj[1][1] + pt2temp.y*dalphadi[0]*dalphadi[1]) + ", " + (coeff[1][2] + coeff2proj[1][2] + pt2temp.y*dalphadi[1]*dalphadi[1]/2) + ", " + coeff[1][3] + ", " + coeff[1][4] + ", " + coeff[1][5] + ", " + coeff[1][6]);
 
-        System.out.print(Main.project_psi + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt);
+        System.out.print(Chua_y_vs_x.first_order_hdr.split(",")[0] + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt);
         System.out.print(",0," + pt2eig.x + ",0");
         Point2D.Double pt2temp;
         for (i = 0; i < 7; i++)
@@ -656,6 +664,7 @@ public final class Chua_Perturb_Torus
             System.out.print(", " + (coeff[1][i] + pt2temp.y));
         }
         System.out.println();
+ */
     }
 
     private static void invert_S(int row)
@@ -677,5 +686,11 @@ public final class Chua_Perturb_Torus
         //System.out.println("\nS S_inv ," + row + ", " + det);
         //for (int i = 0; i < 3; i++)
         //    System.out.println(S[row][i][0] + ", " + S[row][i][1] + ", " + S[row][i][2] + ", " + S_inv[i][0] + ", " + S_inv[i][1] + ", " + S_inv[i][2]);
+    }
+
+    private static double det_S(int row)
+    {
+        return S[row][0][0]*S[row][1][1]*S[row][2][2] + S[row][0][1]*S[row][1][2]*S[row][2][0] + S[row][0][2]*S[row][1][0]*S[row][2][1]
+             - S[row][0][2]*S[row][1][1]*S[row][2][0] - S[row][0][0]*S[row][1][2]*S[row][2][1] - S[row][0][1]*S[row][1][0]*S[row][2][2];
     }
 }

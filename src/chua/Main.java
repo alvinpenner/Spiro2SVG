@@ -39,6 +39,7 @@ public class Main
     protected static double project_psi;
     protected static double final_x, final_y, final_z, final_delt;
     protected static int final_Period;
+    protected static int iTinit;                        // initiallize the line number in 'fit_linear_response'
     protected static double final_Re_V21, final_Im_V21; // skew transform first-order response to 'normal' form
     protected static String type;
     protected static final String VERSION_NO = "0.1";
@@ -249,6 +250,21 @@ public class Main
         return -beta*y - gamma*z;
     }
 
+    protected static double calc_x2dot(double x, double y, double z)      // Chua xdot
+    {
+        return alpha*(calc_ydot(x, y, z) - (3*a*x*x + c)*calc_xdot(x, y, z));
+    }
+
+    protected static double calc_y2dot(double x, double y, double z)      // Chua ydot
+    {
+        return calc_xdot(x, y, z) - calc_ydot(x, y, z) + calc_zdot(x, y, z);
+    }
+
+    protected static double calc_z2dot(double x, double y, double z)      // Chua zdot
+    {
+        return -beta*calc_ydot(x, y, z) - gamma*calc_zdot(x, y, z);
+    }
+
     protected static double calc_phi(double x, double y, double z)       // Euler phi
     {
         return Math.atan2(calc_xdot(x, y, z), -calc_ydot(x, y, z))*180/Math.PI;
@@ -367,6 +383,7 @@ public class Main
                 project_phi = Double.parseDouble(pgmProp.getProperty("project_phi", "0"));
                 project_theta = Double.parseDouble(pgmProp.getProperty("project_theta", "0"));
                 project_psi = Double.parseDouble(pgmProp.getProperty("project_psi", "0"));
+                iTinit = Integer.parseInt(pgmProp.getProperty("iTinit", "0"));
             }
             else                                    // factory default
             {
@@ -399,6 +416,7 @@ public class Main
                 project_phi = 0;
                 project_theta = 0;
                 project_psi = 0;
+                iTinit = 0;
             }
         }
         catch (IOException e)
@@ -436,6 +454,7 @@ public class Main
         pgmProp.setProperty("project_phi", "" + project_phi);
         pgmProp.setProperty("project_theta", "" + project_theta);
         pgmProp.setProperty("project_psi", "" + project_psi);
+        pgmProp.setProperty("iTinit", "" + iTinit);
         try
             {pgmProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "ChuaPrefs.ini"), "Chua System v" + VERSION_NO + " Prefs");}
         catch (IOException e)
