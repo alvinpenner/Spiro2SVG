@@ -41,7 +41,7 @@ public final class Chua_Perturb_Torus
 
         System.out.println("\nPython output - Chua S matrix");
         System.out.println("cubic_hdr = \"\\n\\");
-        System.out.println("Chua - Neimark-Sacker - fit S-matrix perturbation theory response\\n\\");
+        System.out.println("Chua - Neimark-Sacker - S-matrix perturbation theory (integral)\\n\\");
         System.out.println("incr_iT_eig_angle, 1.0, " + Chua_y_vs_x.first_order_hdr + ", \\n\\");
         System.out.println("alpha_beta_gamma , " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ",\\n\\");
         System.out.println("Period_delt      , " + Main.final_Period + ", " + Main.final_delt + ",\\n\\");
@@ -84,7 +84,7 @@ public final class Chua_Perturb_Torus
                 S[k][2][i] = pt6[5];
                 if (i == 0)
                 {
-                    xyz[k][0] = pt6[0];     // save limit cyclr
+                    xyz[k][0] = pt6[0];     // save limit cycle
                     xyz[k][1] = pt6[1];
                     xyz[k][2] = pt6[2];
                 }
@@ -92,9 +92,23 @@ public final class Chua_Perturb_Torus
                 //System.out.println(i + ", " + k + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);     // original S matrix
             }
         }
+
+        //System.out.println("\nproject 2-D S-matrix");               // test 2-D projection of S(t)
+        //System.out.println("k, S11, S12, S21, S22, phi, theta, zdot");
+        //for (int k = 0; k <= Main.final_Period/10; k++)
+        //{
+        //    Point2D.Double pt2_0 = project_2D_local(k, S[10*k][0][0], S[10*k][1][0], S[10*k][2][0]);
+        //    Point2D.Double pt2_1 = project_2D_local(k, S[10*k][0][1], S[10*k][1][1], S[10*k][2][1]);
+        //    System.out.println(Integer.parseInt(Chua_y_vs_x.first_order_hdr.split(",")[0]) + 10*k
+        //            + ", " + pt2_0.x + ", " + pt2_1.x + ", " + pt2_0.y + ", " + pt2_1.y
+        //            + ", " + Main.calc_phi(xyz[10*k][0], xyz[10*k][1], xyz[10*k][2])
+        //            + ", " + Main.calc_theta(xyz[10*k][0], xyz[10*k][1], xyz[10*k][2])
+        //            + ", " + Main.calc_zdot(xyz[10*k][0], xyz[10*k][1], xyz[10*k][2]));
+        //}
+
         //System.out.println("\nlimit cycle xyz det S");
         //for (int k = 0; k < S.length; k++)
-        //    System.out.println(k + ", " + xyz[k][0] + ", " + xyz[k][1] + ", " + xyz[k][2] + ", " + det_S(k));
+        //    System.out.println(k + ", " + xyz[k][0] + ", " + xyz[k][1] + ", " + xyz[k][2] + ", " + Main.calc_phi(xyz[k][0], xyz[k][1], xyz[k][2]) + ", " + Main.calc_theta(xyz[k][0], xyz[k][1], xyz[k][2]) + ", " + det_S(k));
 
         //System.out.println("\nS matrix");
         //for (int i = 0; i < 3; i++)
@@ -666,7 +680,31 @@ public final class Chua_Perturb_Torus
         System.out.println();
  */
     }
-
+/*
+    protected static Point2D.Double project_2D_local(int k, double x, double y, double z)
+    {
+        // 2-D projection based on local Euler angles
+        double phi_rad = Main.calc_phi(xyz[10*k][0], xyz[10*k][1], xyz[10*k][2])*Math.PI/180;
+        double theta_rad = Main.calc_theta(xyz[10*k][0], xyz[10*k][1], xyz[10*k][2])*Math.PI/180;
+        double psi_rad = Main.project_psi*Math.PI/180;
+        double xp =  x*Math.cos(phi_rad)
+                  +  y*Math.sin(phi_rad);
+        double yp = -x*Math.sin(phi_rad)*Math.cos(theta_rad)
+                  +  y*Math.cos(phi_rad)*Math.cos(theta_rad)
+                  +  z*Math.sin(theta_rad);
+        double xpp =  Math.cos(psi_rad)*xp + Math.sin(psi_rad)*yp;
+        double ypp = -Math.sin(psi_rad)*xp + Math.cos(psi_rad)*yp;
+        if (Main.skew_transform)              // transform first-order response into 'normal' form
+        {
+            // apply skew transform V_inverse from Book Chaos III, p. 66
+            xp = (Main.final_Re_V21 - Main.final_Im_V21)*xpp - ypp;
+            yp = (-Main.final_Re_V21 - Main.final_Im_V21)*xpp + ypp;
+            xpp = -xp/2.0/Main.final_Im_V21;
+            ypp = -yp/2.0/Main.final_Im_V21;
+        }
+        return new Point2D.Double(xpp, ypp);
+    }
+*/
     private static void invert_S(int row)
     {
         double det = S[row][0][0]*S[row][1][1]*S[row][2][2] + S[row][0][1]*S[row][1][2]*S[row][2][0] + S[row][0][2]*S[row][1][0]*S[row][2][1]
@@ -688,9 +726,9 @@ public final class Chua_Perturb_Torus
         //    System.out.println(S[row][i][0] + ", " + S[row][i][1] + ", " + S[row][i][2] + ", " + S_inv[i][0] + ", " + S_inv[i][1] + ", " + S_inv[i][2]);
     }
 
-    private static double det_S(int row)
-    {
-        return S[row][0][0]*S[row][1][1]*S[row][2][2] + S[row][0][1]*S[row][1][2]*S[row][2][0] + S[row][0][2]*S[row][1][0]*S[row][2][1]
-             - S[row][0][2]*S[row][1][1]*S[row][2][0] - S[row][0][0]*S[row][1][2]*S[row][2][1] - S[row][0][1]*S[row][1][0]*S[row][2][2];
-    }
+    //private static double det_S(int row)
+    //{
+    //    return S[row][0][0]*S[row][1][1]*S[row][2][2] + S[row][0][1]*S[row][1][2]*S[row][2][0] + S[row][0][2]*S[row][1][0]*S[row][2][1]
+    //         - S[row][0][2]*S[row][1][1]*S[row][2][0] - S[row][0][0]*S[row][1][2]*S[row][2][1] - S[row][0][1]*S[row][1][0]*S[row][2][2];
+    //}
 }

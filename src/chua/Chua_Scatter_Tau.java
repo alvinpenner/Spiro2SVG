@@ -12,6 +12,8 @@ package chua;
 */ 
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -29,13 +31,14 @@ public class Chua_Scatter_Tau extends JDialog
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
     //private static final JLabel lblPosn = new JLabel("posn");
     private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Simul_5\\";
     //private static final String fName = "scatter_angle_99.98_530999600";
     //private static final String fDir = "\\Windows\\Temp\\";
     //private static final String fName = "Chua_scatter_530998000_0.021_0.0_99.98";
     //private static final String fName = "Chua_scatter_56640000_0.0010_0.0_99.994822_3";
     //private static final String fName = "Chua_scatter_384960000_0.0010_0.0_99.9948_800_1200";
     //private static final String fName = "Chua_scatter_180000000_0.0010_0.0_99.99481_100_1200";
-    //private static final String fName = "Chua_scatter_423840000_0.0010_0.0_99.99482_100_1200";
+    private static final String fName = "Chua_scatter_91180000_0.0010_0.0_99.9948_0_500";
     //private static final String fName = "Chua_scatter_237600000_5.0E-4_0.0_99.9944_100_1200";
     //private static final String fName = "Chua_scatter_121440000_0.0010_0.0_99.994_100_1400";
     //private static final String fName = "Chua_scatter_320640000_0.0010_0.0_99.992_100_800";
@@ -47,20 +50,28 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fName = "Chua_scatter_478080000_0.0010_0.0_99.978_100_800";
     //private static final String fName = "Chua_scatter_478080000_5.0E-4_0.0_99.978_0_1200";
     //private static final String fName = "Chua_scatter_347998212_0.0050_0.0_99.98_0_800";
-    private static final String fName = "Chua_scatter_69598071_0.0020_0.0_99.9948_0_1100";
+    //private static final String fName = "Chua_scatter_69598071_0.0020_0.0_99.9948_0_1100";
     //private static final String fName = "Chua_scatter_347997600_1.0E-4_0.0_99.98_0_1200";
+    //private static final String fName = "Chua_scatter_347999425_0.0010_0.0_99.98_0_800";
     //private static final String fName = "Chua_scatter_1141920000_0.0010_0.0_99.977_100_1200";
     //private static final String fName = "Chua_scatter_1609920000_0.0010_0.0_99.977_100_1200";
+    //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_0_3.5E10";
+    //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_100000_-1500000000";
+    //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_g0_10E8_0";
+    //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_20.186E4_0_g";
+    //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_0_0_C";
 
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
+    private static final JLabel lblangle = new JLabel(" : angle = ");
     private static double[] angles; //, times;
     private static int Nfinal = 0;
     private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0, xstat, ystat;
-    private static int range = 30;
+    private static double ymin = 0;
+    private static double ymax = 25;
 
     public Chua_Scatter_Tau()
     {
-        setTitle("Chua System - Modulation Period of x'-y' Scatter (range = " + range + ")");
+        setTitle("Chua System - Modulation Period of x'-y' Scatter (yrange = " + ymin + "-" + ymax + ")");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(530, 650);
         setLocationByPlatform(true);
@@ -97,6 +108,7 @@ public class Chua_Scatter_Tau extends JDialog
         final JPanel pnlend = new JPanel();
         pnlend.setOpaque(false);
         pnlend.add(new JLabel("end"));
+        pnlend.add(lblangle);
         final JPanel pnlfooter = new JPanel();
         pnlfooter.setOpaque(false);
         pnlfooter.add(btnCalc);
@@ -135,27 +147,34 @@ public class Chua_Scatter_Tau extends JDialog
                 calc_dist(slider_start.getValue(), slider_end.getValue());
             }
         });
+        lblImage.addMouseMotionListener(new MouseMotionAdapter()
+        {
+            @Override public void mouseMoved(MouseEvent e)
+            {
+                lblangle.setText(" :  angle = " + e.getX());
+            }
+        });
     }
 
     private static void refresh_graph()
     {
+        double delta;
         lblfile.setText("file = '" + fName + "' (" + slider_start.getValue() + ", " + slider_end.getValue() + ")");
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
         //DC.setColor(new Color(255, 128, 0));
         //DC.drawLine(0, image.getHeight() - 1, image.getWidth() - 1, 0);
+        DC.setColor(Color.gray);
+        DC.drawLine(0, image.getHeight() - 1 - (int) (-ymin*360/(ymax - ymin)), image.getWidth() - 1, image.getHeight() - 1 - (int) (-ymin*360/(ymax - ymin)));
         DC.setColor(new Color(0, 64, 192));
-        //DC.drawLine(0, image.getHeight() - 1 - (int) angle, image.getHeight() - 1 - (int) angle, 0);
-        //DC.drawLine(image.getHeight() - 1 - (int) angle, image.getHeight() - 1, image.getHeight() - 1, image.getHeight() - 1 - (int) angle);
-        DC.drawLine(0, image.getHeight() - 1 - (int) (angle*360/range), image.getWidth() - 1, image.getHeight() - 1 - (int) (angle*360/range));
+        DC.drawLine(0, image.getHeight() - 1 - (int) ((angle - ymin)*360/(ymax - ymin)), image.getWidth() - 1, image.getHeight() - 1 - (int) ((angle - ymin)*360/(ymax - ymin)));
 
         for (int i = slider_start.getValue(); i < slider_end.getValue() - 1; i++)
         {
-            //System.out.println(i + ", " + angles[i] + ", " + angles[i + 1] + ", " + ((angles[i + 1] - angles[i] + 360) % 360)*360/range);
-            //image.setRGB((int) angles[i], image.getHeight() - 1 - (int) angles[i + 1], Color.BLACK.getRGB());
-            if (((angles[i + 1] - angles[i] + 360) % 360)*360/range > 360)
-                System.out.println("BAD DATA at " + i + ", " + angles[i] + ", " + angles[i + 1]);
+            delta = (angles[i + 1] - angles[i] + 540) % 360 - 180.0;
+            if (delta < ymax)
+                image.setRGB((int) angles[i], image.getHeight() - 1 - (int) ((delta - ymin)*360/(ymax - ymin)), Color.BLACK.getRGB());
             else
-                image.setRGB((int) angles[i], image.getHeight() - 1 - (int) (((angles[i + 1] - angles[i] + 360) % 360)*360/range), Color.BLACK.getRGB());
+                System.out.println("BAD DATA, " + i + ", " + angles[i] + ", " + angles[i + 1] + ", " + delta);
         }
         lblImage.repaint();
     }
@@ -171,13 +190,14 @@ public class Chua_Scatter_Tau extends JDialog
         double total_inc = 0;
         double nwrap = 0, totalwrap = 0;
 
-        //System.out.println("org angles");
+        //System.out.println("org angles, diff");
         //for (i = nstart; i <= nend; i++)
         //    System.out.println(i + ", " + angles[i]);
         for (i = 0; i < diff.length; i++)
         {
-            diff[i] = (angles[nstart + i + 1] - angles[nstart + i] + 360) % 360;
-            //System.out.println(i + ", " + angles[nstart + i] + ", " + total_inc);
+            //diff[i] = (angles[nstart + i + 1] - angles[nstart + i] + 360) % 360;
+            diff[i] = (angles[nstart + i + 1] - angles[nstart + i] + 540) % 360 - 180.0;
+            //System.out.println(i + ", " + angles[nstart + i] + ", " + diff[i]);
             if ((total_inc + diff[i]) % 360 < total_inc % 360)
             {
                 nwrap = i;
@@ -303,7 +323,7 @@ public class Chua_Scatter_Tau extends JDialog
                     r = Math.sqrt((x - x0)*(x - x0) + (y - y0)*(y - y0));
                     angles[Nfinal] = (Math.atan2(y - y0, x - x0)*180.0/Math.PI + 360.0) % 360;
                     //angles[Nfinal] = 360 - angles[Nfinal];                     // fix fix bug bug reverse direction temporarily
-                    System.out.println(Nfinal + "," + x + "," + y + "," + r + ", " + angles[Nfinal]);
+                    System.out.println(Nfinal + ", " + x + ", " + y + ", " + r + ", " + angles[Nfinal]);
                     Nfinal++;
                 }
             }

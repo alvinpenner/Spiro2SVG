@@ -25,7 +25,7 @@ public class Main
 {
     private static Properties pgmProp = new Properties();
     protected static boolean skew_transform = false;
-    protected static final double a = -1;               // parameters
+    protected static final double a = -1; // 1;               // parameters
     protected static double alpha, beta, gamma, c;      // parameters
     protected static double alpha_s, alpha_e;           // bifurcate range
     protected static double beta_s, beta_e;             // bifurcate range
@@ -152,6 +152,79 @@ public class Main
         pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
         pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
         pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+    }
+
+    protected static void runge_kutta_chua9_ddu6(double[] pt9, double delt)
+    {
+        double x = pt9[0];          // limit cycle
+        double y = pt9[1];
+        double z = pt9[2];
+        double dx = pt9[3];         // first-order: p^(1)
+        double dy = pt9[4];
+        double dz = pt9[5];
+        double d2x = pt9[6];        // second-order: p^(2)
+        double d2y = pt9[7];
+        double d2z = pt9[8];
+
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double dk1, dk2, dk3, dk4;
+        double dl1, dl2, dl3, dl4;
+        double dm1, dm2, dm3, dm4;
+        double d2k1, d2k2, d2k3, d2k4;
+        double d2l1, d2l2, d2l3, d2l4;
+        double d2m1, d2m2, d2m3, d2m4;
+
+        k1 = delt*alpha*(y - a*x*x*x - c*x);
+        l1 = delt*(x - y + z);
+        m1 = delt*(-beta*y - gamma*z);
+        dk1 = delt*alpha*(dy - 3*a*x*x*dx - c*dx);
+        dl1 = delt*(dx - dy + dz);
+        dm1 = delt*(-beta*dy - gamma*dz);
+        d2k1 = delt*alpha*(d2y - 3*a*x*x*d2x - c*d2x);
+        d2l1 = delt*(d2x - d2y + d2z);
+        d2m1 = delt*(-beta*d2y - gamma*d2z);
+
+        k2 = delt*alpha*(y + l1/2 - a*(x + k1/2)*(x + k1/2)*(x + k1/2) - c*(x + k1/2));
+        l2 = delt*(x + k1/2 - y - l1/2 + z + m1/2);
+        m2 = delt*(-beta*(y + l1/2) - gamma*(z + m1/2));
+        dk2 = delt*alpha*(dy + dl1/2 - 3*a*(x + k1/2)*(x + k1/2)*(dx + dk1/2) - c*(dx + dk1/2));
+        dl2 = delt*(dx + dk1/2 - dy - dl1/2 + dz + dm1/2);
+        dm2 = delt*(-beta*(dy + dl1/2) - gamma*(dz + dm1/2));
+        d2k2 = delt*alpha*(d2y + d2l1/2 - 3*a*(x + k1/2)*(x + k1/2)*(d2x + d2k1/2) - c*(d2x + d2k1/2));
+        d2l2 = delt*(d2x + d2k1/2 - d2y - d2l1/2 + d2z + d2m1/2);
+        d2m2 = delt*(-beta*(d2y + d2l1/2) - gamma*(d2z + d2m1/2));
+
+        k3 = delt*alpha*(y + l2/2 - a*(x + k2/2)*(x + k2/2)*(x + k2/2) - c*(x + k2/2));
+        l3 = delt*(x + k2/2 - y - l2/2 + z + m2/2);
+        m3 = delt*(-beta*(y + l2/2) - gamma*(z + m2/2));
+        dk3 = delt*alpha*(dy + dl2/2 - 3*a*(x + k2/2)*(x + k2/2)*(dx + dk2/2) - c*(dx + dk2/2));
+        dl3 = delt*(dx + dk2/2 - dy - dl2/2 + dz + dm2/2);
+        dm3 = delt*(-beta*(dy + dl2/2) - gamma*(dz + dm2/2));
+        d2k3 = delt*alpha*(d2y + d2l2/2 - 3*a*(x + k2/2)*(x + k2/2)*(d2x + d2k2/2) - c*(d2x + d2k2/2));
+        d2l3 = delt*(d2x + d2k2/2 - d2y - d2l2/2 + d2z + d2m2/2);
+        d2m3 = delt*(-beta*(d2y + d2l2/2) - gamma*(d2z + d2m2/2));
+
+        k4 = delt*alpha*(y + l3 - a*(x + k3)*(x + k3)*(x + k3) - c*(x + k3));
+        l4 = delt*(x + k3 - y - l3 + z + m3);
+        m4 = delt*(-beta*(y + l3) - gamma*(z + m3));
+        dk4 = delt*alpha*(dy + dl3 - 3*a*(x + k3)*(x + k3)*(dx + dk3) - c*(dx + dk3));
+        dl4 = delt*(dx + dk3 - dy - dl3 + dz + dm3);
+        dm4 = delt*(-beta*(dy + dl3) - gamma*(dz + dm3));
+        d2k4 = delt*alpha*(d2y + d2l3 - 3*a*(x + k3)*(x + k3)*(d2x + d2k3) - c*(d2x + d2k3));
+        d2l4 = delt*(d2x + d2k3 - d2y - d2l3 + d2z + d2m3);
+        d2m4 = delt*(-beta*(d2y + d2l3) - gamma*(d2z + d2m3));
+
+        pt9[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt9[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt9[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt9[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt9[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
+        pt9[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+        pt9[6] = d2x + (d2k1 + 2*d2k2 + 2*d2k3 + d2k4)/6;
+        pt9[7] = d2y + (d2l1 + 2*d2l2 + 2*d2l3 + d2l4)/6;
+        pt9[8] = d2z + (d2m1 + 2*d2m2 + 2*d2m3 + d2m4)/6;
     }
 
     protected static Point2D.Double project_2D(double x, double y, double z)

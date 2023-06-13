@@ -21,7 +21,7 @@ import java.io.File;
 public class Chua_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = -6.990205973471885E-5; // 0.0005; // -0.0008; // 0.0005; // -6.990205974363416E-5;    // -0.0005;
+    private final static double DEFAULT_DELT = -0.001; // -6.990205973471885E-5; // 0.0005; // -0.0008; // 0.0005; // -6.990205974363416E-5;    // -0.0005;
     private final static int N = 480000; // 480000;                // total # of iterations 480000
     private static double[] pt6_old;
     private static double eig, angle;                   // first-order response
@@ -244,7 +244,8 @@ public class Chua_y_vs_x extends JDialog
         {
             public void actionPerformed(ActionEvent event)
             {
-                Chua_Perturb_Torus.calc_coeff();     // calculate perturbation theory coeff
+                //Chua_Perturb_Torus.calc_coeff();     // calculate perturbation theory coeff (integral form)
+                Chua_Perturb_d_e.calc_coeff_d_e();     // calculate perturbation theory coeff (d.e. form)
             }
         });
 
@@ -497,7 +498,7 @@ public class Chua_y_vs_x extends JDialog
         //double[] xfer = new double[] {99.99, 1499.25037, -0.51325, -1.0, 0.144, 200, -8.388275344381413E-4, 0.21346406564909817, 0.07991823532663608, -3.3774899100816005};
         //double[] xfer = new double[] {1609920000, 99.977, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990198943096418E-5, -0.18760431693110263, -0.1119262522179699, 1.48518071995642};
         //double[] xfer = new double[] {478080000, 99.978, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990201287968368E-5, -0.18760915811977436, -0.11192486733843215, 1.485180709880168};
-        double[] xfer = new double[] {347997700, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973471885E-5, -0.2469509016535706, -0.09834741326298879, 2.6006532770595605};
+        //double[] xfer = new double[] {347997600, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973471885E-5, -0.18761359939889577, -0.11192288909528943, 1.4850862469573296};
         //double[] xfer = new double[] {347997700, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973471885E-5, -0.11970240239014328, -0.117823496370916, 0.27107075945853604};
         //double[] xfer = new double[] {347997700, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 24000, -6.990205973987019E-6, -0.11970240836566291, -0.11782349676998444, 0.2710706984438698};
         //double[] xfer = new double[] {347998900, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973471885E-5, 0.033261747274911733, 0.11757542743865339, -0.17406255822626843};
@@ -517,11 +518,18 @@ public class Chua_y_vs_x extends JDialog
         //double[] xfer = new double[] {290880000, 99.994821, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990240688952322E-5, -0.18768401920010822, -0.11190242521016512, 1.4850780500284413};
         //double[] xfer = new double[] {56640000, 99.994822, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990240691231722E-5, -0.18768400101962426, -0.11190242704156188, 1.485077745297063};
         //double[] xfer = new double[] {484320000, 99.99484, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990240733438612E-5, -0.18768409146260298, -0.11190240164480135, 1.4850777728383322};
+        //double[] xfer = new double[] {14400000, 8.6956522, 14.2857, 0.0, 1.0, -0.42857, 2400, 7.991038476907487E-4, -0.6492164661497843, 0.21873831729699572, 3.17920947326913};
+        //double[] xfer = new double[] {22080000, 8.6956522, 14.2857, 0.0, 1.0, -0.42857, 2400, 7.99103847690894E-4, -0.9833648715844555, -0.4448294298769549, 2.732230644119052};
+        //double[] xfer = new double[] {19200000, 15.5279503, 28.3125708, 0.0, 1.0, -0.205, 2400, 5.201437828342687E-4, -0.8680072875863561, -0.3493391869076231, 5.300476743138388};
+        double[] xfer = new double[] {101280000, 100.0, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990252819409822E-5, 0.12261973007393918, 0.11771544495390424, -0.32001502739612614};
+        //double[] xfer = new double[] {7200000, -75.0187547, 31.8421053, -2.8947368, -1.0, 0.681, 2400, 3.561946267089565E-4, 0.8458471046904906, -0.012695584681198458, 1.0200109622035856};
+        //double[] xfer = new double[] {12960000, 8.3333333, 16.0, 0.0, 1.0, -0.143, 2400, 7.354632501800597E-4, -0.5170548995280515, -0.6562639991620063, -1.0980044820904584};
 
-        if (true)                                           // initiallize directly from data file, row Main.iT
+        if (!true)                                           // initiallize directly from data file, row Main.iT
         {
             String fDir = "\\APP\\Java\\ChuaOscillator\\skew_vs_time\\";
-            String fName = "xyz_input_24_99.978";
+            //String fName = "xyz_input_240_99.98";
+            String fName = "xyz_input_240_99.9948";
             String str;
             try
             {
@@ -575,6 +583,9 @@ public class Chua_y_vs_x extends JDialog
         Main.final_Period = (int) xfer[6];
         Main.final_delt = xfer[7];
         Main.final_delt *= -1;                  // temporarily reverse the direction of time
+
+        //Main.final_Period *= 10;        // TEMPORARY CODE
+        //Main.final_delt /= 10;          // TEMPORARY CODE
 
         Main.skew_transform = false;            // default = false, try to detect "non-uniformity"
         double incr = 1;
@@ -633,6 +644,9 @@ public class Chua_y_vs_x extends JDialog
             System.out.println("|eig|_angle , " + eig + ", " + angle*180/Math.PI + ", " + eig*Math.cos(angle) + ", " + -eig*Math.sin(angle));
             Main.final_Re_V21 = (M[1][1] - M[0][0])/2/M[0][1];          // define the skew-transform matrix
             Main.final_Im_V21 = Math.sqrt(-(M[1][1] - M[0][0])*(M[1][1] - M[0][0]) - 4*M[0][1]*M[1][0])/2/M[0][1];
+            //System.out.println("test transform, " + iT + ", " + eig + ", " + angle*180/Math.PI + ", " + M[0][0] + ", " + M[0][1] + ", " + Main.final_Re_V21);
+            //System.out.println("              , " + iT + ", " + eig + ", " + angle*180/Math.PI + ", " + M[1][0] + ", " + M[1][1] + ", " + Main.final_Im_V21);
+            //System.out.println(" ");
             double sqr = Math.sqrt((M[0][1] + M[1][0])*(M[0][1] + M[1][0]) + (M[1][1] - M[0][0])*(M[1][1] - M[0][0]));
             System.out.println("ellipse phi_a/b = ," + Math.atan2(M[1][1] - M[0][0], M[0][1] + M[1][0])*180/Math.PI/2 + ", "
                                                      + Math.sqrt((M[0][1] - M[1][0] + sqr)/(M[0][1] - M[1][0] - sqr)));
@@ -664,11 +678,11 @@ public class Chua_y_vs_x extends JDialog
         }
         //System.out.println("first-order hdr = '" + first_order_hdr + "'");
         Main.skew_transform = true;             // make the linear response "uniform"
-        double incr = 0.001;
+        double incr = 0.00001;     // 0.0001/2
         double[] pt3;
-        //int Nangl = 12;                         // # of angular positions (for radial grid)
-        //int Nrad = 3;                           // # of radii > 0 (for radial grid)
-        int Nrect = 2;                            // # of coordinates > 0 (for rectangular grid)
+        int Nangl = 24;                         // # of angular positions (for radial grid)
+        int Nrad = 3;                           // # of radii > 0 (for radial grid)
+        //int Nrect = 2;                            // # of coordinates > 0 (for rectangular grid)
 
         Point2D.Double pt2 = Main.project_2D(Main.final_x, Main.final_y, Main.final_z); // initial (x', y')
         double zp = Main.project_zp(Main.final_x, Main.final_y, Main.final_z);          // setpoint for z'
@@ -683,26 +697,26 @@ public class Chua_y_vs_x extends JDialog
         System.out.println("Chua - Neimark-Sacker - measure cubic model response after one cycle\\n\\");
         System.out.println("incr_iT_eig_angle, " + incr + ", " + first_order_hdr + ", \\n\\");
         System.out.println("alpha_beta_gamma , " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ",\\n\\");
-        //System.out.println("Period_delt      , " + Main.final_Period + ", " + Main.final_delt + ", " + Nangl + ", " + Nrad + ",\\n\\");
-        System.out.println("Period_delt      , " + Main.final_Period + ", " + Main.final_delt + ", " + Nrect + ",\\n\\");
+        System.out.println("Period_delt      , " + Main.final_Period + ", " + Main.final_delt + ", " + Nangl + ", " + Nrad + ",\\n\\");
+        //System.out.println("Period_delt      , " + Main.final_Period + ", " + Main.final_delt + ", " + Nrect + ",\\n\\");
         System.out.println("x_y_z            , " + Main.final_x + ", " + Main.final_y + ", " + Main.final_z + ",\\n\\");
         System.out.println("phi_theta_psi    , " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi + ",\\n\\");
         System.out.println("x'_y'_z'         , " + pt2.x + ", " + pt2.y + ", " + zp + ",\\n\\");
         System.out.println("\\n\\");
         System.out.println("i,j,x',y',tc\"");
         System.out.print("data = np.array([");
-        for (int i = -Nrect; i < Nrect + 1; i++)          // increment x' by i*incr
-            for (int j = -Nrect; j < Nrect + 1; j++)      // increment y' by j*incr
-        //for (int i = 0; i < Nrad + 1; i++)      // increment r' radius by i*incr
-        //    for (int j = 0; j < Nangl; j++)     // increment angle by 360/Nposn degrees
-        //        if (i > 0 || j == 0)
+        //for (int i = -Nrect; i < Nrect + 1; i++)          // increment x' by i*incr
+        //    for (int j = -Nrect; j < Nrect + 1; j++)      // increment y' by j*incr
+        for (int i = 0; i < Nrad + 1; i++)      // increment r' radius by i*incr
+            for (int j = 0; j < Nangl; j++)     // increment angle by 360/Nposn degrees
+                if (i > 0 || j == 0)
             {
-                //pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i*Math.cos(j*2*Math.PI/Nangl), incr*i*Math.sin(j*2*Math.PI/Nangl), 0, "x"),
-                //                    Main.final_y + Main.invert_from_xp_yp(incr*i*Math.cos(j*2*Math.PI/Nangl), incr*i*Math.sin(j*2*Math.PI/Nangl), 0, "y"),
-                //                    Main.final_z + Main.invert_from_xp_yp(incr*i*Math.cos(j*2*Math.PI/Nangl), incr*i*Math.sin(j*2*Math.PI/Nangl), 0, "z")};
-                pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i, incr*j, 0, "x"),
-                                    Main.final_y + Main.invert_from_xp_yp(incr*i, incr*j, 0, "y"),
-                                    Main.final_z + Main.invert_from_xp_yp(incr*i, incr*j, 0, "z")};
+                pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i*Math.cos(j*2*Math.PI/Nangl), incr*i*Math.sin(j*2*Math.PI/Nangl), 0, "x"),
+                                    Main.final_y + Main.invert_from_xp_yp(incr*i*Math.cos(j*2*Math.PI/Nangl), incr*i*Math.sin(j*2*Math.PI/Nangl), 0, "y"),
+                                    Main.final_z + Main.invert_from_xp_yp(incr*i*Math.cos(j*2*Math.PI/Nangl), incr*i*Math.sin(j*2*Math.PI/Nangl), 0, "z")};
+                //pt3 = new double[] {Main.final_x + Main.invert_from_xp_yp(incr*i, incr*j, 0, "x"),
+                //                    Main.final_y + Main.invert_from_xp_yp(incr*i, incr*j, 0, "y"),
+                //                    Main.final_z + Main.invert_from_xp_yp(incr*i, incr*j, 0, "z")};
                 //System.out.println("org   , " + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 //if (i == 0 && j == 0 || i == 2 && j == 3 || i == 2 && j == 9)
                 //    System.out.println("start -   , " + i + ", " + j + ", " + 0 + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
@@ -712,8 +726,9 @@ public class Chua_y_vs_x extends JDialog
                     //if (k == 0 || k == 10 || k == 20)     // temporary debugging code
                     //    System.out.println("debug, " + k + ", " + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                     Main.runge_kutta_chua3(pt3, Main.final_delt);
-                    //if (i == 0 && j == 0 || i == 2 && j == 3 || i == 2 && j == 9)
-                    //    System.out.println("---    , " + i + ", " + j + ", " + (k + 1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                    //if (i == 0 && j == 0) // || i == 2 && j == 3 || i == 2 && j == 9)
+                        //System.out.println("---    , " + i + ", " + j + ", " + (k + 1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
+                        //System.out.println((k+1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + Main.calc_phi(pt3[0], pt3[1], pt3[2]) + ", " + Main.calc_theta(pt3[0], pt3[1], pt3[2]));
                     if (false && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
                     {
                         pt2old = Main.project_2D(xold, yold, zold);
@@ -738,10 +753,10 @@ public class Chua_y_vs_x extends JDialog
                     pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
                     zpnew = Main.project_zp(pt3[0], pt3[1], pt3[2]);
                     System.out.print("[" + i + ", " + j + ", " + pt2new.x + ", " + pt2new.y + ", " + zpnew + "]");
-                    if (i < Nrect || j < Nrect)
-                        System.out.println(",");
-                    //if (i < Nrad || j < Nangl - 1)
+                    //if (i < Nrect || j < Nrect)
                     //    System.out.println(",");
+                    if (i < Nrad || j < Nangl - 1)
+                        System.out.println(",");
                 }
             }
         System.out.println("])");

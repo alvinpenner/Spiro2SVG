@@ -201,13 +201,25 @@ public class Chua_x_y_scatter extends JDialog
                 ScatterActivity activity = new ScatterActivity(changed || first);
                 activity.execute();
                 first = false;
-                Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
                 DC.setColor(Color.BLUE);
-                //System.out.println("pstat = " + pstat);
+                Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
+                System.out.println("pstat = " + pstat);
                 DC.drawLine((int) ((-pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
                             (int) ((-pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
                             (int) ( (pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
                             (int) ( (pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
+                double kx = Main.calc_ydot(Main.x0, Main.y0, Main.z0)*Main.calc_z2dot(Main.x0, Main.y0, Main.z0) - Main.calc_zdot(Main.x0, Main.y0, Main.z0)*Main.calc_y2dot(Main.x0, Main.y0, Main.z0);
+                double ky = Main.calc_zdot(Main.x0, Main.y0, Main.z0)*Main.calc_x2dot(Main.x0, Main.y0, Main.z0) - Main.calc_xdot(Main.x0, Main.y0, Main.z0)*Main.calc_z2dot(Main.x0, Main.y0, Main.z0);
+                double kz = Main.calc_xdot(Main.x0, Main.y0, Main.z0)*Main.calc_y2dot(Main.x0, Main.y0, Main.z0) - Main.calc_ydot(Main.x0, Main.y0, Main.z0)*Main.calc_x2dot(Main.x0, Main.y0, Main.z0);
+                Point2D.Double pt2 = Main.project_2D(kx, ky, kz);
+                double kangle = Math.atan2(pt2.y, pt2.x);
+                kangle = 58*Math.PI/180;
+                System.out.println("project k = " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(kx, ky, kz) + ", " + kangle*180/Math.PI);
+                pt2 = Main.project_2D(Main.x0, Main.y0, Main.z0);
+                DC.drawLine((int) ((pt2.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                            (int) ((pt2.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
+                            (int) ((pt2.x + (Main.xmax - Main.xmin)/3*Math.cos(kangle) - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                            (int) ((pt2.y + (Main.xmax - Main.xmin)/3*Math.sin(kangle) - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
             }
         });
         btnClear.addActionListener(new AbstractAction()
