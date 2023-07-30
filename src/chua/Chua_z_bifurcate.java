@@ -299,9 +299,9 @@ class BifurcateActivity extends SwingWorker<Void, Point>
                 Main.runge_kutta_chua3(pt3, delt);
                 if (i == 300 && j == 10)
                     System.out.println(i + ", " + j + ", " + scan + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
-                if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[1])
+                if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt3[2])    // use max z
                 {
-                    Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[1] - zlist[2]);
+                    Tnew = j - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt3[2] - zlist[2]);
                     //System.out.println("zlist, " + i + ", " + scan + ", " + (j - 2) + ", " + Tnew + ", " + zlist[0] + ", " + zlist[1] + ", " + zlist[2] + ", " + zlist[3] + ", " + pt3[1]);
                     //System.out.println(i + ", " + j + ", " + Tdiff + ", " + Told + ", " + Tnew + ", " + zlist[2]);
                     //if (Tnew - Told > 0.0 || i < 10)              // temporary code fix fix
@@ -327,7 +327,7 @@ class BifurcateActivity extends SwingWorker<Void, Point>
                 }
                 for (int k = 0; k < 3; k++)
                     zlist[k] = zlist[k + 1];
-                zlist[3] = pt3[1];
+                zlist[3] = pt3[2];
             }
             Chua_z_bifurcate.lblImage.repaint();
         }

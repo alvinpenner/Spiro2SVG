@@ -245,7 +245,7 @@ public class Chua_y_vs_x extends JDialog
             public void actionPerformed(ActionEvent event)
             {
                 //Chua_Perturb_Torus.calc_coeff();     // calculate perturbation theory coeff (integral form)
-                Chua_Perturb_d_e.calc_coeff_d_e();     // calculate perturbation theory coeff (d.e. form)
+                Chua_Perturb_d_e.calc_perturb_d_e();   // calculate perturbation theory coeff (d.e. form)
             }
         });
 
@@ -292,7 +292,6 @@ public class Chua_y_vs_x extends JDialog
         Point2D.Double pt2;                                 // projected (x', y') using Euler angles
         Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
         int Nloop = N;                                      // number of iterations
-        double trace = 0.0;                                 // accumulate trace of Jacobian
         String lblhdr;
         String fmt = "%.3f";
         if (fast)
@@ -393,14 +392,16 @@ public class Chua_y_vs_x extends JDialog
                     //                + ", " + Main.calc_xdot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_ydot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_zdot(pt6[0], pt6[1], pt6[2]));
                 if (printChk.isSelected() && Period > 0 && j >= Nloop - Period - 1)     // transfer last cycle
                 {
-                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
-                    //trace += pt6[0]*pt6[0];                 // x*x
+                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);   // normal code, KEEP
+                    //System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]
+                    //                      + ", " + Main.calc_xdot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_ydot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_zdot(pt6[0], pt6[1], pt6[2])
+                    //                      + ", " + Main.calc_x2dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_y2dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_z2dot(pt6[0], pt6[1], pt6[2])
+                    //                      + ", " + Main.calc_x3dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_y3dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_z3dot(pt6[0], pt6[1], pt6[2]));
                 }
                 if (j == Nloop - 1)
                 {
                     System.out.print("end = , " + iT + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                     System.out.println(", " + Main.calc_phi(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_theta(pt6[0], pt6[1], pt6[2]));
-                    //System.out.println("trace = ," + (-1 - Main.gamma - Main.alpha*Main.c - 3*Main.alpha*Main.a*trace/Period));
                     Main.final_Period = Period;
                     Main.final_delt = delt;
                     Main.final_x = pt6[0];
@@ -431,11 +432,11 @@ public class Chua_y_vs_x extends JDialog
                     System.out.println("ddu3 range, " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Period + ", " + delt + ", " + xmin + ", " + xmax + ", " + ymin + ", " + ymax + ", " + zmin + ", " + zmax);
                 }
             }
-            if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt6[1])    // maximum of y coord
+            if (zlist[0] < zlist[1] && zlist[1] <= zlist[2] && zlist[2] > zlist[3] && zlist[3] > pt6[2])    // maximum of z coord
             {
                 Tindex = (Tindex + 1) % Nfork;
                 //Tnew = Main.parabola(iT - 3, iT - 2, iT - 1, zlist[1], zlist[2], zlist[3], false);
-                Tnew = iT - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt6[1] - zlist[2]);
+                Tnew = iT - 2 + Main.quarticT(zlist[0] - zlist[2], zlist[1] - zlist[2], zlist[3] - zlist[2], pt6[2] - zlist[2]); // use z peak
                 //System.out.println("zlist, " + zlist[0] + ", " + zlist[1] + ", " + zlist[2] + ", " + zlist[3] + ", " + pt6[1]);
                 Tfork[Tindex] = Tnew - Told;
                 //System.out.println((iT - 2) + ", " + Main.c + ", " + zlist[2] + ", " + Tnew
@@ -458,7 +459,7 @@ public class Chua_y_vs_x extends JDialog
             }
             for (int k = 0; k < 3; k++)
                 zlist[k] = zlist[k + 1];
-            zlist[3] = pt6[1];
+            zlist[3] = pt6[2];
             if (Period > 0 && false)
                 if (iT % Period == 0)
                     System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2] + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);
@@ -525,11 +526,11 @@ public class Chua_y_vs_x extends JDialog
         //double[] xfer = new double[] {7200000, -75.0187547, 31.8421053, -2.8947368, -1.0, 0.681, 2400, 3.561946267089565E-4, 0.8458471046904906, -0.012695584681198458, 1.0200109622035856};
         //double[] xfer = new double[] {12960000, 8.3333333, 16.0, 0.0, 1.0, -0.143, 2400, 7.354632501800597E-4, -0.5170548995280515, -0.6562639991620063, -1.0980044820904584};
 
-        if (!true)                                           // initiallize directly from data file, row Main.iT
+        if (true)                                           // initiallize directly from data file, row Main.iT
         {
             String fDir = "\\APP\\Java\\ChuaOscillator\\skew_vs_time\\";
-            //String fName = "xyz_input_240_99.98";
-            String fName = "xyz_input_240_99.9948";
+            String fName = "xyz_input_240_99.98";
+            //String fName = "xyz_input_24000_99.9948";
             String str;
             try
             {
@@ -678,11 +679,11 @@ public class Chua_y_vs_x extends JDialog
         }
         //System.out.println("first-order hdr = '" + first_order_hdr + "'");
         Main.skew_transform = true;             // make the linear response "uniform"
-        double incr = 0.00001;     // 0.0001/2
+        double incr = 0.00001*20;     // 0.0001/2
         double[] pt3;
         int Nangl = 24;                         // # of angular positions (for radial grid)
         int Nrad = 3;                           // # of radii > 0 (for radial grid)
-        //int Nrect = 2;                            // # of coordinates > 0 (for rectangular grid)
+        //int Nrect = 3;                            // # of coordinates > 0 (for rectangular grid)
 
         Point2D.Double pt2 = Main.project_2D(Main.final_x, Main.final_y, Main.final_z); // initial (x', y')
         double zp = Main.project_zp(Main.final_x, Main.final_y, Main.final_z);          // setpoint for z'
@@ -692,6 +693,7 @@ public class Chua_y_vs_x extends JDialog
         double zpold, zpnew;            // projected z'
         double xc, yc;                  // interpolated, projected (x', y')
 
+        //System.out.println("projected zpdot = " + Main.project_zp(Main.calc_xdot(Main.final_x, Main.final_y, Main.final_z), Main.calc_ydot(Main.final_x, Main.final_y, Main.final_z), Main.calc_zdot(Main.final_x, Main.final_y, Main.final_z)));
         System.out.println("\nPython output (fit_cubic_response):");
         System.out.println("cubic_hdr = \"\\n\\");
         System.out.println("Chua - Neimark-Sacker - measure cubic model response after one cycle\\n\\");
@@ -721,15 +723,24 @@ public class Chua_y_vs_x extends JDialog
                 //if (i == 0 && j == 0 || i == 2 && j == 3 || i == 2 && j == 9)
                 //    System.out.println("start -   , " + i + ", " + j + ", " + 0 + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 // loop through one cycle
-                for (int k = 0; k < Main.final_Period + 0*40; k++) // add 10 iterations just to be sure it crosses
+                for (int k = 0; k < Main.final_Period + 1*40; k++) // add 10 iterations just to be sure it crosses (KEEP)
+                //for (int k = 0; k < 600; k++) // test code ONLY !!!!!!!
                 {
                     //if (k == 0 || k == 10 || k == 20)     // temporary debugging code
                     //    System.out.println("debug, " + k + ", " + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                     Main.runge_kutta_chua3(pt3, Main.final_delt);
+                    //if (k + 1 == 24*1000)                       // temporary test code for in-flight response at k
+                    //{
+                    //    pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
+                    //    zpnew = Main.project_zp(pt3[0], pt3[1], pt3[2]);
+                    //    System.out.print("[" + i + ", " + j + ", " + pt2new.x + ", " + pt2new.y + ", " + zpnew + "]");
+                    //    if (i < Nrad || j < Nangl - 1)
+                    //        System.out.println(",");
+                    //}
                     //if (i == 0 && j == 0) // || i == 2 && j == 3 || i == 2 && j == 9)
                         //System.out.println("---    , " + i + ", " + j + ", " + (k + 1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                         //System.out.println((k+1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + Main.calc_phi(pt3[0], pt3[1], pt3[2]) + ", " + Main.calc_theta(pt3[0], pt3[1], pt3[2]));
-                    if (false && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
+                    if (!false && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
                     {
                         pt2old = Main.project_2D(xold, yold, zold);
                         pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
@@ -741,18 +752,30 @@ public class Chua_y_vs_x extends JDialog
                         xc = ((zpnew - zp)*pt2old.x + (zp - zpold)*pt2new.x)/(zpnew - zpold);
                         yc = ((zpnew - zp)*pt2old.y + (zp - zpold)*pt2new.y)/(zpnew - zpold);
                         System.out.print("[" + i + ", " + j + ", " + xc + ", " + yc + ", " + (k + (zp - zpold)/(zpnew - zpold)) + "]");
-                        //if (i < Nrad || j < Nangl - 1)
+                        //if (i < Nrect || j < Nrect)
                         //    System.out.println(",");
+                        if (i < Nrad || j < Nangl - 1)
+                            System.out.println(",");
                     }
                     xold = pt3[0];
                     yold = pt3[1];
                     zold = pt3[2];
                 }
-                if (true)                          // use last point (synchronize in time)
+                if (false)                        // use last point (synchronize in time)
                 {
                     pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
                     zpnew = Main.project_zp(pt3[0], pt3[1], pt3[2]);
                     System.out.print("[" + i + ", " + j + ", " + pt2new.x + ", " + pt2new.y + ", " + zpnew + "]");
+                    //if (i < Nrect || j < Nrect)
+                    //    System.out.println(",");
+                    if (i < Nrad || j < Nangl - 1)
+                        System.out.println(",");
+                }
+                if (false)                        // fit unprojected data (org coordinates)
+                {
+                    //System.out.print("[" + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + "]");
+                    //System.out.print("[" + i + ", " + j + ", " + Main.calc_xdot(pt3[0], pt3[1], pt3[2]) + ", " + Main.calc_ydot(pt3[0], pt3[1], pt3[2]) + ", " + Main.calc_zdot(pt3[0], pt3[1], pt3[2]) + "]");
+                    System.out.print("[" + i + ", " + j + ", " + Main.calc_x2dot(pt3[0], pt3[1], pt3[2]) + ", " + Main.calc_y2dot(pt3[0], pt3[1], pt3[2]) + ", " + Main.calc_z2dot(pt3[0], pt3[1], pt3[2]) + "]");
                     //if (i < Nrect || j < Nrect)
                     //    System.out.println(",");
                     if (i < Nrad || j < Nangl - 1)

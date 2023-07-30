@@ -30,15 +30,16 @@ public class Chua_Scatter_Tau extends JDialog
     private static JButton btnCalc = new JButton("Calc");
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
     //private static final JLabel lblPosn = new JLabel("posn");
-    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
-    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Simul_5\\";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Simul_4\\";
     //private static final String fName = "scatter_angle_99.98_530999600";
     //private static final String fDir = "\\Windows\\Temp\\";
     //private static final String fName = "Chua_scatter_530998000_0.021_0.0_99.98";
     //private static final String fName = "Chua_scatter_56640000_0.0010_0.0_99.994822_3";
     //private static final String fName = "Chua_scatter_384960000_0.0010_0.0_99.9948_800_1200";
     //private static final String fName = "Chua_scatter_180000000_0.0010_0.0_99.99481_100_1200";
-    private static final String fName = "Chua_scatter_91180000_0.0010_0.0_99.9948_0_500";
+    //private static final String fName = "Chua_scatter_91180000_0.0010_0.0_99.9948_0_500";
+    //private static final String fName = "Chua_scatter_347999420_0.0010_0.0_99.98_0_600";
     //private static final String fName = "Chua_scatter_237600000_5.0E-4_0.0_99.9944_100_1200";
     //private static final String fName = "Chua_scatter_121440000_0.0010_0.0_99.994_100_1400";
     //private static final String fName = "Chua_scatter_320640000_0.0010_0.0_99.992_100_800";
@@ -60,6 +61,15 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_g0_10E8_0";
     //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_20.186E4_0_g";
     //private static final String fName = "Chua_Simul_5_0.00004_10.75_-5_5_0_0_C";
+    //private static final String fName = "Chua_Simul_4_0.00004_10.75_-5_5_0_4.386E6_2";
+    //private static final String fName = "Chua_Simul_4g_0.00004_10.75_-5_5_0_3.5E6";
+    //private static final String fName = "Chua_Simul_4g_0.00004_10.75_-5_5_-7E11_0";
+    //private static final String fName = "Chua_Simul_4g_0.00004_10.75_-5_5_0_4.465E6";
+    //private static final String fName = "Chua_Simul_4_0.00008_10.762308_-5_-13.425_04y";
+    //private static final String fName = "Chua_scatter_1252790000_0.0010_0.0_99.98";
+    //private static final String fName = "Chua_Simul_4_0.0002_10.75_-5_-247";
+    //private static final String fName = "Chua_Simul_4C_0.00004_46_-5_-5_0_1.67E7";
+    private static final String fName = "Chua_Simul_4C_0.00004_30_-5_5_0_1.4160919E7";
 
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static final JLabel lblangle = new JLabel(" : angle = ");
@@ -67,10 +77,10 @@ public class Chua_Scatter_Tau extends JDialog
     private static int Nfinal = 0;
     private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0, xstat, ystat;
     private static double ymin = 0;
-    private static double ymax = 25;
+    private static double ymax = 60;
 
     public Chua_Scatter_Tau()
-    {
+        {
         setTitle("Chua System - Modulation Period of x'-y' Scatter (yrange = " + ymin + "-" + ymax + ")");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(530, 650);
@@ -165,6 +175,8 @@ public class Chua_Scatter_Tau extends JDialog
         //DC.drawLine(0, image.getHeight() - 1, image.getWidth() - 1, 0);
         DC.setColor(Color.gray);
         DC.drawLine(0, image.getHeight() - 1 - (int) (-ymin*360/(ymax - ymin)), image.getWidth() - 1, image.getHeight() - 1 - (int) (-ymin*360/(ymax - ymin)));
+        for (int i = 1; i < 12; i++)
+            DC.drawLine(30*i, image.getHeight() - 1, 30*i, image.getHeight() - 8);
         DC.setColor(new Color(0, 64, 192));
         DC.drawLine(0, image.getHeight() - 1 - (int) ((angle - ymin)*360/(ymax - ymin)), image.getWidth() - 1, image.getHeight() - 1 - (int) ((angle - ymin)*360/(ymax - ymin)));
 
@@ -223,10 +235,10 @@ public class Chua_Scatter_Tau extends JDialog
                 average[i] = average[i]/count[i];
 
         for (i = 0; i < 360; i++)
-            if (count[i] > 0 && !true)
+            if (count[i] > 0 && true)
                 System.out.println(i + ", " + count[i] + ", " + average[i]);
 
-        System.out.println("calc_dist, " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap);
+        System.out.println("calc_dist, " + fName + ", " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap);
 /*
         i = 0;
         while (count[i] == 0) i++;

@@ -2,15 +2,10 @@
 package chua;
 
 /*
- * this is file : \Documents\NetBeansProjects\ChuaOscillator\src\chua\Chua_Simul_5.java
- * see jdk file : \APP\Java\Demos\jdk_Demos\ButtonDemo.java
- *
- * simulate a Poincare map of degree 5 in the x'-y' plane, odd terms only
- * based on standard cubic model, Book IV, page 62
+ * this is file : \Documents\NetBeansProjects\ChuaOscillator\src\chua\Chua_Simul_4.java.
+ * simulate a Poincare map of degree 4 in the x'-y' plane
+ * based on standard cubic model, Book IV, page 62 and page 69
 */
-
-// N.B. this code is probably irrelevant because it assumes that degree 5 is needed, which is almost certainly not true.
-// see Book IV, p. 69
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -21,16 +16,17 @@ import java.io.*;
 import javax.swing.*;
 import java.util.Properties;
 
-public class Chua_Simul_5 extends JDialog
+public class Chua_Simul_4 extends JDialog
 {
     private static Properties simulProp = new Properties();
     private static final BufferedImage image = new BufferedImage(480, 480, BufferedImage.TYPE_3BYTE_BGR);
     private static final Graphics2D DC = image.createGraphics();
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
     private static JButton btnCalc = new JButton("Calc");
+    private static JButton btnReset = new JButton("Reset");
     private static JButton btnClear = new JButton("Clear");
     private static JCheckBox printChk = new JCheckBox("  print  ");
-    private static final String C_or_g = "g";       // use Cx + iCy parms or use gij
+    private static final String C_or_g = "C";       // use Cx + iCy parms or use gij
 
     private static JTextField txtalpha = new JTextField("0.00004");
     private static JTextField txttheta = new JTextField("10.75");
@@ -40,16 +36,18 @@ public class Chua_Simul_5 extends JDialog
                                              {new JTextField(), new JTextField()},
                                              {new JTextField(), new JTextField()},
                                              {new JTextField(), new JTextField()},
-                                             {new JTextField(), new JTextField()},
                                              {new JTextField(), new JTextField()}};
-    private static JTextField txtstart = new JTextField();
-    private static JTextField txtrange = new JTextField();
+    private static double[][] Carr = new double[5][2];
+    private static JTextField txtstart = new JTextField("0");
+    private static JTextField txtrange = new JTextField("0");
+    private static double costheta;
+    private static double sintheta;
     private static double x0, y0;
     private static int iT = 0;
 
-    public Chua_Simul_5()
+    public Chua_Simul_4()
     {
-        setTitle("Chua System - Simulate x'-y' Scatter (5th degree)");
+        setTitle("Chua System - Simulate x'-y' Scatter (4th degree)");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(780, 532);
         setLocationByPlatform(true);
@@ -58,12 +56,11 @@ public class Chua_Simul_5 extends JDialog
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
         lblImage.setBorder(BorderFactory.createEtchedBorder());
 
-        final JLabel[] lblarr = {new JLabel(C_or_g + " 50"),
-                                 new JLabel(C_or_g + " 41"),
-                                 new JLabel(C_or_g + " 32"),
-                                 new JLabel(C_or_g + " 23"),
-                                 new JLabel(C_or_g + " 14"),
-                                 new JLabel(C_or_g + " 05")};
+        final JLabel[] lblarr = {new JLabel(C_or_g + " 40"),
+                                 new JLabel(C_or_g + " 31"),
+                                 new JLabel(C_or_g + " 22"),
+                                 new JLabel(C_or_g + " 13"),
+                                 new JLabel(C_or_g + " 04")};
         JPanel[] spacerPanel = new JPanel[2];
         for (int i = 0; i < spacerPanel.length; i++)
         {
@@ -160,6 +157,7 @@ public class Chua_Simul_5 extends JDialog
         parmsPanel.add(btnCalc);
         parmsPanel.add(startPanel);
         parmsPanel.add(rangePanel);
+        parmsPanel.add(btnReset);
         parmsPanel.add(btnClear);
         parmsPanel.add(printPanel);
         parmsPanel.setMaximumSize(new Dimension(250, 3000));
@@ -171,7 +169,7 @@ public class Chua_Simul_5 extends JDialog
         scatterPanel.add(lblImage);
 
         load_prefs();
-        x0 = 0*Double.parseDouble(txtstart.getText());
+        x0 = Double.parseDouble(txtstart.getText());
         y0 = Double.parseDouble(txtstart.getText());
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
         getContentPane().setBackground(new Color(200, 221, 242));
@@ -195,6 +193,15 @@ public class Chua_Simul_5 extends JDialog
             }
         });
 
+        btnReset.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                x0 = Double.parseDouble(txtstart.getText());
+                y0 = Double.parseDouble(txtstart.getText());
+            }
+        });
+
         btnClear.addActionListener(new AbstractAction()
         {
             public void actionPerformed(ActionEvent event)
@@ -212,19 +219,18 @@ public class Chua_Simul_5 extends JDialog
             });
     }
 
-    private static void refresh_graph()
+    private void refresh_graph()
     {
         PrintWriter fout = null;
         double alpha = Double.parseDouble(txtalpha.getText());
-        double costheta = Math.cos(Double.parseDouble(txttheta.getText())*Math.PI/180);
-        double sintheta = Math.sin(Double.parseDouble(txttheta.getText())*Math.PI/180);
         double a = Double.parseDouble(txta.getText());
         double b = Double.parseDouble(txtb.getText());
-        double[][] Carr = new double[6][2];
         double range = Double.parseDouble(txtrange.getText());
         double x, y, xtemp, ytemp;
         int N = 100000;
 
+        costheta = Math.cos(Double.parseDouble(txttheta.getText())*Math.PI/180);
+        sintheta = Math.sin(Double.parseDouble(txttheta.getText())*Math.PI/180);
         if (C_or_g.startsWith("C"))
             for (int i = 0; i < txtCarr.length; i++)            // default to Cxy input
             {
@@ -233,19 +239,17 @@ public class Chua_Simul_5 extends JDialog
             }
         else                // override Cxy input with gij input (May 19/23 looseleaf)
         {
-            final double[][] coeffR = new double[][] {{1,  0,-10,  0,  5,  0},   // for g50
-                                                      {1,  0, -2,  0, -3,  0},
-                                                      {1,  0,  2,  0,  1,  0},
-                                                      {1,  0,  2,  0,  1,  0},
-                                                      {1,  0, -2,  0, -3,  0},
-                                                      {1,  0,-10,  0,  5,  0}};  // for g05
-            final double[][] coeffI = new double[][] {{0,  5,  0,-10,  0,  1},
-                                                      {0,  3,  0,  2,  0, -1},
-                                                      {0,  1,  0,  2,  0,  1},
-                                                      {0, -1,  0, -2,  0, -1},
-                                                      {0, -3,  0, -2,  0,  1},
-                                                      {0, -5,  0, 10,  0, -1}};
-            System.out.println("Carr from gi");
+            final double[][] coeffR = new double[][] {{1,  0, -6,  0,  1},   // for g40
+                                                      {1,  0,  0,  0, -1},
+                                                      {1,  0,  2,  0,  1},
+                                                      {1,  0,  0,  0, -1},
+                                                      {1,  0, -6,  0,  1}};  // for g04
+            final double[][] coeffI = new double[][] {{0,  4,  0, -4,  0},
+                                                      {0,  2,  0,  2,  0},
+                                                      {0,  0,  0,  0,  0},
+                                                      {0, -2,  0, -2,  0},
+                                                      {0, -4,  0,  4,  0}};
+            System.out.println("\nCarr from gi");
             System.out.println("i, Carr[i][0], Carr[i][1]");
             for (int i = 0; i < txtCarr.length; i++)            // default to Cxy input
             {
@@ -262,13 +266,13 @@ public class Chua_Simul_5 extends JDialog
         if (printChk.isSelected())
             try
             {
-                boolean fexists = new File("C:\\Windows\\Temp\\Chua_Simul_5_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv").exists();
-                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_Simul_5_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv", true);
+                boolean fexists = new File("C:\\Windows\\Temp\\Chua_Simul_4_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv").exists();
+                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_Simul_4_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv", true);
                 fout = new PrintWriter(fw);
                 if (!fexists)
                 {
-                    fout.println("Cxi, " + Carr[0][0] + ", " + Carr[1][0] + ", " + Carr[2][0] + ", " + Carr[3][0] + ", " + Carr[4][0] + ", " + Carr[5][0]);
-                    fout.println("Cyi, " + Carr[0][1] + ", " + Carr[1][1] + ", " + Carr[2][1] + ", " + Carr[3][1] + ", " + Carr[4][1] + ", " + Carr[5][1]);
+                    fout.println("Cxi, " + Carr[0][0] + ", " + Carr[1][0] + ", " + Carr[2][0] + ", " + Carr[3][0] + ", " + Carr[4][0] + ", NaN");
+                    fout.println("Cyi, " + Carr[0][1] + ", " + Carr[1][1] + ", " + Carr[2][1] + ", " + Carr[3][1] + ", " + Carr[4][1] + ", NaN");
                     fout.println("scatter hdr, NaN, " + (1 + alpha) + ", " + txttheta.getText());
                     fout.println("init x0 y0, 0, 0, NaN, NaN");
                     fout.println("iter       , x', y'");
@@ -276,15 +280,19 @@ public class Chua_Simul_5 extends JDialog
             }
             catch (java.io.IOException e)
                 {System.out.println("Chua_Output.csv save error = " + e);}
-        image.setRGB(image.getWidth()/2, image.getHeight()/2, Color.BLACK.getRGB());
+        //image.setRGB(image.getWidth()/2, image.getHeight()/2, Color.BLACK.getRGB());
         for (int i = 0; i < N; i++)
         {
             xtemp = (1 + alpha)*x0 + (x0*x0 + y0*y0)*(a*x0 - b*y0);
             ytemp = (1 + alpha)*y0 + (x0*x0 + y0*y0)*(b*x0 + a*y0);
-            xtemp += Carr[0][0]*x0*x0*x0*x0*x0 + Carr[1][0]*x0*x0*x0*x0*y0 + Carr[2][0]*x0*x0*x0*y0*y0 + Carr[3][0]*x0*x0*y0*y0*y0 + Carr[4][0]*x0*y0*y0*y0*y0 + Carr[5][0]*y0*y0*y0*y0*y0;
-            ytemp += Carr[0][1]*x0*x0*x0*x0*x0 + Carr[1][1]*x0*x0*x0*x0*y0 + Carr[2][1]*x0*x0*x0*y0*y0 + Carr[3][1]*x0*x0*y0*y0*y0 + Carr[4][1]*x0*y0*y0*y0*y0 + Carr[5][1]*y0*y0*y0*y0*y0;
+            //xtemp += -.5*x0*x0*x0 + 20*x0*x0*y0 - 0*x0*y0*y0 + 0*y0*y0*y0;     // fudge some quadratics
+            //ytemp +=  20*x0*x0*x0 - .5*x0*x0*y0 + 20*x0*y0*y0 - 5*y0*y0*y0;     // fudge some quadratics
+            xtemp += Carr[0][0]*x0*x0*x0*x0 + Carr[1][0]*x0*x0*x0*y0 + Carr[2][0]*x0*x0*y0*y0 + Carr[3][0]*x0*y0*y0*y0 + Carr[4][0]*y0*y0*y0*y0;
+            ytemp += Carr[0][1]*x0*x0*x0*x0 + Carr[1][1]*x0*x0*x0*y0 + Carr[2][1]*x0*x0*y0*y0 + Carr[3][1]*x0*y0*y0*y0 + Carr[4][1]*y0*y0*y0*y0;
             x = costheta*xtemp - sintheta*ytemp;
             y = sintheta*xtemp + costheta*ytemp;
+            //x += Carr[0][0]*x0*x0*x0*x0 + Carr[1][0]*x0*x0*x0*y0 + Carr[2][0]*x0*x0*y0*y0 + Carr[3][0]*x0*y0*y0*y0 + Carr[4][0]*y0*y0*y0*y0;
+            //y += Carr[0][1]*x0*x0*x0*x0 + Carr[1][1]*x0*x0*x0*y0 + Carr[2][1]*x0*x0*y0*y0 + Carr[3][1]*x0*y0*y0*y0 + Carr[4][1]*y0*y0*y0*y0;
             if (image.getWidth()/2 + x/range*image.getWidth()/2 < 0
             ||  image.getWidth()/2 + x/range*image.getWidth()/2 > image.getWidth()
             ||  image.getHeight()/2 - y/range*image.getHeight()/2 < 0
@@ -299,22 +307,66 @@ public class Chua_Simul_5 extends JDialog
             iT++;
         }
         int r = (int) (Math.sqrt(x0*x0 + y0*y0)/range*image.getWidth()/2);
-        DC.setColor(Color.blue);
+        //DC.setColor(Color.blue);
+        DC.setColor(new Color(192, 128, 96));
         DC.drawLine(0, image.getHeight()/2, image.getWidth(), image.getHeight()/2);
         DC.drawLine(image.getWidth()/2, 0, image.getWidth()/2, image.getHeight());
         DC.drawOval(image.getHeight()/2 - r, image.getWidth()/2 - r, 2*r, 2*r);
+        DC.drawLine((int) (image.getWidth()/2*(1 - costheta)), (int) (image.getHeight()/2*(1 + sintheta)), (int) (image.getWidth()/2*(1 + costheta)), (int) (image.getHeight()/2*(1 - sintheta)));
         lblImage.repaint();
         if (fout != null)
             fout.close();
+        //calc_response_anal(a, b, alpha, x0, y0);
     }
 
-    protected static void load_prefs()
+    private static void calc_response_incr(double a, double b, double alpha, double x_in, double y_in)
+    {
+        // calculate the response, numerically, to a slight perturbation, after one cycle
+        double[] x_step = {0, -1, 1,  0, 0};
+        double[] y_step = {0,  0, 0, -1, 1};
+        double incr = 0.00001;
+        double x, y, xtemp, ytemp;
+
+        //x_in = 0.0023009946092825175;
+        //y_in = 0.0012750025504145068;
+        System.out.println();
+        for (int i = 0; i < x_step.length; i++)
+        {
+            x = x_in + incr*x_step[i];
+            y = y_in + incr*y_step[i];
+            xtemp = (1 + alpha)*x + (x*x + y*y)*(a*x - b*y);
+            ytemp = (1 + alpha)*y + (x*x + y*y)*(b*x + a*y);
+            xtemp += Carr[0][0]*x*x*x*x + Carr[1][0]*x*x*x*y + Carr[2][0]*x*x*y*y + Carr[3][0]*x*y*y*y + Carr[4][0]*y*y*y*y;
+            ytemp += Carr[0][1]*x*x*x*x + Carr[1][1]*x*x*x*y + Carr[2][1]*x*x*y*y + Carr[3][1]*x*y*y*y + Carr[4][1]*y*y*y*y;
+            System.out.println("calc_numer , " + x + ", " + y + ", " + (costheta*xtemp - sintheta*ytemp) + ", " + (sintheta*xtemp + costheta*ytemp));
+        }
+    }
+
+    private static void calc_response_anal(double a, double b, double alpha, double x_in, double y_in)
+    {
+        // calculate the response, analytically, to a perturbation, after one cycle
+        double A11, A12, A21, A22;
+
+        System.out.println();
+        A11 = 1 + alpha + 2*(a*x_in - b*y_in)*x_in + a*(x_in*x_in + y_in*y_in);
+        A12 =             2*(a*x_in - b*y_in)*y_in - b*(x_in*x_in + y_in*y_in);
+        A21 =             2*(b*x_in + a*y_in)*x_in + b*(x_in*x_in + y_in*y_in);
+        A22 = 1 + alpha + 2*(b*x_in + a*y_in)*y_in + a*(x_in*x_in + y_in*y_in);
+        A11 += 4*Carr[0][0]*x_in*x_in*x_in + 3*Carr[1][0]*x_in*x_in*y_in + 2*Carr[2][0]*x_in*y_in*y_in + 1*Carr[3][0]*y_in*y_in*y_in;
+        A12 += 1*Carr[1][0]*x_in*x_in*x_in + 2*Carr[2][0]*x_in*x_in*y_in + 3*Carr[3][0]*x_in*y_in*y_in + 4*Carr[4][0]*y_in*y_in*y_in;
+        A21 += 4*Carr[0][1]*x_in*x_in*x_in + 3*Carr[1][1]*x_in*x_in*y_in + 2*Carr[2][1]*x_in*y_in*y_in + 1*Carr[3][1]*y_in*y_in*y_in;
+        A22 += 1*Carr[1][1]*x_in*x_in*x_in + 2*Carr[2][1]*x_in*x_in*y_in + 3*Carr[3][1]*x_in*y_in*y_in + 4*Carr[4][1]*y_in*y_in*y_in;
+        System.out.println("calc_anal  , " + x_in + ", " + y_in + ", " + (costheta*A11 - sintheta*A21) + ", " + (costheta*A12 - sintheta*A22));
+        System.out.println("           ,   ,   , " +                     (sintheta*A11 + costheta*A21) + ", " + (sintheta*A12 + costheta*A22));
+    }
+
+    private static void load_prefs()
     {
         try                                         // recall simulation properties
         {
-            if (new File(System.getProperty("user.home"), "ChuaSimul5.ini").exists())
+            if (new File(System.getProperty("user.home"), "ChuaSimul4.ini").exists())
             {
-                simulProp.load(new FileInputStream(new File(System.getProperty("user.home"), "ChuaSimul5.ini")));
+                simulProp.load(new FileInputStream(new File(System.getProperty("user.home"), "ChuaSimul4.ini")));
                 txtalpha.setText(simulProp.getProperty("alpha", "0.00004"));
                 txttheta.setText(simulProp.getProperty("theta", "10.75"));
                 txta.setText(simulProp.getProperty("a", "-5"));
@@ -328,10 +380,10 @@ public class Chua_Simul_5 extends JDialog
             }
         }
         catch (IOException e)
-            {System.out.println("error reading ChuaSimul5.ini : " + e);}
+            {System.out.println("error reading ChuaSimul4.ini : " + e);}
     }
 
-    protected static void save_prefs()
+    private static void save_prefs()
     {
         simulProp.setProperty("alpha", txtalpha.getText());
         simulProp.setProperty("theta", txttheta.getText());
@@ -344,7 +396,7 @@ public class Chua_Simul_5 extends JDialog
         simulProp.setProperty("start", txtstart.getText());
         simulProp.setProperty("range", txtrange.getText());
         try
-            {simulProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "ChuaSimul5.ini"), "Chua Simulate Degree 5 Prefs");}
+            {simulProp.store(new FileOutputStream(System.getProperty("user.home") + System.getProperty("file.separator") + "ChuaSimul4.ini"), "Chua Simulate Degree 4 Prefs");}
         catch (IOException e)
             {JOptionPane.showMessageDialog(null, e.getMessage(), " Could not save Preferences file", JOptionPane.WARNING_MESSAGE);}
     }
@@ -354,7 +406,7 @@ public class Chua_Simul_5 extends JDialog
         //creating and showing this application's GUI.
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Chua_Simul_5 dlg = new Chua_Simul_5();
+                Chua_Simul_4 dlg = new Chua_Simul_4();
             }
         });
     }

@@ -75,6 +75,7 @@ public class Main
 
     protected static void runge_kutta_chua3(double[] pt3, double delt)
     {
+        // (x, y, z) = limit cycle
         double x = pt3[0];
         double y = pt3[1];
         double z = pt3[2];
@@ -105,6 +106,8 @@ public class Main
 
     protected static void runge_kutta_chua6_ddu3(double[] pt6, double delt)
     {
+        // (x, y, z) = limit cycle
+        // (dx, dy, dz) = deviation from (x, y, z), based on linearized first-order response
         double x = pt6[0];
         double y = pt6[1];
         double z = pt6[2];
@@ -154,17 +157,24 @@ public class Main
         pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
     }
 
-    protected static void runge_kutta_chua9_ddu6(double[] pt9, double delt)
+    protected static void runge_kutta_chua12(double[] pt12, double delt)
     {
-        double x = pt9[0];          // limit cycle
-        double y = pt9[1];
-        double z = pt9[2];
-        double dx = pt9[3];         // first-order: p^(1)
-        double dy = pt9[4];
-        double dz = pt9[5];
-        double d2x = pt9[6];        // second-order: p^(2)
-        double d2y = pt9[7];
-        double d2z = pt9[8];
+        // (x, y, z) = limit cycle
+        // (dx, dy, dz)    = deviation from (x, y, z), based on linearized first-order response
+        // (d2x, d2y, d2z) = additional (quadratic) deviation from (x, y, z), based on perturbation theory
+        // (d3x, d3y, d3z) = additional (cubic) deviation from (x, y, z), based on perturbation theory
+        double x = pt12[0];          // limit cycle
+        double y = pt12[1];
+        double z = pt12[2];
+        double dx = pt12[3];         // first-order: p^(1)
+        double dy = pt12[4];
+        double dz = pt12[5];
+        double d2x = pt12[6];        // second-order: p^(2)
+        double d2y = pt12[7];
+        double d2z = pt12[8];
+        double d3x = pt12[9];        // third-order: p^(3)
+        double d3y = pt12[10];
+        double d3z = pt12[11];
 
         double k1, k2, k3, k4;
         double l1, l2, l3, l4;
@@ -175,6 +185,9 @@ public class Main
         double d2k1, d2k2, d2k3, d2k4;
         double d2l1, d2l2, d2l3, d2l4;
         double d2m1, d2m2, d2m3, d2m4;
+        double d3k1, d3k2, d3k3, d3k4;
+        double d3l1, d3l2, d3l3, d3l4;
+        double d3m1, d3m2, d3m3, d3m4;
 
         k1 = delt*alpha*(y - a*x*x*x - c*x);
         l1 = delt*(x - y + z);
@@ -182,9 +195,14 @@ public class Main
         dk1 = delt*alpha*(dy - 3*a*x*x*dx - c*dx);
         dl1 = delt*(dx - dy + dz);
         dm1 = delt*(-beta*dy - gamma*dz);
-        d2k1 = delt*alpha*(d2y - 3*a*x*x*d2x - c*d2x);
+        d2k1 = delt*alpha*(d2y - 3*a*x*x*d2x - c*d2x)
+             - delt*3*alpha*a*x*dx*dx;                      // quadratic term only
         d2l1 = delt*(d2x - d2y + d2z);
         d2m1 = delt*(-beta*d2y - gamma*d2z);
+        d3k1 = delt*alpha*(d3y - 3*a*x*x*d3x - c*d3x)
+             - delt*alpha*a*dx*dx*dx - delt*6*alpha*a*x*dx*d2x;  // cubic term only
+        d3l1 = delt*(d3x - d3y + d3z);
+        d3m1 = delt*(-beta*d3y - gamma*d3z);
 
         k2 = delt*alpha*(y + l1/2 - a*(x + k1/2)*(x + k1/2)*(x + k1/2) - c*(x + k1/2));
         l2 = delt*(x + k1/2 - y - l1/2 + z + m1/2);
@@ -192,9 +210,14 @@ public class Main
         dk2 = delt*alpha*(dy + dl1/2 - 3*a*(x + k1/2)*(x + k1/2)*(dx + dk1/2) - c*(dx + dk1/2));
         dl2 = delt*(dx + dk1/2 - dy - dl1/2 + dz + dm1/2);
         dm2 = delt*(-beta*(dy + dl1/2) - gamma*(dz + dm1/2));
-        d2k2 = delt*alpha*(d2y + d2l1/2 - 3*a*(x + k1/2)*(x + k1/2)*(d2x + d2k1/2) - c*(d2x + d2k1/2));
+        d2k2 = delt*alpha*(d2y + d2l1/2 - 3*a*(x + k1/2)*(x + k1/2)*(d2x + d2k1/2) - c*(d2x + d2k1/2))
+             - delt*3*alpha*a*(x + k1/2)*(dx + dk1/2)*(dx + dk1/2); // quadratic term only
         d2l2 = delt*(d2x + d2k1/2 - d2y - d2l1/2 + d2z + d2m1/2);
         d2m2 = delt*(-beta*(d2y + d2l1/2) - gamma*(d2z + d2m1/2));
+        d3k2 = delt*alpha*((d3y + d3l1/2) - 3*a*(x + k1/2)*(x + k1/2)*(d3x + d3k1/2) - c*(d3x + d3k1/2))
+             - delt*alpha*a*(dx + dk1/2)*(dx + dk1/2)*(dx + dk1/2) - delt*6*alpha*a*(x + k1/2)*(dx + dk1/2)*(d2x + d2k1/2); // cubic term only
+        d3l2 = delt*(d3x + d3k1/2 - d3y - d3l1/2 + d3z + d3m1/2);
+        d3m2 = delt*(-beta*(d3y + d3l1/2) - gamma*(d3z + d3m1/2));
 
         k3 = delt*alpha*(y + l2/2 - a*(x + k2/2)*(x + k2/2)*(x + k2/2) - c*(x + k2/2));
         l3 = delt*(x + k2/2 - y - l2/2 + z + m2/2);
@@ -202,9 +225,14 @@ public class Main
         dk3 = delt*alpha*(dy + dl2/2 - 3*a*(x + k2/2)*(x + k2/2)*(dx + dk2/2) - c*(dx + dk2/2));
         dl3 = delt*(dx + dk2/2 - dy - dl2/2 + dz + dm2/2);
         dm3 = delt*(-beta*(dy + dl2/2) - gamma*(dz + dm2/2));
-        d2k3 = delt*alpha*(d2y + d2l2/2 - 3*a*(x + k2/2)*(x + k2/2)*(d2x + d2k2/2) - c*(d2x + d2k2/2));
+        d2k3 = delt*alpha*(d2y + d2l2/2 - 3*a*(x + k2/2)*(x + k2/2)*(d2x + d2k2/2) - c*(d2x + d2k2/2))
+             - delt*3*alpha*a*(x + k2/2)*(dx + dk2/2)*(dx + dk2/2); // quadratic term only
         d2l3 = delt*(d2x + d2k2/2 - d2y - d2l2/2 + d2z + d2m2/2);
         d2m3 = delt*(-beta*(d2y + d2l2/2) - gamma*(d2z + d2m2/2));
+        d3k3 = delt*alpha*((d3y + d3l2/2) - 3*a*(x + k2/2)*(x + k2/2)*(d3x + d3k2/2) - c*(d3x + d3k2/2))
+             - delt*alpha*a*(dx + dk2/2)*(dx + dk2/2)*(dx + dk2/2) - delt*6*alpha*a*(x + k2/2)*(dx + dk2/2)*(d2x + d2k2/2); // cubic term only
+        d3l3 = delt*(d3x + d3k2/2 - d3y - d3l2/2 + d3z + d3m2/2);
+        d3m3 = delt*(-beta*(d3y + d3l2/2) - gamma*(d3z + d3m2/2));
 
         k4 = delt*alpha*(y + l3 - a*(x + k3)*(x + k3)*(x + k3) - c*(x + k3));
         l4 = delt*(x + k3 - y - l3 + z + m3);
@@ -212,19 +240,27 @@ public class Main
         dk4 = delt*alpha*(dy + dl3 - 3*a*(x + k3)*(x + k3)*(dx + dk3) - c*(dx + dk3));
         dl4 = delt*(dx + dk3 - dy - dl3 + dz + dm3);
         dm4 = delt*(-beta*(dy + dl3) - gamma*(dz + dm3));
-        d2k4 = delt*alpha*(d2y + d2l3 - 3*a*(x + k3)*(x + k3)*(d2x + d2k3) - c*(d2x + d2k3));
+        d2k4 = delt*alpha*(d2y + d2l3 - 3*a*(x + k3)*(x + k3)*(d2x + d2k3) - c*(d2x + d2k3))
+             - delt*3*alpha*a*(x + k3)*(dx + dk3)*(dx + dk3);       // quadratic term only
         d2l4 = delt*(d2x + d2k3 - d2y - d2l3 + d2z + d2m3);
         d2m4 = delt*(-beta*(d2y + d2l3) - gamma*(d2z + d2m3));
+        d3k4 = delt*alpha*((d3y + d3l3) - 3*a*(x + k3)*(x + k3)*(d3x + d3k3) - c*(d3x + d3k3))
+             - delt*alpha*a*(dx + dk3)*(dx + dk3)*(dx + dk3) - delt*6*alpha*a*(x + k3)*(dx + dk3)*(d2x + d2k3);       // cubic term only
+        d3l4 = delt*(d3x + d3k3 - d3y - d3l3 + d3z + d3m3);
+        d3m4 = delt*(-beta*(d3y + d3l3) - gamma*(d3z + d3m3));
 
-        pt9[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
-        pt9[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
-        pt9[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
-        pt9[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
-        pt9[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
-        pt9[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
-        pt9[6] = d2x + (d2k1 + 2*d2k2 + 2*d2k3 + d2k4)/6;
-        pt9[7] = d2y + (d2l1 + 2*d2l2 + 2*d2l3 + d2l4)/6;
-        pt9[8] = d2z + (d2m1 + 2*d2m2 + 2*d2m3 + d2m4)/6;
+        pt12[0]  = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt12[1]  = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt12[2]  = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt12[3]  = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt12[4]  = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
+        pt12[5]  = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+        pt12[6]  = d2x + (d2k1 + 2*d2k2 + 2*d2k3 + d2k4)/6;
+        pt12[7]  = d2y + (d2l1 + 2*d2l2 + 2*d2l3 + d2l4)/6;
+        pt12[8]  = d2z + (d2m1 + 2*d2m2 + 2*d2m3 + d2m4)/6;
+        pt12[9]  = d3x + (d3k1 + 2*d3k2 + 2*d3k3 + d3k4)/6;
+        pt12[10] = d3y + (d3l1 + 2*d3l2 + 2*d3l3 + d3l4)/6;
+        pt12[11] = d3z + (d3m1 + 2*d3m2 + 2*d3m3 + d3m4)/6;
     }
 
     protected static Point2D.Double project_2D(double x, double y, double z)
@@ -323,19 +359,34 @@ public class Main
         return -beta*y - gamma*z;
     }
 
-    protected static double calc_x2dot(double x, double y, double z)      // Chua xdot
+    protected static double calc_x2dot(double x, double y, double z)      // Chua x2dot
     {
         return alpha*(calc_ydot(x, y, z) - (3*a*x*x + c)*calc_xdot(x, y, z));
     }
 
-    protected static double calc_y2dot(double x, double y, double z)      // Chua ydot
+    protected static double calc_y2dot(double x, double y, double z)      // Chua y2dot
     {
         return calc_xdot(x, y, z) - calc_ydot(x, y, z) + calc_zdot(x, y, z);
     }
 
-    protected static double calc_z2dot(double x, double y, double z)      // Chua zdot
+    protected static double calc_z2dot(double x, double y, double z)      // Chua z2dot
     {
         return -beta*calc_ydot(x, y, z) - gamma*calc_zdot(x, y, z);
+    }
+
+    protected static double calc_x3dot(double x, double y, double z)      // Chua x3dot NOT DONE
+    {
+        return alpha*(calc_y2dot(x, y, z) - (3*a*x*x + c)*calc_x2dot(x, y, z) - 6*a*x*calc_xdot(x, y, z)*calc_xdot(x, y, z));
+    }
+
+    protected static double calc_y3dot(double x, double y, double z)      // Chua y3dot
+    {
+        return calc_x2dot(x, y, z) - calc_y2dot(x, y, z) + calc_z2dot(x, y, z);
+    }
+
+    protected static double calc_z3dot(double x, double y, double z)      // Chua z3dot
+    {
+        return -beta*calc_y2dot(x, y, z) - gamma*calc_z2dot(x, y, z);
     }
 
     protected static double calc_phi(double x, double y, double z)       // Euler phi

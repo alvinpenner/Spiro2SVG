@@ -543,6 +543,8 @@ public final class Chua_Perturb_Torus
         // assume we have calculated second-order (t-sync) response, based on S matrix, during one cycle
         // then define the partial derivatives of the output (x, y, z) response wrt input (x', y')
 
+        // WARNING !!! - most of this code is obsolete, based on Rossler
+
         double x0dot = Main.calc_xdot(Main.final_x, Main.final_y, Main.final_z);
         double y0dot = Main.calc_ydot(Main.final_x, Main.final_y, Main.final_z);
         double z0dot = Main.calc_zdot(Main.final_x, Main.final_y, Main.final_z);
@@ -626,6 +628,8 @@ public final class Chua_Perturb_Torus
         System.out.println(Chua_y_vs_x.first_order_hdr.split(",")[0] + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Main.final_Period + ", " + Main.final_delt
                        + ", 0, 0, 0, " + coeff[0][0] + ", " + coeff[0][1] + ", " + coeff[0][2] + ", " + coeff[0][3] + ", " + coeff[0][4] + ", " + coeff[0][5] + ", " + coeff[0][6]
                        + ", 0, 0, 0, " + coeff[1][0] + ", " + coeff[1][1] + ", " + coeff[1][2] + ", " + coeff[1][3] + ", " + coeff[1][4] + ", " + coeff[1][5] + ", " + coeff[1][6]);
+        System.out.println("\nWARNING !!! - most of this cubic code is obsolete, based on Rossler\n");
+
 /*      z-sync calc (temporarily disabled)
         for (i = 0; i < 3; i++)                                                 // proportional to Pdot
         {
