@@ -266,8 +266,8 @@ public class Chua_Simul_4 extends JDialog
         if (printChk.isSelected())
             try
             {
-                boolean fexists = new File("C:\\Windows\\Temp\\Chua_Simul_4_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv").exists();
-                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_Simul_4_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv", true);
+                boolean fexists = new File("C:\\Windows\\Temp\\Chua_Simul_4" + C_or_g + "_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv").exists();
+                FileWriter fw = new FileWriter("C:\\Windows\\Temp\\Chua_Simul_4" + C_or_g + "_" + txtalpha.getText() + "_" + txttheta.getText() + "_" + txta.getText() + "_" + txtb.getText() + ".csv", true);
                 fout = new PrintWriter(fw);
                 if (!fexists)
                 {

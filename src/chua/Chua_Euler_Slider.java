@@ -86,6 +86,6 @@ public class Chua_Euler_Slider extends JDialog
                 lblpsi.setText("psi = " + slider_psi.getValue());
             }
         });
-        slider_psi.setSnapToTicks(true);    // snap psi to nearest 5 degrees
+        //slider_psi.setSnapToTicks(true);    // snap psi to nearest 5 degrees
     }
 }

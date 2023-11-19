@@ -157,6 +157,130 @@ public class Main
         pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
     }
 
+    protected static void runge_kutta_chua6_ddu3_full(double[] pt6, double delt)
+    {
+        // (x, y, z) = limit cycle
+        // (dx, dy, dz) = deviation from (x, y, z), based on full nonlinear response
+        //                                          (using original limit cycle)
+        double x = pt6[0];
+        double y = pt6[1];
+        double z = pt6[2];
+        double dx = pt6[3];
+        double dy = pt6[4];
+        double dz = pt6[5];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double dk1, dk2, dk3, dk4;
+        double dl1, dl2, dl3, dl4;
+        double dm1, dm2, dm3, dm4;
+
+        k1 = delt*alpha*(y - a*x*x*x - c*x);
+        l1 = delt*(x - y + z);
+        m1 = delt*(-beta*y - gamma*z);
+        dk1 = delt*alpha*(dy - a*(3*x*x*dx + 3*x*dx*dx + dx*dx*dx) - c*dx);
+        dl1 = delt*(dx - dy + dz);
+        dm1 = delt*(-beta*dy - gamma*dz);
+
+        k2 = delt*alpha*(y + l1/2 - a*(x + k1/2)*(x + k1/2)*(x + k1/2) - c*(x + k1/2));
+        l2 = delt*(x + k1/2 - y - l1/2 + z + m1/2);
+        m2 = delt*(-beta*(y + l1/2) - gamma*(z + m1/2));
+        dk2 = delt*alpha*(dy + dl1/2 - a*(3*(x + k1/2)*(x + k1/2)*(dx + dk1/2) + 3*(x + k1/2)*(dx + dk1/2)*(dx + dk1/2)
+                                          + (dx + dk1/2)*(dx + dk1/2)*(dx + dk1/2)) - c*(dx + dk1/2));
+        dl2 = delt*(dx + dk1/2 - dy - dl1/2 + dz + dm1/2);
+        dm2 = delt*(-beta*(dy + dl1/2) - gamma*(dz + dm1/2));
+
+        k3 = delt*alpha*(y + l2/2 - a*(x + k2/2)*(x + k2/2)*(x + k2/2) - c*(x + k2/2));
+        l3 = delt*(x + k2/2 - y - l2/2 + z + m2/2);
+        m3 = delt*(-beta*(y + l2/2) - gamma*(z + m2/2));
+        dk3 = delt*alpha*(dy + dl2/2 - a*(3*(x + k2/2)*(x + k2/2)*(dx + dk2/2) + 3*(x + k2/2)*(dx + dk2/2)*(dx + dk2/2)
+                                          + (dx + dk2/2)*(dx + dk2/2)*(dx + dk2/2)) - c*(dx + dk2/2));
+        dl3 = delt*(dx + dk2/2 - dy - dl2/2 + dz + dm2/2);
+        dm3 = delt*(-beta*(dy + dl2/2) - gamma*(dz + dm2/2));
+
+        k4 = delt*alpha*(y + l3 - a*(x + k3)*(x + k3)*(x + k3) - c*(x + k3));
+        l4 = delt*(x + k3 - y - l3 + z + m3);
+        m4 = delt*(-beta*(y + l3) - gamma*(z + m3));
+        dk4 = delt*alpha*(dy + dl3 - a*(3*(x + k3)*(x + k3)*(dx + dk3) + 3*(x + k3)*(dx + dk3)*(dx + dk3)
+                                        + (dx + dk3)*(dx + dk3)*(dx + dk3)) - c*(dx + dk3));
+        dl4 = delt*(dx + dk3 - dy - dl3 + dz + dm3);
+        dm4 = delt*(-beta*(dy + dl3) - gamma*(dz + dm3));
+
+        pt6[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt6[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt6[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
+        pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+    }
+/*
+    protected static void runge_kutta_chua6_ddu3_projected_2D(double[] pt6, double delt)
+    {
+        // (x, y, z) = limit cycle
+        // (dx, dy, dz) = deviation from (x, y, z), based on full nonlinear response
+        //                projected onto the (x', y', z') plane at each time using (phi, theta)
+        //                (using original limit cycle)
+        double x = pt6[0];
+        double y = pt6[1];
+        double z = pt6[2];
+        double dx = pt6[3];
+        double dy = pt6[4];
+        double dz = pt6[5];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double dk1, dk2, dk3, dk4;
+        double dl1, dl2, dl3, dl4;
+        double dm1, dm2, dm3, dm4;
+
+        runge_kutta_projected_to_Euler(x, y, z);
+        k1 = delt*alpha*(y - a*x*x*x - c*x);
+        l1 = delt*(x - y + z);
+        m1 = delt*(-beta*y - gamma*z);
+        dk1 = 0*delt*alpha*(dy - a*(3*x*x*dx + 3*x*dx*dx + dx*dx*dx) - c*dx);
+        dl1 = 0*delt*(dx - dy + dz);
+        dm1 = 0*delt*(-beta*dy - gamma*dz);
+
+        k2 = delt*alpha*(y + l1/2 - a*(x + k1/2)*(x + k1/2)*(x + k1/2) - c*(x + k1/2));
+        l2 = delt*(x + k1/2 - y - l1/2 + z + m1/2);
+        m2 = delt*(-beta*(y + l1/2) - gamma*(z + m1/2));
+        dk2 = 0*delt*alpha*(dy + dl1/2 - a*(3*(x + k1/2)*(x + k1/2)*(dx + dk1/2) + 3*(x + k1/2)*(dx + dk1/2)*(dx + dk1/2)
+                                          + (dx + dk1/2)*(dx + dk1/2)*(dx + dk1/2)) - c*(dx + dk1/2));
+        dl2 = 0*delt*(dx + dk1/2 - dy - dl1/2 + dz + dm1/2);
+        dm2 = 0*delt*(-beta*(dy + dl1/2) - gamma*(dz + dm1/2));
+
+        k3 = delt*alpha*(y + l2/2 - a*(x + k2/2)*(x + k2/2)*(x + k2/2) - c*(x + k2/2));
+        l3 = delt*(x + k2/2 - y - l2/2 + z + m2/2);
+        m3 = delt*(-beta*(y + l2/2) - gamma*(z + m2/2));
+        dk3 = 0*delt*alpha*(dy + dl2/2 - a*(3*(x + k2/2)*(x + k2/2)*(dx + dk2/2) + 3*(x + k2/2)*(dx + dk2/2)*(dx + dk2/2)
+                                          + (dx + dk2/2)*(dx + dk2/2)*(dx + dk2/2)) - c*(dx + dk2/2));
+        dl3 = 0*delt*(dx + dk2/2 - dy - dl2/2 + dz + dm2/2);
+        dm3 = 0*delt*(-beta*(dy + dl2/2) - gamma*(dz + dm2/2));
+
+        k4 = delt*alpha*(y + l3 - a*(x + k3)*(x + k3)*(x + k3) - c*(x + k3));
+        l4 = delt*(x + k3 - y - l3 + z + m3);
+        m4 = delt*(-beta*(y + l3) - gamma*(z + m3));
+        dk4 = 0*delt*alpha*(dy + dl3 - a*(3*(x + k3)*(x + k3)*(dx + dk3) + 3*(x + k3)*(dx + dk3)*(dx + dk3)
+                                        + (dx + dk3)*(dx + dk3)*(dx + dk3)) - c*(dx + dk3));
+        dl4 = 0*delt*(dx + dk3 - dy - dl3 + dz + dm3);
+        dm4 = 0*delt*(-beta*(dy + dl3) - gamma*(dz + dm3));
+
+        pt6[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt6[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt6[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
+        pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+    }
+
+    private static void runge_kutta_projected_to_Euler(double x, double y, double z)
+    {
+        // project d.e. onto time-varying Euler angles (velocity vector)
+        // (x, y, z) = limit cycle
+        // (dx, dy, dz) = deviation from (x, y, z), based on full nonlinear response
+        System.out.println(x + ", " + y + ", " + z + ", " + calc_phi(x, y, z) + ", " + calc_theta(x, y, z));
+    }
+*/
     protected static void runge_kutta_chua12(double[] pt12, double delt)
     {
         // (x, y, z) = limit cycle
@@ -341,6 +465,8 @@ public class Main
         double xstat = Math.sqrt((1/(1 + beta/gamma) - c)/a);
         double ystat = xstat/(1 + beta/gamma);
         double zstat = -beta*ystat/gamma;
+        //System.out.println("pstat = " + xstat + ", " + ystat + ", " + zstat);
+        //System.out.println("z     = " + project_zp(-xstat, -ystat, -zstat));
         return project_2D(xstat, ystat, zstat);
     }
 

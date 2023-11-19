@@ -30,8 +30,8 @@ public class Chua_Scatter_Tau extends JDialog
     private static JButton btnCalc = new JButton("Calc");
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
     //private static final JLabel lblPosn = new JLabel("posn");
-    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
-    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Simul_4\\";
+    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Simul_4\\";
     //private static final String fName = "scatter_angle_99.98_530999600";
     //private static final String fDir = "\\Windows\\Temp\\";
     //private static final String fName = "Chua_scatter_530998000_0.021_0.0_99.98";
@@ -65,11 +65,14 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fName = "Chua_Simul_4g_0.00004_10.75_-5_5_0_3.5E6";
     //private static final String fName = "Chua_Simul_4g_0.00004_10.75_-5_5_-7E11_0";
     //private static final String fName = "Chua_Simul_4g_0.00004_10.75_-5_5_0_4.465E6";
-    //private static final String fName = "Chua_Simul_4_0.00008_10.762308_-5_-13.425_04y";
+    //private static final String fName = "Chua_Simul_4C_0.0002_10.780769_-5_-50_quart";
     //private static final String fName = "Chua_scatter_1252790000_0.0010_0.0_99.98";
     //private static final String fName = "Chua_Simul_4_0.0002_10.75_-5_-247";
     //private static final String fName = "Chua_Simul_4C_0.00004_46_-5_-5_0_1.67E7";
-    private static final String fName = "Chua_Simul_4C_0.00004_30_-5_5_0_1.4160919E7";
+    //private static final String fName = "Chua_Simul_4C_0.00004_30_-5_5_0_1.4160919E7";
+    //private static final String fName = "Chua_scatter_91180000_0.0010_0.0_99.99482_900";
+    private static final String fName = "Chua_scatter_347998000_0.0050_0.0_99.98";
+    //private static final String fName = "Chua_scatter_2023197600_0.0010_0.0_99.9765";
 
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static final JLabel lblangle = new JLabel(" : angle = ");
@@ -77,7 +80,7 @@ public class Chua_Scatter_Tau extends JDialog
     private static int Nfinal = 0;
     private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0, xstat, ystat;
     private static double ymin = 0;
-    private static double ymax = 60;
+    private static double ymax = 30;
 
     public Chua_Scatter_Tau()
         {
