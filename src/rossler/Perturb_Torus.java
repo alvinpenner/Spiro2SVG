@@ -92,6 +92,17 @@ public final class Perturb_Torus
                 //System.out.println(i + ", " + k + ", " + pt6[3] + ", " + pt6[4] + ", " + pt6[5]);     // original S matrix
             }
         }
+
+        //System.out.println("\nproject 2-D S-matrix");               // test 2-D projection of S(t)
+        //for (int k = 0; k <= Main.final_Period; k++)
+        //{
+        //    Point2D.Double pt2_0 = Main.project_2D(S[k][0][0], S[k][1][0], S[k][2][0]);
+        //    Point2D.Double pt2_1 = Main.project_2D(S[k][0][1], S[k][1][1], S[k][2][1]);
+        //    double zdottemp = Main.b + xyz[k][2]*(xyz[k][0] - Main.c);
+        //    System.out.println(k + ", " + pt2_0.x + ", " + pt2_1.x + ", " + pt2_0.y + ", " + pt2_1.y
+        //                            + ", " + zdottemp);
+        //}
+
         //System.out.println("\nlimit cycle xyz");
         //for (int k = 0; k < S.length; k++)
         //    System.out.println(k + ", " + xyz[k][0] + ", " + xyz[k][1] + ", " + xyz[k][2]);

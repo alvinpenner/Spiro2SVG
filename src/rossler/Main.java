@@ -211,6 +211,60 @@ public class Main
         pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
     }
 
+    protected static void runge_kutta_rossler6_ddu3_full(double[] pt6, double delt, double tempc)
+    {
+        // (x, y, z) = limit cycle
+        // (dx, dy, dz) = deviation from (x, y, z), based on full nonlinear response
+        //                                          (using original limit cycle)
+        double x = pt6[0];
+        double y = pt6[1];
+        double z = pt6[2];
+        double dx = pt6[3];
+        double dy = pt6[4];
+        double dz = pt6[5];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+        double dk1, dk2, dk3, dk4;
+        double dl1, dl2, dl3, dl4;
+        double dm1, dm2, dm3, dm4;
+
+        k1 = delt*(-y - z);
+        l1 = delt*( x + a*y);
+        m1 = delt*(b + z*(x - tempc));
+        dk1 = delt*(-dy - dz);
+        dl1 = delt*(dx + a*dy);
+        dm1 = delt*(dz*(x - tempc + dx) + z*dx);
+
+        k2 = delt*(-y - l1/2 - z - m1/2);
+        l2 = delt*( x + k1/2 + a*(y + l1/2));
+        m2 = delt*(b + (z + m1/2)*(x + k1/2 - tempc));
+        dk2 = delt*(-dy - dl1/2 - dz - dm1/2);
+        dl2 = delt*(dx + dk1/2 + a*(dy + dl1/2));
+        dm2 = delt*((dz + dm1/2)*(x + k1/2 - tempc + dx + dk1/2) + (z + m1/2)*(dx + dk1/2));
+
+        k3 = delt*(-y - l2/2 - z - m2/2);
+        l3 = delt*( x + k2/2 + a*(y + l2/2));
+        m3 = delt*(b + (z + m2/2)*(x + k2/2 - tempc));
+        dk3 = delt*(-dy - dl2/2 - dz - dm2/2);
+        dl3 = delt*(dx + dk2/2 + a*(dy + dl2/2));
+        dm3 = delt*((dz + dm2/2)*(x + k2/2 - tempc + dx + dk2/2) + (z + m2/2)*(dx + dk2/2));
+
+        k4 = delt*(-y - l3 - z - m3);
+        l4 = delt*( x + k3 + a*(y + l3));
+        m4 = delt*(b + (z + m3)*(x + k3 - tempc));
+        dk4 = delt*(-dy - dl3 - dz - dm3);
+        dl4 = delt*(dx + dk3 + a*(dy + dl3));
+        dm4 = delt*((dz + dm3)*(x + k3 - tempc + dx + dk3) + (z + m3)*(dx + dk3));
+
+        pt6[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt6[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt6[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+        pt6[3] = dx + (dk1 + 2*dk2 + 2*dk3 + dk4)/6;
+        pt6[4] = dy + (dl1 + 2*dl2 + 2*dl3 + dl4)/6;
+        pt6[5] = dz + (dm1 + 2*dm2 + 2*dm3 + dm4)/6;
+    }
+
     protected static void runge_kutta_rossler6_ddu2(double[] pt6, double delt, double tempc)
     {
         double x = pt6[0];
@@ -523,6 +577,8 @@ public class Main
 
                 // generate diagonals of M, and v
 
+                //phidot = 0;                                 // temporary fudge FIX FIX
+                //thetadot = 0;                               // temporary fudge FIX FIX
                 for (int vari = 0; vari < 3; vari++)                       // var = (dx'/dc, dy'/dc, dz'/dc)
                     for (int varj = 0; varj < 3; varj++)
                         Mout[vari][varj][i] = - dTdphi[vari][varj]*phidot - dTdtheta[vari][varj]*thetadot
@@ -601,7 +657,7 @@ public class Main
             //        System.out.println(i + ", " + soln2[i] + ", " + soln2[i + Period]);
             //}
 
-            if (true)                                           // solve first-order d.e. in Python
+            if (false)                                           // solve first-order d.e. in Python
             {
                 System.out.println("\nfinal (x y z) =," + a + ", " + b + ", " + c + ", " + gen_x[Period - 1] + ", " + gen_y[Period - 1] + ", " + gen_z[Period - 1]);
                 System.out.println("\n# Rossler first-order d.e. elements of M (Python)");
@@ -629,6 +685,16 @@ public class Main
                 //System.out.println("\nindex,M00,M01,M10,M11,b");
                 //for (int i = 0; i < Period; i++)
                 //    System.out.println(i + ", " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + v[i + Period]);
+            }
+
+            if (true)                                           // generate transformed Mout vs time
+            {
+                System.out.println("Rossler - Limit cycle and 2-D (x', y') (linear) coupling matrix");
+                System.out.println("a_b_c , " + a + ", " + b + ", " + c);
+                System.out.println("Period_delt , 0, " + Period + ", " + delt);
+                System.out.println("i,x,y,z,phi,theta,phidot,thetadot,M[0][0],M[0][1],M[0][2],M[1][0],M[1][1],M[1][2],M[2][0],M[2][1],M[2][2]");
+                for (int i = 0; i < Period; i++)            // i = time index
+                    System.out.println(i + ", " + gen_x[i] + ", " + gen_y[i] + ", " + gen_z[i] + ",0.0,0.0,0.0,0.0, " + Mout[0][0][i] + ", " + Mout[0][1][i] + ", " + Mout[0][2][i] + ", " + Mout[1][0][i] + ", " + Mout[1][1][i] + ", " + Mout[1][2][i] + ", " + Mout[2][0][i] + ", " + Mout[2][1][i] + ", " + Mout[2][2][i]);
             }
 
             if (false)                                           // solve second-order d.e. in Python
@@ -954,5 +1020,20 @@ public class Main
         double temp = v[i1];
         v[i1] = v[i2];
         v[i2] = temp;
+    }
+
+    protected static double[][] multmm(double[][] m1, double[][] m2)
+    {
+        // matrix multiplication (for square matrices only)
+        double[][] retVal = new double[m1.length][m1[0].length];
+
+        for (int i = 0; i < m1.length; i++)
+            for (int j = 0; j < m1.length; j++)
+            {
+                retVal[i][j] = 0;
+                for (int k = 0; k < m1.length; k++)
+                    retVal[i][j] += m1[i][k]*m2[k][j];
+            }
+        return retVal;
     }
 }

@@ -187,6 +187,15 @@ public class Rossler_x_y_scatter extends JDialog
                 ScatterActivity activity = new ScatterActivity(changed || first);
                 activity.execute();
                 first = false;
+                DC.setColor(Color.BLUE);
+                Point2D.Double pstat1 = Main.project_stationary("+");   // projected stationary point (x', y')
+                Point2D.Double pstat2 = Main.project_stationary("-");   // projected stationary point (x', y')
+                System.out.println("pstat1 = " + pstat1);
+                System.out.println("pstat2 = " + pstat2);
+                DC.drawLine((int) ((pstat1.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                            (int) ((pstat1.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
+                            (int) ((pstat2.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                            (int) ((pstat2.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
             }
         });
         btnClear.addActionListener(new AbstractAction()
@@ -305,7 +314,7 @@ class ScatterActivity extends SwingWorker<Void, Point>
 
     protected Void doInBackground() throws Exception
     {
-        int Nloop = 10000*10;
+        int Nloop = 10000*100;
         Point2D.Double pt2old;          // projected, old, (x', y') using Euler angles
         Point2D.Double pt2new;          // projected, new, (x', y') using Euler angles
         double zpold, zpnew;            // projected z'

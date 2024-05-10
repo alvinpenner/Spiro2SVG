@@ -33,12 +33,14 @@ public class Scatter_Tau extends JDialog
     //private static final String fName = "scatter_angle_0.8493_0.6018_2.0_new";
     //private static final String fName = "scatter_angle_0.613613_0.6_1.25";
     //private static final String fName = "scatter_angle_0.613612788_0.6_1.25";
-    private static final String fName = "scatter_angle_0.6156_0.6_1.25";
+    private static final String fName = "scatter_angle_0.6154_0.6_1.25";
     //private static final String fName = "test_angle";
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static double[] angles; //, times;
     private static int Nfinal = 0;
     private static double a, b, c, Period, delt, eig, angle, x0, y0;
+    private static double ymin = 0;
+    private static double ymax = 30;
 
     public Scatter_Tau()
     {
@@ -120,17 +122,25 @@ public class Scatter_Tau extends JDialog
 
     private static void refresh_graph()
     {
+        double delta;
         lblfile.setText("file = '" + fName + "' (" + slider_start.getValue() + ", " + slider_end.getValue() + ")");
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
-        DC.setColor(new Color(255, 128, 0));
-        DC.drawLine(0, image.getHeight() - 1, image.getWidth() - 1, 0);
+        //DC.setColor(new Color(255, 128, 0));
+        //DC.drawLine(0, image.getHeight() - 1, image.getWidth() - 1, 0);
+        DC.setColor(Color.gray);
+        DC.drawLine(0, image.getHeight() - 1 - (int) (-ymin*360/(ymax - ymin)), image.getWidth() - 1, image.getHeight() - 1 - (int) (-ymin*360/(ymax - ymin)));
+        for (int i = 1; i < 12; i++)
+            DC.drawLine(30*i, image.getHeight() - 1, 30*i, image.getHeight() - 8);
         DC.setColor(new Color(0, 64, 192));
-        DC.drawLine(0, image.getHeight() - 1 - (int) angle, image.getHeight() - 1 - (int) angle, 0);
-        DC.drawLine(image.getHeight() - 1 - (int) angle, image.getHeight() - 1, image.getHeight() - 1, image.getHeight() - 1 - (int) angle);
+        DC.drawLine(0, image.getHeight() - 1 - (int) ((angle - ymin)*360/(ymax - ymin)), image.getWidth() - 1, image.getHeight() - 1 - (int) ((angle - ymin)*360/(ymax - ymin)));
+
         for (int i = slider_start.getValue(); i < slider_end.getValue() - 1; i++)
         {
-            //System.out.println(i + ", " + angles[i] + ", " + angles[i + 1]);
-            image.setRGB((int) angles[i], image.getHeight() - 1 - (int) angles[i + 1], Color.BLACK.getRGB());
+            delta = (angles[i + 1] - angles[i] + 540) % 360 - 180.0;
+            if (delta < ymax)
+                image.setRGB((int) angles[i], image.getHeight() - 1 - (int) ((delta - ymin)*360/(ymax - ymin)), Color.BLACK.getRGB());
+            else
+                System.out.println("BAD DATA, " + i + ", " + angles[i] + ", " + angles[i + 1] + ", " + delta);
         }
         lblImage.repaint();
     }

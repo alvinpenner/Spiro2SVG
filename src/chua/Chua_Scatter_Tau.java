@@ -29,8 +29,9 @@ public class Chua_Scatter_Tau extends JDialog
     private static JSlider slider_end;
     private static JButton btnCalc = new JButton("Calc");
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
-    //private static final JLabel lblPosn = new JLabel("posn");
-    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\scatter_period\\";
+    private static final String fDir = "\\APP\\Java\\RosslerSystem\\3D_map_cylindrical\\";
+    //private static final String fDir = "\\Windows\\Temp\\";
     //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Simul_4\\";
     //private static final String fName = "scatter_angle_99.98_530999600";
     //private static final String fDir = "\\Windows\\Temp\\";
@@ -71,8 +72,12 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fName = "Chua_Simul_4C_0.00004_46_-5_-5_0_1.67E7";
     //private static final String fName = "Chua_Simul_4C_0.00004_30_-5_5_0_1.4160919E7";
     //private static final String fName = "Chua_scatter_91180000_0.0010_0.0_99.99482_900";
-    private static final String fName = "Chua_scatter_347998000_0.0050_0.0_99.98";
+    //private static final String fName = "Chua_scatter_347998000_0.0050_0.0_99.98";
+    //private static final String fName = "Chua_scatter_347998210_0.0010_0.0_99.98";
     //private static final String fName = "Chua_scatter_2023197600_0.0010_0.0_99.9765";
+    //private static final String fName = "Simul_3D_Rossler_0.61535_0.6_1.25_0_1";
+    //private static final String fName = "Simul_3D_Rossler_0.6152_0.6_1.25_0_1";
+    private static final String fName = "Rossler_0.6155_0.6_1.25_2000";
 
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static final JLabel lblangle = new JLabel(" : angle = ");
@@ -80,10 +85,10 @@ public class Chua_Scatter_Tau extends JDialog
     private static int Nfinal = 0;
     private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle, x0, y0, xstat, ystat;
     private static double ymin = 0;
-    private static double ymax = 30;
+    private static double ymax = 40;
 
     public Chua_Scatter_Tau()
-        {
+    {
         setTitle("Chua System - Modulation Period of x'-y' Scatter (yrange = " + ymin + "-" + ymax + ")");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(530, 650);
@@ -324,9 +329,9 @@ public class Chua_Scatter_Tau extends JDialog
                 y0 = Double.parseDouble(str.split(",")[2]);
                 xstat = Double.parseDouble(str.split(",")[3]);
                 ystat = Double.parseDouble(str.split(",")[4]);
-                System.out.println("stat1 = " + (Math.atan2(-ystat - y0, -xstat - x0)*180.0/Math.PI + 360.0) % 360);
-                System.out.println("stat2 = " + (Math.atan2(-y0, -x0)*180.0/Math.PI + 360.0) % 360);
-                System.out.println("stat3 = " + (Math.atan2(ystat - y0, xstat - x0)*180.0/Math.PI + 360.0) % 360);
+                //System.out.println("stat1 = " + (Math.atan2(-ystat - y0, -xstat - x0)*180.0/Math.PI + 360.0) % 360);
+                //System.out.println("stat2 = " + (Math.atan2(-y0, -x0)*180.0/Math.PI + 360.0) % 360);
+                //System.out.println("stat3 = " + (Math.atan2(ystat - y0, xstat - x0)*180.0/Math.PI + 360.0) % 360);
                 str = istr.readLine();                                  // dummy
                 System.out.println("scatter_tau, " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + (int) Nhdr + ", " + eig + ", " + angle + ", " + x0 + ", " + y0 + ", " + xstat + ", " + ystat);
                 System.out.println("Nfinal, x, y, r, angle");

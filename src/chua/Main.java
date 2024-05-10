@@ -25,7 +25,7 @@ public class Main
 {
     private static Properties pgmProp = new Properties();
     protected static boolean skew_transform = false;
-    protected static final double a = -1; // 1;               // parameters
+    protected static final double a = -1; // 1;         // parameters
     protected static double alpha, beta, gamma, c;      // parameters
     protected static double alpha_s, alpha_e;           // bifurcate range
     protected static double beta_s, beta_e;             // bifurcate range
@@ -720,6 +720,20 @@ public class Main
         }
         catch (IOException e)
             {System.out.println("save_PNG error = " + e);}
+    }
+
+    protected static double[][] multmm(double[][] m1, double[][] m2)
+    {
+        double[][] retVal = new double[m1.length][m1[0].length];
+
+        for (int i = 0; i < m1.length; i++)
+            for (int j = 0; j < m1.length; j++)
+            {
+                retVal[i][j] = 0;
+                for (int k = 0; k < m1.length; k++)
+                    retVal[i][j] += m1[i][k]*m2[k][j];
+            }
+        return retVal;
     }
 /*
     private static double[] gaussj(double[][] m, double[] v)
