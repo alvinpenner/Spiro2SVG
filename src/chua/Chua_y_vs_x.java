@@ -21,7 +21,7 @@ import java.io.File;
 public class Chua_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = 0.0001; // -0.001; //-6.990205973471885E-5; // 0.0005; // -0.0008; // 0.0005; // -6.990205974363416E-5;    // -0.0005;
+    private final static double DEFAULT_DELT = -6.990205973471885E-5; // 0.0001; //-6.990205973471885E-5; // 0.0005; // -0.0008; // 0.0005; // -6.990205974363416E-5;    // -0.0005;
     private final static int N = 480000; // 7000; // 480000;                // total # of iterations 480000
     private static double[] pt6_old;
     private static double eig, angle;                   // first-order response
@@ -255,7 +255,7 @@ public class Chua_y_vs_x extends JDialog
         {
             public void actionPerformed(ActionEvent event)
             {
-                //fit_cubic_response();                 // original nonlinear response using a finite perturbation
+                //fit_cubic_response();                 // original nonlinear response using a finite perturbation (OBSOLETE)
                 //fit_cubic_response_full();              // new nonlinear response at fixed limit cycle Phi(t)
                 fit_cubic_response_full_3D();           // new nonlinear response at fixed limit cycle (3-D model)
                 //fit_cubic_response_full_radial();     // new nonlinear response at (angle, z')
@@ -532,8 +532,10 @@ public class Chua_y_vs_x extends JDialog
         //double[] xfer = new double[] {1609920000, 99.977, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990198943096418E-5, -0.18760431693110263, -0.1119262522179699, 1.48518071995642};
         //double[] xfer = new double[] {530997600, 99.98, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205974363416E-5, 0.1777456119481388, -0.06254861764073841, -3.9867298219742078};
         //double[] xfer = new double[] {478080000, 99.978, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990201287968368E-5, -0.18760915811977436, -0.11192486733843215, 1.485180709880168};
-        double[] xfer = new double[] {347997600, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205974363416E-5,-0.18764493016867104, 0.09538889391093033, 2.860907453898518};
-        //double[] xfer = new double[] {347997700, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973471885E-5, -0.11970240239014328, -0.117823496370916, 0.27107075945853604};
+        //double[] xfer = new double[] {347997600, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205974363416E-5,-0.18764493016867104, 0.09538889391093033, 2.860907453898518};
+        //double[] xfer = new double[] {1147680000, 99.978, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990201290548752E-5, -0.3446112277608778, 0.02361883040508388, 4.680948421199436};
+        //double[] xfer = new double[] {132480000, 99.98, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973333324E-5, -0.3446227293625814, 0.023618762729455088, 4.68085072726888};
+        double[] xfer = new double[] {356160000, 99.986, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990220027189508E-5, -0.3446576942108788, 0.02361855575147547, 4.680557133553639};
         //double[] xfer = new double[] {347997700, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 24000, -6.990205973987019E-6, -0.11970240836566291, -0.11782349676998444, 0.2710706984438698};
         //double[] xfer = new double[] {347998900, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 2400, -6.990205973471885E-5, 0.033261747274911733, 0.11757542743865339, -0.17406255822626843};
         //double[] xfer = new double[] {347998900, 99.980, 1499.25037, -0.51325, -1.0, 0.144, 24000, -6.990205973360493E-6, 0.03326174478635965, 0.11757542749244691, -0.1740624919192874};
@@ -563,8 +565,8 @@ public class Chua_y_vs_x extends JDialog
         if (true)                                           // initiallize directly from data file, row Main.iT
         {
             String fDir = "\\APP\\Java\\ChuaOscillator\\skew_vs_time\\";
-            //String fName = "xyz_input_24_99.98";
-            String fName = "xyz_input_2400_99.9765";
+            String fName = "xyz_input_24_99.98";
+            //String fName = "xyz_input_2400_99.9765";
             //String fName = "xyz_input_24000_99.9948";
             String str;
             try

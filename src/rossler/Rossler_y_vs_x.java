@@ -256,8 +256,8 @@ public class Rossler_y_vs_x extends JDialog
         {
             public void actionPerformed(ActionEvent event)
             {
-                //fit_cubic_response();
-                fit_cubic_response_full_3D();
+                fit_cubic_response();
+                //fit_cubic_response_full_3D();
             }
         });
 
@@ -564,6 +564,7 @@ public class Rossler_y_vs_x extends JDialog
         //double[] xfer = new double[] {0.615, 0.6, 1.25, 2400, 0.002041008652432798, 1.1053031693677278, -1.0747243349326034, 1.2530723349641284};
         //double[] xfer = new double[] {0.613, 0.6, 1.25, 1000.0, -0.00491197867733379, 1.0803402502099697, -1.0065396774688258, 1.3078939309021518};
         //double[] xfer = new double[] {0.614, 0.6, 1.25, 2500, 0.0019621089010658493, 0.1526369391508889, -0.8648954643212351, 0.8659408980845922};
+        double[] xfer = new double[] {0.6156, 0.6, 1.25, 2400, 0.0020392652462394504, 0.3224917019058715, -1.150200373750082, 0.7301173767526574};
         //double[] xfer = new double[] {0.6156, 0.6, 1.25, 2400, 0.0020392652462394504, 0.3224917019058715, -1.150200373750082, 0.7301173767526574};
         //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2500, 0.0019631483769110302, 0.14895150728061218, -0.8615515776624472, 0.8647183170080577};
         //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2400, 0.0020449462259348994, 0.14904317050291274, -0.8569829974422363, 0.8689988111468419};
@@ -575,7 +576,7 @@ public class Rossler_y_vs_x extends JDialog
         //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 0.6062959213425169, -1.320068706969935, 0.7425192346784949};
         //double[] xfer = new double[] {0.613615, 0.6, 1.25, 2400, 0.0020449462259342285, 1.034450798924672, -0.9516501511131881, 1.3506453448473772};
         //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 1.0727371201489548, -1.0179184419750524, 1.3046631553824795};
-        double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 1.0727371201489548, -1.0179184419750524, 1.3046631553824795};
+        //double[] xfer = new double[] {0.6155, 0.6, 1.25, 2400, 0.00203955745286074, 1.0727371201489548, -1.0179184419750524, 1.3046631553824795};
         //double[] xfer = new double[] {0.61465, 0.6, 1.25, 2400, 0.002042014926546927, 1.073065448368517, -1.010296410713409, 1.3088652634252895};
         //double[] xfer = new double[] {0.61445, 0.6, 1.25, 2400, 0.0020425864773399565, 1.0742955273651251, -1.0103094893478959, 1.3083703787600285};
         //double[] xfer = new double[] {0.61415, 0.6, 1.25, 2400, 0.0020434391601832, 0.30280341144849077, -1.140230754847078, 0.7220977493765032};
@@ -800,12 +801,12 @@ public class Rossler_y_vs_x extends JDialog
                                     Main.final_z + Main.invert_from_xp_yp(incr*i*Math.cos(j*Math.PI/12), incr*i*Math.sin(j*Math.PI/12), 0, "z")};
                 //System.out.println("org   , " + i + ", " + j + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 // loop through one cycle
-                for (int k = 0; k < Main.final_Period + 1*40; k++) // add 10 iterations just to be sure it crosses
+                for (int k = 0; k < Main.final_Period + 0*40; k++) // add 10 iterations just to be sure it crosses
                 {
                     Main.runge_kutta_rossler3(pt3, Main.final_delt, Main.a, Main.b, Main.c);
                     //if (k < 2 || k > Main.final_Period - 3)
                     //    System.out.println("---   , " + (k + 1) + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
-                    if (true && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
+                    if (false && k > 1 && (Main.project_zp(xold, yold, zold) - zp)*Main.final_delt <= 0 && (Main.project_zp(pt3[0], pt3[1], pt3[2]) - zp)*Main.final_delt > 0)
                     {
                         pt2old = Main.project_2D(xold, yold, zold);
                         pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
@@ -824,7 +825,7 @@ public class Rossler_y_vs_x extends JDialog
                     yold = pt3[1];
                     zold = pt3[2];
                 }
-                if (!true)                          // use last point (synchronize in time)
+                if (true)                          // use last point (synchronize in time)
                 {
                     pt2new = Main.project_2D(pt3[0], pt3[1], pt3[2]);
                     zpnew = Main.project_zp(pt3[0], pt3[1], pt3[2]);
