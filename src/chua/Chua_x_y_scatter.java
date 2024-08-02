@@ -22,7 +22,7 @@ public class Chua_x_y_scatter extends JDialog
     protected static JCheckBox printChk = new JCheckBox("  print  ");
     private static JButton btnUniform = new JButton("Set-Uniform");
     protected static double del_xp = 0, del_yp = 0;
-    protected static String first_order_hdr;             // # iterations, eig, angle
+    protected static String first_order_hdr;                // # iterations, eig, angle
     private boolean first = true;
 
     public Chua_x_y_scatter(Image img)
@@ -202,24 +202,28 @@ public class Chua_x_y_scatter extends JDialog
                 activity.execute();
                 first = false;
                 DC.setColor(Color.BLUE);
-                Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
-                System.out.println("pstat = " + pstat);
-                DC.drawLine((int) ((-pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
-                            (int) ((-pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
-                            (int) ( (pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
-                            (int) ( (pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
-                double kx = Main.calc_ydot(Main.x0, Main.y0, Main.z0)*Main.calc_z2dot(Main.x0, Main.y0, Main.z0) - Main.calc_zdot(Main.x0, Main.y0, Main.z0)*Main.calc_y2dot(Main.x0, Main.y0, Main.z0);
-                double ky = Main.calc_zdot(Main.x0, Main.y0, Main.z0)*Main.calc_x2dot(Main.x0, Main.y0, Main.z0) - Main.calc_xdot(Main.x0, Main.y0, Main.z0)*Main.calc_z2dot(Main.x0, Main.y0, Main.z0);
-                double kz = Main.calc_xdot(Main.x0, Main.y0, Main.z0)*Main.calc_y2dot(Main.x0, Main.y0, Main.z0) - Main.calc_ydot(Main.x0, Main.y0, Main.z0)*Main.calc_x2dot(Main.x0, Main.y0, Main.z0);
-                Point2D.Double pt2 = Main.project_2D(kx, ky, kz);
-                double kangle = Math.atan2(pt2.y, pt2.x);
-                kangle = 58*Math.PI/180;
-                System.out.println("project k = " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(kx, ky, kz) + ", " + kangle*180/Math.PI);
-                pt2 = Main.project_2D(Main.x0, Main.y0, Main.z0);
-                DC.drawLine((int) ((pt2.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
-                            (int) ((pt2.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
-                            (int) ((pt2.x + (Main.xmax - Main.xmin)/3*Math.cos(kangle) - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
-                            (int) ((pt2.y + (Main.xmax - Main.xmin)/3*Math.sin(kangle) - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
+                //Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
+                //System.out.println("pstat = " + pstat);
+                //DC.drawLine((int) ((-pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                //            (int) ((-pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
+                //            (int) ( (pstat.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                //            (int) ( (pstat.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
+                //double kx = Main.calc_ydot(Main.x0, Main.y0, Main.z0)*Main.calc_z2dot(Main.x0, Main.y0, Main.z0) - Main.calc_zdot(Main.x0, Main.y0, Main.z0)*Main.calc_y2dot(Main.x0, Main.y0, Main.z0);
+                //double ky = Main.calc_zdot(Main.x0, Main.y0, Main.z0)*Main.calc_x2dot(Main.x0, Main.y0, Main.z0) - Main.calc_xdot(Main.x0, Main.y0, Main.z0)*Main.calc_z2dot(Main.x0, Main.y0, Main.z0);
+                //double kz = Main.calc_xdot(Main.x0, Main.y0, Main.z0)*Main.calc_y2dot(Main.x0, Main.y0, Main.z0) - Main.calc_ydot(Main.x0, Main.y0, Main.z0)*Main.calc_x2dot(Main.x0, Main.y0, Main.z0);
+                //Point2D.Double pt2 = Main.project_2D(kx, ky, kz);
+                //double kangle = Math.atan2(pt2.y, pt2.x);
+                //kangle = 58*Math.PI/180;
+                //System.out.println("project k = " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(kx, ky, kz) + ", " + kangle*180/Math.PI);
+                Point2D.Double pt2 = Main.project_2D(Main.x0, Main.y0, Main.z0);
+                //DC.drawLine((int) ((pt2.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                //            (int) ((pt2.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()),
+                //            (int) ((pt2.x + (Main.xmax - Main.xmin)/10*Math.cos(kangle) - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth()),
+                //            (int) ((pt2.y + (Main.xmax - Main.xmin)/10*Math.sin(kangle) - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()));
+                DC.drawLine((int) ((pt2.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth() - 2),
+                            (int) ((pt2.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight() - 2),
+                            (int) ((pt2.x - Main.xmin)/(Main.xmax - Main.xmin)*image.getWidth() + 2),
+                            (int) ((pt2.y - Main.ymax)/(Main.ymin - Main.ymax)*image.getHeight()) + 2);
             }
         });
         btnClear.addActionListener(new AbstractAction()
@@ -285,6 +289,15 @@ public class Chua_x_y_scatter extends JDialog
 class ScatterActivity extends SwingWorker<Void, Point>
 {
     protected static double delt = 0.00005;
+    //protected static double[] Cx = new double[] {-1.7144498681885263 , 2.887590649924726 , 0.41865398546281907};
+    //protected static double[] Cy = new double[] {-2.7302926626819404 , -0.9454671597617976 , -1.5553130222501819};
+    //protected static double[] Cx = new double[] {-1.9854121867626764 , 5.278816440613675 , 1.1677876751189247};
+    //protected static double[] Cy = new double[] {-4.781366025646555 , -2.8490240722558156 , -1.573431311366903};
+    //protected static double[] Cx = new double[] {-1.107155942014133 , 8.7312104139989 , -34.17683230319818};
+    //protected static double[] Cy = new double[] {-0.005320900593378551 , 43.475293577200446 , 9.063606245173178};
+    protected static double[] Cx = new double[] {0, 0, 0};
+    protected static double[] Cy = new double[] {0, 0, 0};
+    protected static Point2D.Double pt2_proj;           // projected (x0, y0, z0)
     protected static double[] pt3_cross = new double[3];
     private static double[] pt3 = new double[3];
     private static double xold = 0, yold = 0, zold = Main.zc;
@@ -303,18 +316,24 @@ class ScatterActivity extends SwingWorker<Void, Point>
             }
             catch (java.io.IOException e)
                 {System.out.println("Chua_Output.csv save error = " + e);}
+
         if (chg)
         {
             iter = 0;
+            pt2_proj = Main.project_2D(Main.x0, Main.y0, Main.z0);          // projected (x0, y0, z0)
+            //System.out.println("ScatterActivity 0, " + Main.project_phi + ", " + Main.project_theta + ", " + Main.x0 + ", " + Main.y0 + ", " +  Main.z0 + ", " + pt2_proj);
             System.out.println("reset, " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + delt + ", " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi + ", " + Main.zc);
             System.out.println(" ,iter,x,y,z,x',y',z',tc,phi,theta");
             System.arraycopy(new double[] {Main.x0, Main.y0, Main.z0}, 0, pt3, 0, pt3.length);
             Point2D.Double pt2 = Main.project_2D(pt3[0], pt3[1], pt3[2]);
             System.out.println("init  , " + Chua_x_y_scatter.first_order_hdr + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt3[0], pt3[1], pt3[2]));
+            //System.out.println("test data org ," + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + pt2.x + ", " + pt2.y);
             // back-transform del (x',y') into del (x,y,z)
             pt3[0] += Main.invert_from_xp_yp(Chua_x_y_scatter.del_xp, Chua_x_y_scatter.del_yp, 0, "x");
             pt3[1] += Main.invert_from_xp_yp(Chua_x_y_scatter.del_xp, Chua_x_y_scatter.del_yp, 0, "y");
             pt3[2] += Main.invert_from_xp_yp(Chua_x_y_scatter.del_xp, Chua_x_y_scatter.del_yp, 0, "z");
+            //System.out.println("ScatterActivity 1, " + pt3[0] + ", " + pt3[1] + ", " + pt3[2] + ", " + Main.project_2D(pt3[0], pt3[1], pt3[2]));
+
             if (fout != null)
             {
                 Point2D.Double pstat = Main.project_stationary();           // projected stationary point (x', y')
@@ -325,6 +344,8 @@ class ScatterActivity extends SwingWorker<Void, Point>
                 fout.println("iter       , x', y'");
             }
         }
+        //System.out.println("ScatterActivity 1, " + chg + ", " + Main.x0 + ", " + Main.y0 + ", " +  Main.z0 + ", " + pt2_proj);
+        //System.out.println("ScatterActivity 2, " + chg + ", " + Main.x0 + ", " + Main.y0 + ", " +  Main.z0 + ", " + Main.project_2D(pt3[0], pt3[1], pt3[2]));
     }
 
     protected Void doInBackground() throws Exception
@@ -332,8 +353,10 @@ class ScatterActivity extends SwingWorker<Void, Point>
         int Nloop = 5*10000*2000;
         Point2D.Double pt2old;          // projected, old, (x', y') using Euler angles
         Point2D.Double pt2new;          // projected, new, (x', y') using Euler angles
+        Point2D.Double ztrans;
         double zpold, zpnew;            // projected z'
         double xc, yc;                  // interpolated, projected (x', y')
+        double xplt, yplt;              // transformed coord
 
         System.out.println("print = " + Chua_x_y_scatter.printChk.isSelected() + " at " + iter);
         for (int i = 0; i < Nloop; i++)
@@ -356,21 +379,32 @@ class ScatterActivity extends SwingWorker<Void, Point>
                 //System.out.println("new = ," + i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
                 xc = ((zpnew - Main.zc)*pt2old.x + (Main.zc - zpold)*pt2new.x)/(zpnew - zpold);
                 yc = ((zpnew - Main.zc)*pt2old.y + (Main.zc - zpold)*pt2new.y)/(zpnew - zpold);
+                // transform to remove quadratic component (xc, yc)
+                //System.out.println("ScatterActivity in , " + i + ", " + xc + ", " + yc + ", " + pt2_proj.x + ", " + pt2_proj.y);
+                //xplt = transform_quadratic("x", xc, yc);
+                //yplt = transform_quadratic("y", xc, yc);
+                ztrans = Chua_Simul_3.transform(xc - pt2_proj.x, yc - pt2_proj.y);
+                xplt = ztrans.x + pt2_proj.x;
+                yplt = ztrans.y + pt2_proj.y;
+                //xplt = xc;
+                //yplt = yc;
+
+                //System.out.println("ScatterActivity out, " + i + ", " + xplt + ", " + yplt + ", " + pt2_proj.x + ", " + pt2_proj.y);
                 if (true)
                 {
                     System.out.println("z inter , " + iter + ", " + ((zpnew - Main.zc)*xold + (Main.zc - zpold)*pt3[0])/(zpnew - zpold)
                                                            + ", " + ((zpnew - Main.zc)*yold + (Main.zc - zpold)*pt3[1])/(zpnew - zpold)
                                                            + ", " + ((zpnew - Main.zc)*zold + (Main.zc - zpold)*pt3[2])/(zpnew - zpold)
-                                                           + ", " + xc + ", " + yc + ", " + (iter + (Main.zc - zpold)/(zpnew - zpold)));
+                                                           + ", " + xplt + ", " + yplt + ", " + (iter + (Main.zc - zpold)/(zpnew - zpold)));
                 }
                 pt3_cross[0] = pt3[0];
                 pt3_cross[1] = pt3[1];
                 pt3_cross[2] = pt3[2];
                 if (fout != null && Chua_x_y_scatter.printChk.isSelected())
                     fout.println(iter + ", " + xc + ", " + yc);
-                if (xc > Main.xmin && xc < Main.xmax && yc > Main.ymin && yc < Main.ymax)
-                    publish(new Point((int) ((xc - Main.xmin)/(Main.xmax - Main.xmin)*Chua_x_y_scatter.image.getWidth()),
-                                      (int) ((yc - Main.ymax)/(Main.ymin - Main.ymax)*Chua_x_y_scatter.image.getHeight())));
+                if (xplt > Main.xmin && xplt < Main.xmax && yplt > Main.ymin && yplt < Main.ymax)
+                    publish(new Point((int) ((xplt - Main.xmin)/(Main.xmax - Main.xmin)*Chua_x_y_scatter.image.getWidth()),
+                                      (int) ((yplt - Main.ymax)/(Main.ymin - Main.ymax)*Chua_x_y_scatter.image.getHeight())));
             }
             if (false && iter % 500 == 0)
             {
@@ -388,8 +422,34 @@ class ScatterActivity extends SwingWorker<Void, Point>
             Chua_x_y_scatter.lblImage.repaint();
             //System.out.println(i + ", " + pt3[0] + ", " + pt3[1] + ", " + pt3[2]);
         }
-        //System.out.println("final , " + pt3_cross[0] + ", " + pt3_cross[1] + ", " + pt3_cross[2]);
+        //System.out.println("final , " + iter + ", " + pt3_cross[0] + ", " + pt3_cross[1] + ", " + pt3_cross[2]);
         return null;
+    }
+
+//    protected Point2D.Double transform_z(double xt, double yt)
+//    {
+        //System.out.println("in  , " + pt2_proj + ", " + x + ", " + y);
+//        xt = xt - pt2_proj.x;
+//        yt = yt - pt2_proj.y;
+        //ztrans = Chua_Simul_3.transform(xt, yt);
+
+        //System.out.println("disp, " + pt2_proj + ", " + x + ", " + y);
+
+//            return xt - Cx[0]*xt*xt - Cx[1]*xt*yt - Cx[2]*yt*yt + pt2_proj.x;
+//        else
+//            return yt - Cy[0]*xt*xt - Cy[1]*xt*yt - Cy[2]*yt*yt + pt2_proj.y;
+//    }
+
+    protected double transform_quadratic(String type, double xt, double yt)
+    {
+        //System.out.println("in  , " + pt2_proj + ", " + x + ", " + y);
+        xt = xt - pt2_proj.x;
+        yt = yt - pt2_proj.y;
+        //System.out.println("disp, " + pt2_proj + ", " + x + ", " + y);
+        if (type.equals("x"))
+            return xt - Cx[0]*xt*xt - Cx[1]*xt*yt - Cx[2]*yt*yt + pt2_proj.x;
+        else
+            return yt - Cy[0]*xt*xt - Cy[1]*xt*yt - Cy[2]*yt*yt + pt2_proj.y;
     }
 
     @Override protected void process(List<Point> points)
