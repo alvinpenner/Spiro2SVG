@@ -735,6 +735,49 @@ public class Main
             }
         return retVal;
     }
+
+    protected static Point2D.Double conjugate(Point2D.Double p1)
+    {
+        // complex conjugate of p1
+        return new Point2D.Double(p1.x, -p1.y);
+    }
+
+    protected static Point2D.Double add(Point2D.Double p1, Point2D.Double p2)
+    {
+        // add (x1 + i*y1) + (x2 + i*y2)
+        return new Point2D.Double(p1.x + p2.x, p1.y + p2.y);
+    }
+
+    protected static Point2D.Double subtract(Point2D.Double p1, Point2D.Double p2)
+    {
+        // subtract (x1 + i*y1) - (x2 + i*y2)
+        return new Point2D.Double(p1.x - p2.x, p1.y - p2.y);
+    }
+
+    protected static Point2D.Double multiply(double d, Point2D.Double p1)
+    {
+        // multiply d*(x2 + i*y2)
+        return new Point2D.Double(d*p1.x, d*p1.y);
+    }
+
+    protected static Point2D.Double multiply(Point2D.Double p1, Point2D.Double p2)
+    {
+        // multiply (x1 + i*y1)*(x2 + i*y2)
+        return new Point2D.Double(p1.x*p2.x - p1.y*p2.y, p1.x*p2.y + p2.x*p1.y);
+    }
+
+    protected static Point2D.Double multiply(double d, Point2D.Double p1, Point2D.Double p2)
+    {
+        // multiply d*(x1 + i*y1)*(x2 + i*y2)
+        return multiply(d, multiply(p1, p2));
+    }
+
+    protected static Point2D.Double divide(Point2D.Double p1, Point2D.Double p2)
+    {
+        // divide (x1 + i*y1)/(x2 + i*y2)
+        double abs = p2.x*p2.x + p2.y*p2.y;
+        return new Point2D.Double((p1.x*p2.x + p1.y*p2.y)/abs, (-p1.x*p2.y + p2.x*p1.y)/abs);
+    }
 /*
     private static double[] gaussj(double[][] m, double[] v)
     {

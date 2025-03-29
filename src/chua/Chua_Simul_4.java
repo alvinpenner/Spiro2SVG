@@ -8,6 +8,7 @@ package chua;
 */
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -25,6 +26,7 @@ public class Chua_Simul_4 extends JDialog
     private static JButton btnCalc = new JButton("Calc");
     private static JButton btnReset = new JButton("Reset");
     private static JButton btnClear = new JButton("Clear");
+    private static JCheckBox invertChk = new JCheckBox(" invert ");
     private static JCheckBox printChk = new JCheckBox("  print  ");
     private static final String C_or_g = "C";       // use Cx + iCy parms or use gij
 
@@ -38,8 +40,11 @@ public class Chua_Simul_4 extends JDialog
                                              {new JTextField(), new JTextField()},
                                              {new JTextField(), new JTextField()}};
     private static double[][] Carr = new double[5][2];
+    private static Point2D.Double[] g_4 = new Point2D.Double[5];           // quartic model
+    private static Point2D.Double[] h_4 = new Point2D.Double[5];           // quartic transform
     private static JTextField txtstart = new JTextField("0");
     private static JTextField txtrange = new JTextField("0");
+    private static double alpha;
     private static double costheta;
     private static double sintheta;
     private static double x0, y0;
@@ -141,6 +146,8 @@ public class Chua_Simul_4 extends JDialog
         JPanel printPanel = new JPanel();
         printPanel.setOpaque(false);
         printPanel.setPreferredSize(new Dimension(185, 24));
+        invertChk.setOpaque(false);
+        printPanel.add(invertChk);
         printChk.setOpaque(false);
         printPanel.add(printChk);
 
@@ -219,26 +226,129 @@ public class Chua_Simul_4 extends JDialog
             });
     }
 
+    protected static void init()
+    {
+        // convert from Cij (without factorials)
+        // to gij (with factorials)
+        // see Book "Averaging" p.57
+        final double[][] C_g_4_R = new double[][] {{24,  0,-24,  0, 24},
+                                                   {24,  0,  0,  0,-24},
+                                                   {24,  0,  8,  0, 24},
+                                                   {24,  0,  0,  0,-24},
+                                                   {24,  0,-24,  0, 24}};
+        final double[][] C_g_4_I = new double[][] {{ 0,-24,  0, 24,  0},
+                                                   { 0,-12,  0,-12,  0},
+                                                   { 0,  0,  0,  0,  0},
+                                                   { 0, 12,  0, 12,  0},
+                                                   { 0, 24,  0,-24,  0}};
+        for (int i = 0; i < C_g_4_R.length; i++)
+            for (int j = 0; j < C_g_4_R.length; j++)
+            {
+                C_g_4_R[i][j] /= 16.0;
+                C_g_4_I[i][j] /= 16.0;
+            }
+
+        Point2D.Double mu10 = new Point2D.Double((1 + alpha)*costheta, (1 + alpha)*sintheta); // first-order response
+        //System.out.println("linear a b, " + mu10);
+        Point2D.Double mu01 = Main.conjugate(mu10);                  // conjugate of mu
+        Point2D.Double mu20 = Main.multiply(mu10, mu10);
+        Point2D.Double mu11 = Main.multiply(mu10, mu01);
+        Point2D.Double mu02 = Main.multiply(mu01, mu01);
+        Point2D.Double mu40 = Main.multiply(mu20, mu20);
+        Point2D.Double mu31 = Main.multiply(mu20, mu11);
+        Point2D.Double mu22 = Main.multiply(mu11, mu11);
+        Point2D.Double mu13 = Main.multiply(mu02, mu11);
+        Point2D.Double mu04 = Main.multiply(mu02, mu02);
+
+        // define Taylor coeff 'gij' using Kuznetsov notation and a 2D point for complex numbers
+        for (int i = 0; i < g_4.length; i++)
+        {
+            g_4[i] = new Point2D.Double(0.0, 0.0);
+            for (int j = 0; j < g_4.length; j++)
+            {
+                g_4[i].x += C_g_4_R[i][j]*Carr[j][0] - C_g_4_I[i][j]*Carr[j][1];
+                g_4[i].y += C_g_4_R[i][j]*Carr[j][1] + C_g_4_I[i][j]*Carr[j][0];
+            }
+        }
+        System.out.print("g_4");
+        for (int i = 0; i < g_4.length; i++)
+            System.out.print(", " + g_4[i]);
+        System.out.println();
+
+        // coeff 'h' of nonlinear transform
+
+        Point2D.Double htemp = new Point2D.Double();            // (Kuznetsov p. 151)
+        htemp = Main.subtract(mu40, mu10);
+        h_4[0] = Main.divide(g_4[0], htemp);
+        htemp = Main.subtract(mu31, mu10);
+        h_4[1] = Main.divide(g_4[1], htemp);
+        htemp = Main.subtract(mu22, mu10);
+        h_4[2] = Main.divide(g_4[2], htemp);
+        htemp = Main.subtract(mu13, mu10);
+        h_4[3] = Main.divide(g_4[3], htemp);
+        htemp = Main.subtract(mu04, mu10);
+        h_4[4] = Main.divide(g_4[4], htemp);
+        System.out.print("h_4");
+        for (int i = 0; i < h_4.length; i++)
+            System.out.print(", " + h_4[i]);
+        System.out.println();
+        //System.out.println("test transform : " + transform(-0.2374, 1.825));
+    }
+
+    protected static Point2D.Double transform(double x, double y)
+    {
+        // transform z to w
+        Point2D.Double z10 = new Point2D.Double(x, y);
+        Point2D.Double z01 = Main.conjugate(z10);
+        Point2D.Double z20 = Main.multiply(z10, z10);
+        Point2D.Double z11 = Main.multiply(z10, z01);
+        Point2D.Double z02 = Main.multiply(z01, z01);
+        Point2D.Double z40 = Main.multiply(z20, z20);
+        Point2D.Double z31 = Main.multiply(z20, z11);
+        Point2D.Double z22 = Main.multiply(z11, z11);
+        Point2D.Double z13 = Main.multiply(z02, z11);
+        Point2D.Double z04 = Main.multiply(z02, z02);
+
+        z10 = Main.subtract(z10, Main.multiply(1.0/24.0, h_4[0], z40));
+        z10 = Main.subtract(z10, Main.multiply( 1.0/6.0, h_4[1], z31));
+        z10 = Main.subtract(z10, Main.multiply( 1.0/4.0, h_4[2], z22));
+        z10 = Main.subtract(z10, Main.multiply( 1.0/6.0, h_4[3], z13));
+        z10 = Main.subtract(z10, Main.multiply(1.0/24.0, h_4[4], z04));
+        //z10 = Main.add(z10, Main.multiply(inv_3[0], z30));
+        //z10 = Main.add(z10, Main.multiply(inv_3[1], z21));
+        //z10 = Main.add(z10, Main.multiply(inv_3[2], z12));
+        //z10 = Main.add(z10, Main.multiply(inv_3[3], z03));
+        return z10;
+    }
+
     private void refresh_graph()
     {
         PrintWriter fout = null;
-        double alpha = Double.parseDouble(txtalpha.getText());
+        alpha = Double.parseDouble(txtalpha.getText());
+        costheta = Math.cos(Double.parseDouble(txttheta.getText())*Math.PI/180);
+        sintheta = Math.sin(Double.parseDouble(txttheta.getText())*Math.PI/180);
         double a = Double.parseDouble(txta.getText());
         double b = Double.parseDouble(txtb.getText());
         double range = Double.parseDouble(txtrange.getText());
+        Point2D.Double ztrans;
+        double xplt = 0, yplt = 0;              // transformed coord
         double x, y, xtemp, ytemp;
         int N = 100000;
 
-        costheta = Math.cos(Double.parseDouble(txttheta.getText())*Math.PI/180);
-        sintheta = Math.sin(Double.parseDouble(txttheta.getText())*Math.PI/180);
+        System.out.println("refresh_graph " + invertChk.isSelected());
         if (C_or_g.startsWith("C"))
-            for (int i = 0; i < txtCarr.length; i++)            // default to Cxy input
+        {
+            for (int i = 0; i < txtCarr.length; i++)    // default to Cxy input
             {
                 Carr[i][0] = Double.parseDouble(txtCarr[i][0].getText());   // Cx
                 Carr[i][1] = Double.parseDouble(txtCarr[i][1].getText());   // Cy
             }
+            init();                                     // use Cxy to define gij, hij
+        }
         else                // override Cxy input with gij input (May 19/23 looseleaf)
         {
+            // convert from gij (with factorials)
+            // to Cij (without factorials)
             final double[][] coeffR = new double[][] {{1,  0, -6,  0,  1},   // for g40
                                                       {1,  0,  0,  0, -1},
                                                       {1,  0,  2,  0,  1},
@@ -293,20 +403,31 @@ public class Chua_Simul_4 extends JDialog
             y = sintheta*xtemp + costheta*ytemp;
             //x += Carr[0][0]*x0*x0*x0*x0 + Carr[1][0]*x0*x0*x0*y0 + Carr[2][0]*x0*x0*y0*y0 + Carr[3][0]*x0*y0*y0*y0 + Carr[4][0]*y0*y0*y0*y0;
             //y += Carr[0][1]*x0*x0*x0*x0 + Carr[1][1]*x0*x0*x0*y0 + Carr[2][1]*x0*x0*y0*y0 + Carr[3][1]*x0*y0*y0*y0 + Carr[4][1]*y0*y0*y0*y0;
-            if (image.getWidth()/2 + x/range*image.getWidth()/2 < 0
-            ||  image.getWidth()/2 + x/range*image.getWidth()/2 > image.getWidth()
-            ||  image.getHeight()/2 - y/range*image.getHeight()/2 < 0
-            ||  image.getHeight()/2 - y/range*image.getHeight()/2 > image.getHeight())
-                System.out.println(x + ", " + y);
+            if (invertChk.isSelected())
+            {
+                ztrans = transform(x, y);
+                xplt = ztrans.x;
+                yplt = ztrans.y;
+            }
             else
-                image.setRGB(image.getWidth()/2 + (int) (x/range*image.getWidth()/2), image.getHeight()/2  - (int) (y/range*image.getHeight()/2), Color.BLACK.getRGB());
+            {
+                xplt = x;
+                yplt = y;
+            }
+            if (image.getWidth()/2 + xplt/range*image.getWidth()/2 < 0
+            ||  image.getWidth()/2 + xplt/range*image.getWidth()/2 > image.getWidth()
+            ||  image.getHeight()/2 - yplt/range*image.getHeight()/2 < 0
+            ||  image.getHeight()/2 - yplt/range*image.getHeight()/2 > image.getHeight())
+                System.out.println(xplt + ", " + yplt);
+            else
+                image.setRGB(image.getWidth()/2 + (int) (xplt/range*image.getWidth()/2), image.getHeight()/2  - (int) (yplt/range*image.getHeight()/2), Color.BLACK.getRGB());
             x0 = x;
             y0 = y;
             if (fout != null)
-                fout.println(iT + ", " + x0 + ", " + y0);
+                fout.println(iT + ", " + xplt + ", " + yplt);
             iT++;
         }
-        int r = (int) (Math.sqrt(x0*x0 + y0*y0)/range*image.getWidth()/2);
+        int r = (int) (Math.sqrt(xplt*xplt + yplt*yplt)/range*image.getWidth()/2);
         //DC.setColor(Color.blue);
         DC.setColor(new Color(192, 128, 96));
         DC.drawLine(0, image.getHeight()/2, image.getWidth(), image.getHeight()/2);
