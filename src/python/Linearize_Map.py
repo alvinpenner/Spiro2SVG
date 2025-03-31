@@ -2,6 +2,8 @@
 # consider either a Delayed Logistic Map (Aronson) with parameter 'a'
 # or a Generalized Henon Map (Gonchenko_Kuznetsov) with parameters 'alpha, beta, R'
 # transform real Cxy coeff into uniform linear form
+# (this is a cleaned-up version of 'Delayed_Logistic_cubic_variable_c1.py')
+# March 30, 2025
 
 import numpy as np
 from numpy import linalg as LA
@@ -12,7 +14,7 @@ print ()
 
 DL = not True
 #data = [2.22, 2.17]             # Delayed Logistic
-data = [1.024]             # Henon
+data = [1.022, 1.0249777]             # Henon
 
 for i in range(len(data)):
     print ('______________________________________________________')
