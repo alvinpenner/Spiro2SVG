@@ -12,9 +12,13 @@ import math
 print ('cubic header: iT, alpha, beta, gamma, NaN, NaN, NaN, NaN,Cx[0],Cx[1],Cx[2],Cx[3],Cx[4],Cx[5],Cx[6],Cx[7],Cx[8],Cx[9],Cy[0],Cy[1],Cy[2],Cy[3],Cy[4],Cy[5],Cy[6],Cy[7],Cy[8],Cy[9]')
 print ()
 
-DL = not True
+DL = True
 #data = [2.22, 2.17]             # Delayed Logistic
-data = [1.022, 1.0249777]             # Henon
+data = [1.0202, 1.021, 1.022, 1.023, 1.024, 1.025, 1.026, 1.027, 1.028, 1.029]    # Henon
+#data = [1.0271, 1.0272, 1.0273, 1.0274, 1.0275, 1.0276, 1.0277, 1.0278, 1.0279]
+data = [1.0106, 1.011, 1.012, 1.013, 1.014, 1.015, 1.016, 1.017, 1.018, 1.019, 1.020, 1.021, 1.022, 1.023, 1.024, 1.025, 1.026]
+#data = [1.0249777]
+data = [2.08, 2.14, 2.20, 2.24]
 
 for i in range(len(data)):
     print ('______________________________________________________')
@@ -29,7 +33,7 @@ for i in range(len(data)):
     else:                               # assume Henon
         #x_n+1 = y_n
         #y_n+1 = Henon_a - Henon_b*x_n - y_n*y_n + Henon_R*x_n*y_n
-        Henon_a = -0.36
+        Henon_a = -0.20 # -0.36
         Henon_b = data[i]               # scan beta
         Henon_R = -0.1
         x0 = (Henon_b + 1 - np.sqrt((Henon_b + 1)*(Henon_b + 1) - 4*Henon_a*(Henon_R - 1)))/2/(Henon_R - 1) # stationary point
@@ -45,14 +49,14 @@ for i in range(len(data)):
     #print ('vec: \n', v)
     Cx10 = w[0].real                        # assume the eigenvalues are complex conjugate pairs
     Cy10 = w[0].imag
-    print ('Cxy10 = ', Cx10, ',', Cy10, ',', abs(w[0]), ',', math.atan(Cy10/Cx10)*180/np.pi)
+    print ('Cxy10 = ', Cx10, ',', Cy10, ',', abs(w[0]), ',', math.atan(Cy10/Cx10)*180/np.pi, ',', Cy10/Cx10)
     Re_V21 = (v[1][0]/v[0][0]).real         # define the skew-transform matrix
     Im_V21 = (v[1][0]/v[0][0]).imag
-    print ("\nJac =\n", Jac, ',', Re_V21, ',', Im_V21)
+    print ("\nJac =\n", Jac, ',', Re_V21, ',', Im_V21, ',', Im_V21/Re_V21)
     U = np.array([[1, 1], [Re_V21 + Im_V21, Re_V21 - Im_V21]])
     Uinv = LA.inv(U)
     #print ("\nU =\n", U)
-    #print ("\nUinv =\n", Uinv)
+    print ("\nUinv =\n", Uinv)
     print ("transform Jac:\n", np.matmul(Uinv ,np.matmul(Jac, U)))
     print ()
 

@@ -21,8 +21,9 @@ import java.io.File;
 public class Chua_y_vs_x extends JDialog
 {
     private boolean first = true;
-    private final static double DEFAULT_DELT = -6.9902397031E-5; // 0.0001; //-6.990205973471885E-5; // 0.0005; // -0.0008; // 0.0005; // -6.990205974363416E-5;    // -0.0005;
-    private final static int N = 480000; // 7000; // 480000;                // total # of iterations 480000
+    //private final static double DEFAULT_DELT = -6.9902397031E-5; // 0.0001; //-6.990205973471885E-5; // 0.0005; // -0.0008; // 0.0005; // -6.990205974363416E-5;    // -0.0005;
+    private final static double DEFAULT_DELT = 2*Math.PI/Math.sqrt(3)/2400;      // for Glass ONLY
+    private final static int N = 48000; // 0; // 7000; // 480000;                // total # of iterations 480000
     private static double[] pt6_old;
     private static double eig, angle;                   // first-order response
     protected Path2D.Double path1 = new Path2D.Double(Path2D.WIND_NON_ZERO, N);     // start band
@@ -202,7 +203,8 @@ public class Chua_y_vs_x extends JDialog
                     if (txt[i].getText().isEmpty())
                         txt[i].setText("0");
                 if (phaseRadio.isSelected())                                // normal phase space
-                    setTitle(" Chua System - phase y' vs. x' (" + String.format("%.4f", Main.project_phi) + ", " + String.format("%.4f", Main.project_theta) + ", " + Double.toString(Main.project_psi) + ") (" + Main.a + ", " + String.format(" %.7f", delt) + ")");
+                    //setTitle(" Chua System - phase y' vs. x' (" + String.format("%.4f", Main.project_phi) + ", " + String.format("%.4f", Main.project_theta) + ", " + Double.toString(Main.project_psi) + ") (" + Main.a + ", " + String.format(" %.7f", delt) + ")");
+                    setTitle(" Glass System - phase y' vs. x' (" + String.format("%.4f", Main.project_phi) + ", " + String.format("%.4f", Main.project_theta) + ", " + Double.toString(Main.project_psi) + ") (" + Main.a + ", " + String.format(" %.7f", delt) + ")");
                 else if (ddu3Radio.isSelected())
                     setTitle(" Chua System - dy/du vs. dx/du (3-D)");    // Lyapunov response
                 else
@@ -286,6 +288,7 @@ public class Chua_y_vs_x extends JDialog
                 }
             });
         //System.out.println("dataPanel = " + dataPanel[0].getSize());
+        //System.out.println(Main.glass_g(0.07, 5));
     }
 
     private void phase_space(boolean ch, int Period, boolean fast)
@@ -314,7 +317,8 @@ public class Chua_y_vs_x extends JDialog
         if (true)                                               // dump raw (x,y,z) to file
             try
             {
-                String fname = "C:\\Windows\\Temp\\Chua_Output_" + Main.alpha + "_" + String.format("%.6f", delt) + ".csv";
+                //String fname = "C:\\Windows\\Temp\\Chua_Output_" + Main.alpha + "_" + String.format("%.6f", delt) + ".csv";
+                String fname = "C:\\Windows\\Temp\\Glass_Output_" + Main.mu + "_" + String.format("%.6f", delt) + ".csv";
                 boolean fexists = new File(fname).exists();
                 FileWriter fw = new FileWriter(fname, true);
                 fout = new PrintWriter(fw);
@@ -334,8 +338,8 @@ public class Chua_y_vs_x extends JDialog
         {
             if (phaseRadio.isSelected())
             {
-                //System.out.println("Chua y' vs. x', " + now.getTime() + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Period + ", " + Main.project_phi + ", " + Main.project_theta + ", " + delt + ", " + N);
-                System.out.print("Chua y' vs. x', " + now.getTime() + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                System.out.print("Glass y' vs. x', " + now.getTime() + ", " + Main.mu + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                //System.out.print("Chua y' vs. x', " + now.getTime() + ", " + Main.alpha + ", " + Main.beta + ", " + Main.gamma + ", " + Main.a + ", " + Main.c + ", " + Period + ", " + delt + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                 //System.out.println(", " + Main.calc_phi(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_theta(pt6[0], pt6[1], pt6[2]));
                 System.out.println(", " + Main.project_phi + ", " + Main.project_theta + ", " + Main.project_psi);
             }
@@ -392,10 +396,11 @@ public class Chua_y_vs_x extends JDialog
             iT++;
             if (phaseRadio.isSelected())                        // normal phase space
             {
-                Main.runge_kutta_chua3(pt6, delt);
+                //Main.runge_kutta_chua3(pt6, delt);
+                Main.runge_kutta_Glass3(pt6, delt);             // temporarily over-ride Chua code
                 pt2 = Main.project_2D(pt6[0], pt6[1], pt6[2]);
-                //if (j < 100)
-                //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                if (j < 100)
+                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                 if (pt2.x > xmax) xmax = pt2.x;
                 if (pt2.x < xmin) xmin = pt2.x;
                 if (pt2.y > ymax) ymax = pt2.y;

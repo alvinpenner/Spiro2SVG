@@ -25,6 +25,7 @@ public class Main
 {
     private static Properties pgmProp = new Properties();
     protected static boolean skew_transform = false;
+    protected static final double mu = 5; // 6.235386;             // Glass mu parameter (Langford_1977)
     protected static final double a = -1; // 1;         // parameters
     protected static double alpha, beta, gamma, c;      // parameters
     protected static double alpha_s, alpha_e;           // bifurcate range
@@ -73,6 +74,13 @@ public class Main
         //System.out.println(parabola(qx0, qx1, qx2, qa + qb*qx0 + qc*qx0*qx0, qa + qb*qx1 + qc*qx1*qx1, qa + qb*qx2 + qc*qx2*qx2, false));
     }
 
+    private static double glass_g(double y)
+    {
+        // nonlinear response of Glass model: Langford_1977_Numerical_Solution
+        double temp = Math.pow(1.0 + 2.0*y, mu);
+        return 0.5*(temp - 1)/(temp + 1) - 2.0*y;
+    }
+
     protected static void runge_kutta_chua3(double[] pt3, double delt)
     {
         // (x, y, z) = limit cycle
@@ -98,6 +106,38 @@ public class Main
         k4 = delt*alpha*(y + l3 - a*(x + k3)*(x + k3)*(x + k3) - c*(x + k3));
         l4 = delt*(x + k3 - y - l3 + z + m3);
         m4 = delt*(-beta*(y + l3) - gamma*(z + m3));
+
+        pt3[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
+        pt3[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
+        pt3[2] = z + (m1 + 2*m2 + 2*m3 + m4)/6;
+    }
+
+    protected static void runge_kutta_Glass3(double[] pt3, double delt)
+    {
+        // Glass model as per Langford 1977
+        // (x, y, z) = limit cycle
+        double x = pt3[0];
+        double y = pt3[1];
+        double z = pt3[2];
+        double k1, k2, k3, k4;
+        double l1, l2, l3, l4;
+        double m1, m2, m3, m4;
+
+        k1 = delt*(-x - 2*z - glass_g(z));
+        l1 = delt*(2*x - y  + glass_g(x));
+        m1 = delt*(2*y - z  + glass_g(y));
+
+        k2 = delt*( -(x + k1/2) - 2*(z + m1/2) - glass_g(z + m1/2));
+        l2 = delt*(2*(x + k1/2) -   (y + l1/2) + glass_g(x + k1/2));
+        m2 = delt*(2*(y + l1/2) -   (z + m1/2) + glass_g(y + l1/2));
+
+        k3 = delt*( -(x + k2/2) - 2*(z + m2/2) - glass_g(z + m2/2));
+        l3 = delt*(2*(x + k2/2) -   (y + l2/2) + glass_g(x + k2/2));
+        m3 = delt*(2*(y + l2/2) -   (z + m2/2) + glass_g(y + l2/2));
+
+        k4 = delt*( -(x + k3)   - 2*(z + m3)   - glass_g(z + m3));
+        l4 = delt*(2*(x + k3)   -   (y + l3)   + glass_g(x + k3));
+        m4 = delt*(2*(y + l3)   -   (z + m3)   + glass_g(y + l3));
 
         pt3[0] = x + (k1 + 2*k2 + 2*k3 + k4)/6;
         pt3[1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;

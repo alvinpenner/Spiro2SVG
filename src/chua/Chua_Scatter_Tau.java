@@ -92,7 +92,7 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fName = "Delayed_Logistic_Transformed_2.06";
     //private static final String fName = "Delayed_Logistic_Quintic_g21_g50_g32_g14_2.17";
     //private static final String fName = "Delayed_Logistic_Transformed_2.14_test";
-    private static final String fName = "Henon_Simul_scatter_0_-0.36_1.024_-0.1_12";
+    private static final String fName = "Henon_quadratic_3_2.24_NaN_NaN_18";
 
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static final JLabel lblangle = new JLabel(" : angle = ");
@@ -100,8 +100,8 @@ public class Chua_Scatter_Tau extends JDialog
     private static int Nfinal = 0;
     private static String source;
     private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle;
-    private static double ymin = 30; // 0;
-    private static double ymax = 120; // 90;
+    private static double ymin = -180; // 0;
+    private static double ymax = 180; // 90;
 
     public Chua_Scatter_Tau()
     {
@@ -290,8 +290,8 @@ public class Chua_Scatter_Tau extends JDialog
                 average[i] = average[i]/count[i];
 
         for (i = 0; i < 360; i++)
-            if (count[i] > 0 && true)
-                System.out.println(i + ", " + count[i] + ", " + average[i]);
+            if (count[i] > 0 && !true)
+                System.out.println(i + ", " + count[i] + ", " + average[i] + ", " + count[i]*average[i]);
 
         System.out.println("calc_dist_" + source + ", " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap);
         //System.out.println("calc_dist_" + source + ", " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap + ", " + totalwrap + ", " + nwrap);
