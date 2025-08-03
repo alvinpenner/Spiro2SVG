@@ -138,7 +138,7 @@ public class run_buckle
         return ret/(v.length - 1)/3;
     }
 
-    private static double Cotes_4(double[] v)
+    protected static double Cotes_4(double[] v)
     {
         // integrate vector v (assume N is multiple of 4)
         // see Froberg p.201, Table of Cote's numbers

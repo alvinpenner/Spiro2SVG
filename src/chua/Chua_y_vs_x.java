@@ -299,6 +299,7 @@ public class Chua_y_vs_x extends JDialog
         double[] pt6 = new double[] {Main.x0, Main.y0, Main.z0, Main.dx0du, Main.dy0du, Main.dz0du};
         double xmin, xmax, ymin, ymax, zmin, zmax;
         Point2D.Double pt2;                                 // projected (x', y') using Euler angles
+        double [] Glass_vec;                                // use ONLY for the Glass model projection
         Point2D.Double pstat = Main.project_stationary();   // projected stationary point (x', y')
         //pstat = Main.project_2D(-0.37992427533176765 - 8.50122819e-01 , 0.000130106962529913 - 1.03983278e-02, 0.38005438 + 5.26481782e-01);
         //System.out.println("pstat = " + pstat.x + ", " + pstat.y + ", " + Main.project_phi + ", " + Main.project_theta);
@@ -399,8 +400,8 @@ public class Chua_y_vs_x extends JDialog
                 //Main.runge_kutta_chua3(pt6, delt);
                 Main.runge_kutta_Glass3(pt6, delt);             // temporarily over-ride Chua code
                 pt2 = Main.project_2D(pt6[0], pt6[1], pt6[2]);
-                if (j < 100)
-                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
+                //if (j < 100)
+                //    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);
                 if (pt2.x > xmax) xmax = pt2.x;
                 if (pt2.x < xmin) xmin = pt2.x;
                 if (pt2.y > ymax) ymax = pt2.y;
@@ -427,7 +428,10 @@ public class Chua_y_vs_x extends JDialog
                 if (printChk.isSelected() && Period > 0 && j >= Nloop - Period - 1)     // transfer last cycle
                 {
                     //System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);   // normal code, KEEP
-                    System.out.println(iT + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt6[0], pt6[1], pt6[2]));   // temporary code (replace)
+                    //System.out.println(iT + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt6[0], pt6[1], pt6[2]));   // temporary code (replace)
+                    // temporary use of Glass projection
+                    Glass_vec = buckle.Glass_w.project_2D(new double[] {pt6[0], pt6[1], pt6[2]});               // temporary code (replace)
+                    System.out.println(iT + ", " + Glass_vec[0] + ", " + Glass_vec[1] + ", " + Glass_vec[2]);   // temporary code (replace)
                     //System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]
                     //                      + ", " + Main.calc_xdot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_ydot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_zdot(pt6[0], pt6[1], pt6[2])
                     //                      + ", " + Main.calc_x2dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_y2dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_z2dot(pt6[0], pt6[1], pt6[2])

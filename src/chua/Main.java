@@ -25,7 +25,7 @@ public class Main
 {
     private static Properties pgmProp = new Properties();
     protected static boolean skew_transform = false;
-    protected static final double mu = 5; // 6.235386;             // Glass mu parameter (Langford_1977)
+    protected static final double mu = 4.52028812; // 6.235386;        // Glass mu parameter (Langford_1977)
     protected static final double a = -1; // 1;         // parameters
     protected static double alpha, beta, gamma, c;      // parameters
     protected static double alpha_s, alpha_e;           // bifurcate range
@@ -81,6 +81,13 @@ public class Main
         return 0.5*(temp - 1)/(temp + 1) - 2.0*y;
     }
 
+    private static double glass_g_cubic(double y)
+    {
+        // nonlinear response of Glass model: Langford_1977_Numerical_Solution
+        // Taylor expansion to cubic degree
+        return y*(mu - 4)/2 - mu*y*y/2 - mu*(mu*mu - 4)*y*y*y/6;
+    }
+
     protected static void runge_kutta_chua3(double[] pt3, double delt)
     {
         // (x, y, z) = limit cycle
@@ -115,6 +122,7 @@ public class Main
     protected static void runge_kutta_Glass3(double[] pt3, double delt)
     {
         // Glass model as per Langford 1977
+        // calculate a limit cycle numerically
         // (x, y, z) = limit cycle
         double x = pt3[0];
         double y = pt3[1];
