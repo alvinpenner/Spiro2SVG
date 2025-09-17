@@ -311,6 +311,7 @@ public class Chua_x_y_scatter extends JDialog
                 }
             });
         //System.out.println("dataPanel = " + dataPanel[0].getSize());
+        //System.out.println("getClass " + this.getClass().getName());
     }
 }
 

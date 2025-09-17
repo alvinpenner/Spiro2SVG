@@ -148,4 +148,15 @@ public class run_buckle
             ret += 7*v[i - 2] + 32*v[i - 1] + 12*v[i] + 32*v[i + 1] + 7*v[i + 2];
         return ret*2/(v.length - 1)/45;
     }
+
+    protected static double Cotes_6(double[] v)
+    {
+        // integrate vector v (assume N is multiple of 6)
+        // see Froberg p.201, Table of Cote's numbers
+        double ret = 0;
+        //System.out.println("v " + v.length);
+        for (int i = 3; i < v.length; i += 6)
+            ret += 41*v[i - 3] + 216*v[i - 2] + 27*v[i - 1] + 272*v[i] + 27*v[i + 1] + 216*v[i + 2] + 41*v[i + 3];
+        return ret/(v.length - 1)/140;
+    }
 }

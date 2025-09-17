@@ -10,14 +10,15 @@ package buckle;
 
 public class run_Glass_init
 {
-    private static final int N = 128;                           // number of steps in (0, 1)
+    private static final int N = 126; // 128;                           // number of steps in (0, 1)
     private static final double beta = Math.sqrt(3);            // eigenvalue at bifurc
-    private static final double eps = 0.20;
-    private static final double eta = 13.00720304;
+    private static final double eps = 0.20; // 0.30;
+    private static final double eta = 13.00720304; // 24.837623;
     private static final double mu = 4 + eps*eps*eta;
-    private static final double tau = -0.01311693;
+    private static final double tau = -0.01311693; // -0.373599;
     private static final double T = 2*Math.PI*(1 + eps*eps*tau)/beta;
     private static final double [] y_init = new double[] { 0, -0.14399230, -0.13934930};
+    //private static final double [] y_init = new double[] { 0, -0.232312, -0.195332};
     private static final double [][] A0 = new double[][] {{ -1,  0, -2},
                                                           {  2, -1,  0},
                                                           {  0,  2, -1}};
@@ -29,7 +30,7 @@ public class run_Glass_init
 
     public static void main (String[] args)
     {
-        System.out.println("Glass_Hopf-Bifurcation System - initial-value solution");
+        System.out.println("Glass_Hopf-Bifurcation System - initial-value solution - run_Glass_init.java");
         System.out.println("N_beta_eps, " + N + ", " + beta + ", " + eps);
         System.out.println("eta_mu,     " + eta + ", " + mu);
         System.out.println("tau_T,      " + tau + ", " + T);
@@ -43,10 +44,30 @@ public class run_Glass_init
         }
         w[0] = new double[] {(y_init[0] - eps*phi[0][0])/eps/eps, (y_init[1] - eps*phi[0][1])/eps/eps, (y_init[2] - eps*phi[0][2])/eps/eps};
         //w[0] = new double[] {phi[0][0], phi[0][1], phi[0][2]};     // temporary over-ride to calc phi
+        //w[0] = new double[] {-0.31158599018045524, -0.07331372516012909, 0.07331504508653534}; // TEMPORARY OVERRIDE for Glass_w check
         for (int i = 0; i < N; i++)
             runge_kutta_Glass_initial_value(i);
+        System.out.println("w org, w[0], w[1], w[2]");      // original 3-D 'w[][]'
         for (int i = 0; i < N + 1; i++)
             System.out.println(i + ", " + w[i][0] + ", " + w[i][1] + ", " + w[i][2]);
+        double [] vec;                          // temporary transformed position vector
+        System.out.println();
+        System.out.println("w project, w[0], w[1], w[2]");  // projected w[][]
+        for (int i = 0; i < N + 1; i++)
+        {
+            vec = Glass_w.project_2D(w[i]);     // projected w[i]
+            System.out.println(i + ", " + vec[0] + ", " + vec[1] + ", " + vec[2]);
+        }
+
+        // calculate 3-D version of <w, phi>
+
+        double [] tempint = new double[N + 1];      // temporary integrand for Cotes
+        for (int i = 0; i < N + 1; i++)
+            tempint[i] = phi[i][0]*w[i][0] + phi[i][1]*w[i][1] + phi[i][2]*w[i][2]; // integrate phi[]*w[]
+        //System.out.println("\ntest 3-D <phi, w>, " + run_buckle.Cotes_4(tempint));
+        System.out.println("\ntest 3-D <phi, w>, " + run_buckle.Cotes_6(tempint));
+
+        calc_eta_tau();                             // calculate eta, tau
     }
 
     private static void runge_kutta_Glass_initial_value(int iter)
@@ -66,6 +87,16 @@ public class run_Glass_init
             w[iter + 1][i] = w[iter][i] + (klm1[i] + 2*klm2[i] + 2*klm3[i] + klm4[i])/6;
     }
 
+    private static double [] F_test_only(double t, double x, double y, double z) // this is a TEMPORARY fudge
+    {
+        double delt = 2*Math.PI/N/beta;                                     // to compare with Glass_w bvp
+        double [] ret = new double[] {0, 0, 0};
+
+        transform(ret, delt, A0, x, y, z);                                  // term A0*w
+        ret[0] += delt*Math.sin(2*t*2*Math.PI/N);                           // TEMPORARY OVERWRITE !!!!!!!!!!!!!!!!!
+        return ret;
+    }
+
     private static double [] F(double t, double x, double y, double z)      // Froberg, p. 269
     {
         double delt = 2*Math.PI/N/beta;
@@ -75,17 +106,56 @@ public class run_Glass_init
         double phiz = Math.sqrt(2.0/3)*Math.sin(t*2*Math.PI/N - Math.PI*2/3);
         //System.out.println(t + ", " + x + ", " + y + ", " + z);
         transform(ret, delt, A0, x, y, z);                                  // term A0*w
-        transform(ret, delt*eps*eta, A1, phix, phiy, phiz);                 // term eta*A1*phi
+        transform(ret, delt*eps*eta/2, A1, phix, phiy, phiz);               // term eta*A1*phi/2
         transform(ret, delt*eps*tau, A0, phix, phiy, phiz);                 // term tau*A0*phi
-        transform(ret, delt*eps*eps*eta, A1, x, y, z);                      // term eps*eps*eta*A1*w
+        transform(ret, delt*eps*eps*eta/2, A1, x, y, z);                    // term eps*eps*eta*A1*w/2
         transform(ret, delt*eps*eps*tau, A0, x, y, z);                      // term eps*eps*tau*A0*w
-        transform(ret, delt*eps*eps*eps*eta*tau, A1, phix, phiy, phiz);     // term eps*eps*eps*eta*tau*A1*phi
-        transform(ret, delt*eps*eps*eps*eps*eta*tau, A1, x, y, z);          // term eps*eps*eps*eps*eta*tau*A1*w
+        transform(ret, delt*eps*eps*eps*eta*tau/2, A1, phix, phiy, phiz);   // term eps*eps*eps*eta*tau*A1*phi/2
+        transform(ret, delt*eps*eps*eps*eps*eta*tau/2, A1, x, y, z);        // term eps*eps*eps*eps*eta*tau*A1*w/2
         // add nonlinear term (1 + eps*eps*tau)/eps/eps*Q
         ret[0] += -delt*(1 + eps*eps*tau)*calc_Glass_G(eps*(phiz + eps*z))/eps/eps;
         ret[1] +=  delt*(1 + eps*eps*tau)*calc_Glass_G(eps*(phix + eps*x))/eps/eps;
         ret[2] +=  delt*(1 + eps*eps*tau)*calc_Glass_G(eps*(phiy + eps*y))/eps/eps;
         return ret;
+    }
+
+    private static void calc_eta_tau()      // Langford, Eq. 5.18
+    {
+        // see 'Implementation of Glass Model III', p. 12
+        // assume a null space phi = sqrt(2/3)*(sin t, sin (t - 60 deg), sin (t - 120 deg))
+        // assume a transformed T_inv*phi = sqrt(2)*(0, sin t, cos t)
+        double [] arg_vec_sin = new double[N + 1];      // temporary integrand for Cotes
+        double [] arg_vec_cos = new double[N + 1];
+        double [] vec;                      // temporary transformed position vector
+        double delt = 1.0/eps;
+        System.out.println("P org, P[0], P[1], P[2]");
+        for (int i = 0; i < N + 1; i++)
+        {
+            double [] ret = new double[] {0, 0, 0};                 // implement Glass Eq. 5.19
+            transform(ret, delt*eps*eps*eta/2, A1, w[i][0], w[i][1], w[i][2]);                  // term eps*eps*eta*A1*w/2
+            transform(ret, delt*eps*eps*tau, A0, w[i][0], w[i][1], w[i][2]);                    // term eps*eps*tau*A0*w
+            transform(ret, delt*eps*eps*eps*eta*tau/2, A1, phi[i][0], phi[i][1], phi[i][2]);    // term eps*eps*eps*eta*tau*A1*phi/2
+            transform(ret, delt*eps*eps*eps*eps*eta*tau/2, A1, w[i][0], w[i][1], w[i][2]);      // term eps*eps*eps*eps*eta*tau*A1*w/2
+            // add nonlinear term (1 + eps*eps*tau)/eps/eps*Q
+            ret[0] += -delt*(1 + eps*eps*tau)*calc_Glass_G(eps*(phi[i][2] + eps*w[i][2]))/eps/eps;
+            ret[1] +=  delt*(1 + eps*eps*tau)*calc_Glass_G(eps*(phi[i][0] + eps*w[i][0]))/eps/eps;
+            ret[2] +=  delt*(1 + eps*eps*tau)*calc_Glass_G(eps*(phi[i][1] + eps*w[i][1]))/eps/eps;
+            System.out.println(i + ", " + ret[0] + ", " + ret[1] + ", " + ret[2]);
+            vec = Glass_w.project_2D(ret);                          // projected state at time 'i'
+            //System.out.println(i + ", " + vec[0] + ", " + vec[1] + ", " + vec[2]);
+            //arg_vec_sin[i] = Math.sqrt(2)*vec[1]*Math.sin(i*2*Math.PI/N);
+            //arg_vec_cos[i] = Math.sqrt(2)*vec[2]*Math.cos(i*2*Math.PI/N);
+            arg_vec_sin[i] = Math.sqrt(2)*(vec[1]*Math.sin(i*2*Math.PI/N) + vec[2]*Math.cos(i*2*Math.PI/N));
+            arg_vec_cos[i] = Math.sqrt(2)*(vec[1]*Math.cos(i*2*Math.PI/N) - vec[2]*Math.sin(i*2*Math.PI/N));
+        }
+        //double v1 = run_buckle.Cotes_4(arg_vec_sin);
+        //double v2 = run_buckle.Cotes_4(arg_vec_cos);
+        double v1 = run_buckle.Cotes_6(arg_vec_sin);
+        double v2 = run_buckle.Cotes_6(arg_vec_cos);
+        v1 = v1/2;              // This is a bit of a fudge to account for normalization
+        v2 = v2/2;              // see attach 'Implementation of Glass Model III, p. 24'
+        System.out.println("eta = " + (-4.0*v1));   // page 15 of "Implementation of Glass Model III"
+        System.out.println("tau = " + (-v2/beta + v1));
     }
 
     private static void transform(double [] in, double scale, double [][] trans, double x, double y, double z)
