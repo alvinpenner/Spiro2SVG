@@ -278,6 +278,7 @@ public class Chua_y_vs_x extends JDialog
             {
                 @Override public void keyPressed(KeyEvent e)
                 {
+                    //System.out.println("keyPressed = " + e.getKeyCode());
                     if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
                     {
                         Main.save_prefs();
@@ -427,11 +428,11 @@ public class Chua_y_vs_x extends JDialog
                     //                + ", " + Main.calc_xdot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_ydot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_zdot(pt6[0], pt6[1], pt6[2]));
                 if (printChk.isSelected() && Period > 0 && j >= Nloop - Period - 1)     // transfer last cycle
                 {
-                    //System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);   // normal code, KEEP
+                    System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]);   // normal code, KEEP
                     //System.out.println(iT + ", " + pt2.x + ", " + pt2.y + ", " + Main.project_zp(pt6[0], pt6[1], pt6[2]));   // temporary code (replace)
                     // temporary use of Glass projection
-                    Glass_vec = buckle.Glass_w.project_2D(new double[] {pt6[0], pt6[1], pt6[2]});               // temporary code (replace)
-                    System.out.println(iT + ", " + Glass_vec[0] + ", " + Glass_vec[1] + ", " + Glass_vec[2]);   // temporary code (replace)
+                    //Glass_vec = buckle.Glass_w.project_2D(new double[] {pt6[0], pt6[1], pt6[2]});               // temporary code (replace)
+                    //System.out.println(iT + ", " + Glass_vec[0] + ", " + Glass_vec[1] + ", " + Glass_vec[2]);   // temporary code (replace)
                     //System.out.println(iT + ", " + pt6[0] + ", " + pt6[1] + ", " + pt6[2]
                     //                      + ", " + Main.calc_xdot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_ydot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_zdot(pt6[0], pt6[1], pt6[2])
                     //                      + ", " + Main.calc_x2dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_y2dot(pt6[0], pt6[1], pt6[2]) + ", " + Main.calc_z2dot(pt6[0], pt6[1], pt6[2])

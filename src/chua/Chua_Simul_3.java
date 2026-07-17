@@ -299,7 +299,15 @@ public class Chua_Simul_3 extends JDialog
     //private static String hdr = "3   , 2.26   , NaN  , NaN  , NaN  , NaN  , NaN  , NaN   , 0, 0.5000000000000001 , -1.004987562112089 , 0, 0, 0, 0.6984813596688586 , 1.473293012378352 , 0.698481359668859 , 1.4732930123783523 , 0 , 0.0 , 0 , 0.0 , 0 ,0 , 0.0 , 0 , 0.0 , 0 , 0.0 , 0, 1.004987562112089 , 0.5000000000000001 , 0, 0, 0, -1.4732930123783523 , 0.698481359668859 , -1.4732930123783525 , 0.6984813596688586 , 0 , 0.0 , 0 , 0.0 , 0 ,0 , 0.0 , 0 , 0.0 , 0 , 0.0";
     //private static String hdr = "2  , -0.36  , 1.022  , -0.1  , NaN , NaN , NaN , NaN  , 0, 0.20973455993273862 , -0.9787934891366136 , 0, 0, 0, 0.4613732764545197 , 0.11673926950595609 , 0.4613732764545197 , 0.11673926950595609 , 0 , 0.0 , 0 , 0.0 , 0 ,0 , 0.0 , 0 , 0.0 , 0 , 0.0 , 0, 0.9787934891366136 , 0.20973455993273862 , 0, 0, 0, -0.11673926950595609 , 0.4613732764545197 , -0.11673926950595609 , 0.4613732764545197 , 0 , 0.0 , 0 , 0.0 , 0 ,0 , 0.0 , 0 , 0.0 , 0 , 0.0";
     //private static String hdr = "3  , -0.2  , 1.013  , -0.1  , NaN , NaN , NaN , NaN  , 0, 0.11069940324386887 , -0.9950893637319774 , 0, 0, 0, 0.3750263172880073 , 0.057330963924578794 , 0.3750263172880073 , 0.057330963924578794 , 0 , 0.0 , 0 , 0.0 , 0 ,0 , 0.0 , 0 , 0.0 , 0 , 0.0 , 0, 0.9950893637319774 , 0.11069940324386887 , 0, 0, 0, -0.057330963924578794 , 0.3750263172880073 , -0.057330963924578794 , 0.3750263172880073 , 0 , 0.0 , 0 , 0.0 , 0 ,0 , 0.0 , 0 , 0.0 , 0 , 0.0";
-    private static String hdr = "3   , 2.24   , NaN  , NaN  , NaN  , NaN  , NaN  , NaN   , 0, 0.5 , -0.99498743710662 , 0, 0, 0, 0.7168931276718685 , 1.487036029499228 , 0.7168931276718685 , 1.4870360294992286 , 0 , 0.0 , 0 , 0.0 , 0 ,7.805543625404072 , 7.558124835518663 , 15.611087250808144 , 15.116249671037327 , 7.805543625404072 , 7.558124835518663 , 0, 0.99498743710662 , 0.5 , 0, 0, 0, -1.4870360294992282 , 0.7168931276718685 , -1.4870360294992284 , 0.7168931276718685 , 0 , 0.0 , 0 , 0.0 , 0 ,-7.558124835518663 , 7.805543625404072 , -15.116249671037327 , 15.611087250808144 , -7.558124835518663 , 7.805543625404072";
+    //private static String hdr = "3   , 2.24   , NaN  , NaN  , NaN  , NaN  , NaN  , NaN   , 0, 0.5 , -0.99498743710662 , 0, 0, 0, 0.7168931276718685 , 1.487036029499228 , 0.7168931276718685 , 1.4870360294992286 , 0 , 0.0 , 0 , 0.0 , 0 ,7.805543625404072 , 7.558124835518663 , 15.611087250808144 , 15.116249671037327 , 7.805543625404072 , 7.558124835518663 , 0, 0.99498743710662 , 0.5 , 0, 0, 0, -1.4870360294992282 , 0.7168931276718685 , -1.4870360294992284 , 0.7168931276718685 , 0 , 0.0 , 0 , 0.0 , 0 ,-7.558124835518663 , 7.805543625404072 , -15.116249671037327 , 15.611087250808144 , -7.558124835518663 , 7.805543625404072";
+// Dec 8, 2025 test cubic theory
+    //private static String hdr = "0 , 2.1 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.5 , -0.9219544457292888, 0, 0, 0, 2.742923552471728, -3.338483148541635, 1.666753401538138, 2.1033348036145885 , 0 , 0.9219544457292888 , 0.5, 0, 0, 0, -2.7429235524717273, 3.3384831485416386, -1.6667534015381404, -2.1033348036145885";
+    //private static String hdr = "1 , 2.2 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.49999999999999994 , -0.9746794344808964, 0, 0, 0, 2.461456254647048, -3.315422786665701, 1.7057180106201368, 2.120213676190729 , 0 , 0.9746794344808964 , 0.49999999999999994, 0, 0, 0, -2.4614562546470453, 3.3154227866657004, -1.705718010620139, -2.120213676190728";
+    //private static String hdr = "2 , 2.27 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.5 , -1.0099504938362078, 0, 0, 0, 2.296360276647616, -3.302611563025474, 1.7356958054148708, 2.1371408424389293 , 0 , 1.0099504938362078 , 0.5, 0, 0, 0, -2.296360276647616, 3.302611563025472, -1.7356958054148701, -2.1371408424389298";
+    //private static String hdr = "0 , 2.1 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.5 , -0.9219544457292889, -1.6194424517739725, -1.1388849035479447, 0.48055754822602786, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 , 0.9219544457292889 , 0.5, 1.6194424517739723, 1.1388849035479445, -0.48055754822602775, 0, 0, 0, 0, 0, 0, 0, 0, 0";
+    //private static String hdr = "0 , 2.223 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.5 , -0.99498743710662, -1.6828211765451586, -1.1256423530903172, 0.5571788234548416, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 , 0.99498743710662 , 0.5, 1.6828211765451586, 1.1256423530903172, -0.5571788234548416, 0, 0, 0, 0, 0, 0, 0, 0, 0";
+    //private static String hdr = "0 , 2.174 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.5 , -0.9612491872558333, -1.6524101009453953, -1.1308202018907907, 0.5215898990546046, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 , 0.9612491872558333 , 0.5, 1.6524101009453958, 1.130820201890791, -0.5215898990546047, 0, 0, 0, 0, 0, 0, 0, 0, 0";
+    private static String hdr = "0 , 2.177 , NaN, NaN, NaN, NaN, NaN, NaN , 0 , 0.5 , -0.9628083921528728, -1.653773427647466, -1.1305468552949316, 0.5232265723525342, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 , 0.9628083921528728 , 0.5, 1.653773427647466, 1.1305468552949316, -0.5232265723525342, 0, 0, 0, 0, 0, 0, 0, 0, 0";
 
     private static double[][] C_g_2_R = new double[][] {{ 1, 0,-1},     // convert C to g
                                                         { 1, 0, 1},     // quadratic, real
@@ -322,10 +330,10 @@ public class Chua_Simul_3 extends JDialog
     private static final Graphics2D DC = image.createGraphics();
     private static final JLabel lblImage = new JLabel(new ImageIcon(image));
     private static JButton btnCalc = new JButton("Calc");
-    //private static JButton btnIncr_a = new JButton("Incr_a");
     private static JButton btnResetHenon = new JButton("Res_Henon");
     private static JButton btnReset = new JButton("Reset");
     private static JButton btnClear = new JButton("Clear");
+    private static JButton btnInc = new JButton("+");
     private static JCheckBox invertChk = new JCheckBox(" invert ");
     private static JCheckBox printChk = new JCheckBox("  print  ");
 
@@ -343,22 +351,26 @@ public class Chua_Simul_3 extends JDialog
     private static String Chua_iTstr;
     private static double Chua_alpha, Chua_beta, Chua_gamma, Chua_a, Chua_c, Chua_Period, Chua_delt;
     private static double[][] Carr;
-    private static JTextField txtstartx = new JTextField("-0.2"); //  0.001 // 0.5
-    private static JTextField txtstarty = new JTextField("-0.2"); // -0.001 // 0.5
-    private static JTextField txtrange = new JTextField("1.0");   // 0.005
+    private static JTextField txtstartx = new JTextField("0.5"); //  0.001 // -0.2
+    private static JTextField txtstarty = new JTextField("0.5"); // -0.001 // -0.2
+    private static JTextField txtrange = new JTextField("1.5");   // 0.005
     private static double x0, y0;
     //private static double xclick, yclick;
-    //private static double Henon_a = -0.36; //-0.21; // -0.2285; // 0.3;
-    //private static double Henon_b = 1.024977; // 1.0249778;  // 1.0106;
-    //private static double Henon_R = -0.1; // -0.5;
-    //private static double Henon_S = 0;
-    //private static double Delay_a = 2.22;
-    //private static double H_alpha = Math.acos(0.22); // Henon map from Arrowsmith p.54
+    private static double Henon_a = -0.36; // 3; // 1.89; // -0.20; //-0.36; //-0.21; // -0.2285; // 0.3;
+    private static double Henon_b = 1.0249777; // 1.495; // 0.9323; // 1.02496; //-1.055; //-1.057; // 1.02; //1.011; //1.023; // 1.024977; // 1.0249778;  // 1.0106;
+    private static double Henon_R = -0.1; // 0.5; //-0.50; // -0.1; // -0.5;
+    private static double Henon_S = 0;
+    //private static double Delay_a = 9992.177; // 2.272; // 2.10;
+    //private static final double H_cos = 0.00; // 0.00; // -0.45; // 0.24; // 0.8;           // Henon map from Arrowsmith p.54
+    //private static double H_alpha = Math.acos(H_cos);   // Henon map from Arrowsmith p.54
     private static int iT = 0;
 
     public Chua_Simul_3()
     {
-        setTitle("Chua System - Simulate x'-y' Scatter (quartic map) (" + hdr.split(",")[0].trim() + "_" + hdr.split(",")[1].trim() + "_" + (hdr.split(",").length/2 - 7) + ")");
+        //setTitle("Chua System - Simulate x'-y' Scatter (quartic map) (" + hdr.split(",")[0].trim() + "_" + hdr.split(",")[1].trim() + "_" + (hdr.split(",").length/2 - 7) + ")");
+        //setTitle("Delayed Logistic - Simulate x-y Scatter : a = " + Delay_a);
+        setTitle("Henon_scatter: (" + Henon_a + ", " + Henon_b + ", " + Henon_R + ", " + Henon_S + ")");
+        //setTitle("Henon_1969_scatter: (" + H_cos + ", " + String.format("%.8f", 2*Math.tan(H_alpha/2)) + ", " + String.format("%.8f", 2*Math.tan(H_alpha/2)*Math.tan(H_alpha/2)) + ")");
         setIconImage(Toolkit.getDefaultToolkit().getImage(Main.class.getResource("images/icon.gif")));
         setSize(780, 544);
         setLocationByPlatform(true);
@@ -474,11 +486,11 @@ public class Chua_Simul_3 extends JDialog
         parmsPanel.add(spacerPanel[1]);
         parmsPanel.add(btnCalc);
         parmsPanel.add(btnResetHenon);
-        //parmsPanel.add(btnIncr_a);
         parmsPanel.add(startPanel);
         parmsPanel.add(rangePanel);
         parmsPanel.add(btnReset);
         parmsPanel.add(btnClear);
+        //parmsPanel.add(btnInc);
         parmsPanel.add(printPanel);
         parmsPanel.setMaximumSize(new Dimension(250, 3000));
         parmsPanel.setPreferredSize(new Dimension(250, 3000));
@@ -503,11 +515,15 @@ public class Chua_Simul_3 extends JDialog
                 //System.out.println(e.getX() + ", " + e.getY() + ", " + e.getButton() + ", " + e.getModifiers());
                 x0 = (2.0*e.getX()/image.getWidth() - 1.0)*Double.parseDouble(txtrange.getText());
                 y0 = (1.0 - 2.0*e.getY()/image.getHeight())*Double.parseDouble(txtrange.getText());
+                //y0 = x0*Math.tan(H_alpha/2);    // override: snap onto plane of symmetry
+                //x0 = 0.4641;
+                //y0 = 0.775*x0;                                  // fix fix force slope
                 System.out.println("Mouse Clicked (" + x0 + ", " + y0 + ")");
                 //System.out.println("Mouse Clicked (" + xclick + ", " + yclick + ")");
                 if (e.getX() > 0 && e.getX() < image.getWidth() && e.getY() > 0 && e.getY() < image.getHeight())
                 {
-                    image.setRGB(e.getX(), e.getY(), Color.BLUE.getRGB());
+                    //image.setRGB(e.getX(), e.getY(), Color.BLUE.getRGB());
+                    draw_cross (x0, y0, Color.LIGHT_GRAY);
                     lblImage.repaint();
                 }
             }
@@ -541,22 +557,16 @@ public class Chua_Simul_3 extends JDialog
             }
         });
 
-        //btnIncr_a.addActionListener(new AbstractAction()
-        //{
-        //    public void actionPerformed(ActionEvent event)
-        //    {
-        //        // increment Delayed Logistic 'a'
-        //        Delay_a -= 0.0005;
-        //        System.out.println("DL_a =" + Delay_a);
-        //    }
-        //});
-
         btnReset.addActionListener(new AbstractAction()
         {
             public void actionPerformed(ActionEvent event)
             {
                 x0 = Double.parseDouble(txtstartx.getText());
                 y0 = Double.parseDouble(txtstarty.getText());
+                //y0 = x0*Math.tan(H_alpha/2);    // override: snap onto plane of symmetry
+                //y0 = x0*0.23/0.674;                 // aim for sixfold island resonance at cos = .40
+                //txtstarty.setText(String.format("%.6f", y0));       // truncate display ONLY
+                System.out.println("btnReset (" + x0 + ", " + y0 + ")");
                 //x0 = xclick;
                 //y0 = yclick;
             }
@@ -571,6 +581,15 @@ public class Chua_Simul_3 extends JDialog
             }
         });
         //transform_circle();
+        //System.out.println("H_alpha/2 = " + H_alpha/2*180/Math.PI);
+        btnInc.addActionListener(new AbstractAction()
+        {
+            public void actionPerformed(ActionEvent event)
+            {
+                //Delay_a = 0.0001*Math.round(10000*Delay_a - 1);
+                //System.out.println("Delay_a = " + Delay_a);
+            }
+        });
     }
 
     protected static void init()
@@ -743,6 +762,15 @@ public class Chua_Simul_3 extends JDialog
         }
     }
 
+    private static void draw_cross(double xc, double yc, Color clr)
+    {
+        DC.setColor(clr);
+        int setX = (int) ((1 + xc/Double.parseDouble(txtrange.getText()))*image.getWidth()/2);
+        int setY = (int) ((1 - yc/Double.parseDouble(txtrange.getText()))*image.getWidth()/2);
+        DC.drawLine(setX - 2, setY, setX + 2, setY);
+        DC.drawLine(setX, setY - 2, setX, setY + 2);
+    }
+
     protected static Point2D.Double transform(double x, double y)
     {
         // transform z to w
@@ -766,6 +794,49 @@ public class Chua_Simul_3 extends JDialog
         return z10;
     }
 
+//    private void plot_Logistic_boundary()
+//    {
+//        // see: Pounder & Rogers, region E0, p. 560
+//        for (int i = 0; i < (1.0 - 1.0/Delay_a)*image.getWidth()/2; i++)
+//            //image.setRGB(image.getWidth()/2  + i, image.getWidth()/2  - (int) (1.5), Color.LIGHT_GRAY.getRGB());
+//            image.setRGB(image.getWidth()/2  + i, image.getWidth()/2  - (int) (image.getWidth()/2.0/Delay_a/(1.0 - 2.0*i/image.getWidth())), Color.LIGHT_GRAY.getRGB());
+//    }
+
+    protected static Point2D.Double rotate(Point2D.Double pt_in, double rot)
+    {
+        // rotate point by angle : Henon_1969 Eq. 13
+        return new Point2D.Double(pt_in.x*Math.cos(rot) - pt_in.y*Math.sin(rot),
+                                  pt_in.x*Math.sin(rot) + pt_in.y*Math.cos(rot));
+    }
+
+    protected static Point2D.Double skew(Point2D.Double pt_in, double skew)
+    {
+        // skew point: y = y - skew*x*x : Henon_1969 Eq. 12
+        return new Point2D.Double(pt_in.x, pt_in.y - skew*pt_in.x*pt_in.x);
+    }
+
+    protected static Point2D.Double reflect(Point2D.Double pt_in, double alpha)
+    {
+        // reflect point about a line at angle alpha (Henon_1969)
+        return new Point2D.Double(pt_in.x*Math.cos(2*alpha) + pt_in.y*Math.sin(2*alpha), pt_in.x*Math.sin(2*alpha) - pt_in.y*Math.cos(2*alpha));
+    }
+/*
+    protected static Point2D.Double map_transform()
+    {
+        // implement Henon map : Henon_1969 Eq. 4-8
+        // scale C and E according to D in Eq.7
+        //double beta = -H_alpha/2 + Math.PI/2;       // even in x
+        double beta = -H_alpha + Math.PI;               // original x^2 model
+
+        double D = -2*Math.sin(H_alpha + beta)*Math.cos(H_alpha + beta);
+        double C = Math.cos(H_alpha + beta)*Math.cos(H_alpha + beta);
+        double E = Math.sin(H_alpha + beta)*Math.sin(H_alpha + beta);
+        double R = C*x0*x0 + D*x0*y0 + E*y0*y0;
+        //System.out.println("C D E R, " + C + ", " + D + ", " + E + ", " + R);
+        return new Point2D.Double(x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + R*Math.sin(beta),
+                                  x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) + R*Math.cos(beta));
+    }
+*/
     private void refresh_graph()
     {
         PrintWriter fout = null;
@@ -773,11 +844,27 @@ public class Chua_Simul_3 extends JDialog
         double b = Double.parseDouble(txtb.getText());
         double range = Double.parseDouble(txtrange.getText());
         Point2D.Double ztrans;
+        //Point2D.Double pt;
         double xplt, yplt;              // transformed coord
+        //double H_del = 1*(Math.PI/2 - H_alpha/2);         // rotate Henon by angle del
         double x, y;
-        int N = 30000; // 30000;
+        //double x2 = 0.6575379230230298;                              // initialize x at t-2
+        int N = 30000;
+        //int N = 29997;                  //
+
+        //x0 = 0.46040285344901516;
+        //x0 = -0.333; //0.5076983932892956;                               // FIX FIX temporary override
+        //y0 = -0.275; //-0.43;
+        //pt = new Point2D.Double(-0.333, -0.275);
+        //pt = new Point2D.Double(-0.2760382492972518, -0.3180380523020866);
+        //x0 = pt.x;
+        //y0 = pt.y;
+        //x0 = 0.15; // 0.28;                  // FIX FIX temporary override
+        //y0 = 0.11625; // 0.46;
+        //H_alpha = Math.acos(H_cos);
 
         System.out.println("refresh_graph, " + iT + ", " + invertChk.isSelected() + ", " + x0 + ", " + y0);
+        //System.out.println("refresh_graph, " + iT + ", " + Delay_a + ", " + x0 + ", " + y0);
         for (int i = 0; i < txtCarr.length; i++)
         {
             Carr[i][0] = Double.parseDouble(txtCarr[i][0].getText());   // Cx
@@ -787,30 +874,37 @@ public class Chua_Simul_3 extends JDialog
             try
             {
                 //String fname = "Chua_Simul_scatter_" + hdr.split(",")[0].trim() + "_" + hdr.split(",")[1].trim() + "_" + (hdr.split(",").length/2 - 7);
-                //String fname = "Henon_scatter_" + Henon_a + "_" + Henon_b + "_" + Henon_R + "_" + Henon_S;
+                String fname = "Henon_scatter_" + Henon_a + "_" + Henon_b + "_" + Henon_R + "_" + Henon_S;
+                //String fname = "Henon_1969_scatter_" + H_cos + "_" + String.format("%.6f", x0) + "_" + String.format("%.6f", y0);
                 //String fname = "Henon_theory_no4_g50_g32_g14_" + hdr.split(",")[0].trim() + "_" + hdr.split(",")[1].trim() + "_" + hdr.split(",")[2].trim() + "_" + hdr.split(",")[3].trim() + "_" + (hdr.split(",").length/2 - 7);
-                String fname = "Henon_quadratic_" + hdr.split(",")[0].trim() + "_" + hdr.split(",")[1].trim() + "_" + hdr.split(",")[2].trim() + "_" + hdr.split(",")[3].trim() + "_" + (hdr.split(",").length/2 - 7);
+                //String fname = "Henon_quadratic_" + hdr.split(",")[0].trim() + "_" + hdr.split(",")[1].trim() + "_" + hdr.split(",")[2].trim() + "_" + hdr.split(",")[3].trim() + "_" + (hdr.split(",").length/2 - 7);
                 //String fname = "DL_Linearized_" + hdr.split(",")[1].trim();
                 //String fname = "DL_final_g21_no_quartic_no_quintic_" + hdr.split(",")[1].trim();
                 //String fname = "DL_raw_" + Delay_a;
                 boolean fexists = new File("C:\\Windows\\Temp\\" + fname + ".csv").exists();
+                System.out.println("fexists = " + fexists + ", " + iT);
                 FileWriter fw = new FileWriter("C:\\Windows\\Temp\\" + fname + ".csv", true);
                 fout = new PrintWriter(fw);
                 if (!fexists)
                 {
                     fout.println("Cxi, " + Carr[0][0] + ", " + Carr[1][0] + ", " + Carr[2][0] + ", " + Carr[3][0] + ", " + Carr[4][0] + ", " + Carr[5][0] + ", " + Carr[6][0]
                                   + ", " + Carr[0][1] + ", " + Carr[1][1] + ", " + Carr[2][1] + ", " + Carr[3][1] + ", " + Carr[4][1] + ", " + Carr[5][1] + ", " + Carr[6][1]);
-                    fout.println("simul3, " + Chua_alpha + ", " + Chua_beta + ", " + Chua_gamma + ", " + Chua_a + ", " + Chua_c + ", " + Chua_delt);
-                    //fout.println("Henon, " + Henon_a + ", " + Henon_b + ", " + Henon_R + ", " + Henon_S + ", " + "NaN" + ", " + "NaN");
+                    //fout.println("simul3, " + Chua_alpha + ", " + Chua_beta + ", " + Chua_gamma + ", " + Chua_a + ", " + Chua_c + ", " + Chua_delt);
+                    //fout.println("raw   , " + Delay_a + ", NaN, NaN, NaN, NaN, NaN");
+                    fout.println("Henon, " + Henon_a + ", " + Henon_b + ", " + Henon_R + ", " + Henon_S + ", " + "NaN" + ", " + "NaN");
+                    //fout.println("Henon 1969, " + H_cos + ", " + String.format("%.8f", x0) + ", " + String.format("%.8f", y0) + ", " + String.format("%.8f", 2*Math.tan(H_alpha/2)) + ", " + String.format("%.8f", 2*Math.tan(H_alpha/2)*Math.tan(H_alpha/2)) + ", " + "NaN");
+                    //fout.println("Henon 1969, " + H_cos + ", " + String.format("%.8f", x0) + ", " + String.format("%.8f", y0) + ", " + "NaN" + ", " + "NaN" + ", " + "NaN");
                     fout.println("scatter hdr, " + hdr.split(",")[0] + ", " + Math.sqrt(a*a + b*b) + ", " + txttheta.getText());
                     fout.println("init x0 y0, 0, 0, NaN, NaN");         // normal simulation
-                    //fout.println("init x0 y0, 0.5, 0.5, NaN, NaN");   // Felayed Logistic
+                    //fout.println("init x0 y0, 0.5, 0.5, NaN, NaN");   // Delayed Logistic
                     fout.println("iter       , x', y'");
+                    fout.println(iT + ", " + x0 + ", " + y0);
                 }
             }
             catch (java.io.IOException e)
                 {System.out.println("Chua_Output.csv save error = " + e);}
         //System.out.println("Carr len = " + Carr.length);
+        //double accumx = 0;              // accum x to check for cyclic behaviour
         for (int i = 0; i < N; i++)
         {
             x = a*x0 - b*y0
@@ -837,8 +931,8 @@ public class Chua_Simul_3 extends JDialog
                 y = y + Carr[25][1]*x0*x0*x0*x0*x0*x0*x0 + Carr[26][1]*x0*x0*x0*x0*x0*x0*y0 + Carr[27][1]*x0*x0*x0*x0*x0*y0*y0 + Carr[28][1]*x0*x0*x0*x0*y0*y0*y0 + Carr[29][1]*x0*x0*x0*y0*y0*y0*y0 + Carr[30][1]*x0*x0*y0*y0*y0*y0*y0 + Carr[31][1]*x0*y0*y0*y0*y0*y0*y0 + Carr[32][1]*y0*y0*y0*y0*y0*y0*y0;
 
             // TEMPORARY over-ride with a generalized Henon map (Gonchenko)
-            //x = y0;
-            //y = Henon_a - Henon_b*x0 - y0*y0 + Henon_R*x0*y0 + Henon_S*y0*y0*y0;
+            x = y0;
+            y = Henon_a - Henon_b*x0 - y0*y0 + Henon_R*x0*y0 + Henon_S*y0*y0*y0;
             // END of over-ride
 
             // TEMPORARY over-ride with inverse of generalized Henon map (Gonchenko)
@@ -846,14 +940,70 @@ public class Chua_Simul_3 extends JDialog
             //x = (Henon_a - x0*x0 - y0)/(Henon_b - Henon_R*x0);
             // END of over-ride
 
-            // TEMPORARY over-ride with a Henon map (Arrowsmith)
-            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + x0*x0*Math.sin(H_alpha);
+            // TEMPORARY over-ride with a Henon map (Arrowsmith p. 54) : Henon Eq.11
+            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + x0*x0*Math.sin(H_alpha);    // org code x'*x'
             //y = x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) - x0*x0*Math.cos(H_alpha);
+            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + y0*y0*Math.cos(H_alpha);      // org code y'*y'
+            //y = x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) + y0*y0*Math.sin(H_alpha);
+
+            // TEMPORARY over-ride with a Henon map (Arrowsmith p. 54) : Henon Eq.11
+            // general map as per p.17 of insert 'Henon_1969_map' Feb 20, 2026
+            //double H_beta = -H_alpha - Math.PI/4;           // beta is an adjustable rotation
+            //double H_beta = -H_alpha - Math.PI/2;
+            //double R = x0*Math.cos(H_alpha + H_beta) - y0*Math.sin(H_alpha + H_beta);
+            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) - R*R*Math.sin(H_beta);     // general rotation angle
+            //y = x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) - R*R*Math.cos(H_beta);
+
+            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + y0*y0*Math.cos(H_alpha);  // test code y'*y'
+            //y = x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) + y0*y0*Math.sin(H_alpha);
+            //double H_beta = -0.99*H_alpha;
+            //double R = (1 - Math.cos(4*(H_alpha + H_beta)))*x0*x0/2 + y0*y0;
+            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + Math.cos(H_alpha)*R; // new code y'*y'
+            //y = x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) + Math.sin(H_alpha)*R;
             // END of over-ride
 
+            //pt = map_transform();
+            //x = pt.x;
+            //y = pt.y;
+
+            // over-ride with a Henon map (Arrowsmith) (rotated CCW by (90 - alpha/2)
+            //double x_trans = x0*Math.cos(H_del) + y0*Math.sin(H_del);       // back-transform x'
+            //x = x0*Math.cos(H_alpha) - y0*Math.sin(H_alpha) + x_trans*x_trans*Math.sin(H_alpha + H_del);
+            //y = x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) - x_trans*x_trans*Math.cos(H_alpha + H_del);
+            // END of over-ride
+
+            // TEMPORARY over-ride with the inverse of a Henon map (Arrowsmith p. 54) : Henon Eq.14
+            //double x_trans =  x0*Math.cos(H_alpha - H_del) + y0*Math.sin(H_alpha - H_del);
+            //x =  x0*Math.cos(H_alpha) + y0*Math.sin(H_alpha) + Math.sin(H_del)*x_trans*x_trans;
+            //y = -x0*Math.sin(H_alpha) + y0*Math.cos(H_alpha) + Math.cos(H_del)*x_trans*x_trans;
+            // END of over-ride
+
+            // over-ride with a Henon map (Arrowsmith) (rotated CCW by (90 - alpha/2) (DO NOT USE - WRONG)
+            // expressed as a second-order d.e. in x, in the time sequence : (x2, x0, x)
+            // see: "Fourier Analysis of Henon 'sin_cos' map, p.13"
+            //x = 2*x0*Math.cos(H_alpha) - x2 + Math.cos(H_alpha/2)*(x0*x0 - x2*x2);
+            //y = (-x*Math.cos(H_alpha) + x0 + x2*x2*Math.sin(Math.PI/2 - H_alpha/2))/Math.sin(H_alpha);
+
+            // second-order d.e. in x, as above, but use formulas from p.16 (decouple Henon_1969)
+            //x = 2*x0*Math.cos(H_alpha) - x2 + Math.sin(H_alpha)*x0*x0;
+            //y = (-x*Math.cos(H_alpha) + x0)/Math.sin(H_alpha);
+            // this algorithm does NOT use y0
+
+            //pt = reflect(pt, H_alpha/2);
+            //pt = rotate(skew(reflect(pt, H_alpha/2), 1), H_alpha);       // reflect_skew_rotate Henon map
+            //pt = reflect(rotate(skew(reflect(pt, H_alpha/2), 1), H_alpha), H_alpha/2);       // reflect_skew_rotate Henon map
+            //pt = rotate(skew(pt, 1), H_alpha);       // implement normal Henon map
+            //pt = skew(rotate(pt, -H_alpha), -1);       // implement inverse Henon map
+            //pt = rotate(skew(pt, 0.5), H_alpha/2);       // implement half Henon map
+            //x = pt.x;
+            //y = pt.y;
+
             // TEMPORARY over-ride with a Delayed Logistic Map (Aronson)
+            //if (i < 10)
+            //    System.out.println(i + ", " + x0 + ", " + y0);
             //x = y0;
             //y = Delay_a*y0*(1 - x0);
+            //accumx += x;
             // END of over-ride
 
             if (invertChk.isSelected())
@@ -871,22 +1021,32 @@ public class Chua_Simul_3 extends JDialog
             ||  image.getWidth()/2 + xplt/range*image.getWidth()/2 > image.getWidth()
             ||  image.getHeight()/2 - yplt/range*image.getHeight()/2 < 0
             ||  image.getHeight()/2 - yplt/range*image.getHeight()/2 > image.getHeight())
-                System.out.println(xplt + ", " + yplt);
+                System.out.println("BAD: " + xplt + ", " + yplt);
             else
                 image.setRGB(image.getWidth()/2 + (int) (xplt/range*image.getWidth()/2), image.getHeight()/2  - (int) (yplt/range*image.getHeight()/2), Color.BLUE.getRGB());
+            //x2 = x0;                        // use ONLY for the second-order d.e. initilization
             x0 = x;
             y0 = y;
-            if (fout != null)
-                fout.println(iT + ", " + xplt + ", " + yplt);
             iT++;
+            if (fout != null)
+                fout.println(iT + ", " + xplt + ", " + yplt);           // normal output
+            //                    + ", " + ( xplt*Math.cos(H_alpha/2 + Math.PI/2) + yplt*Math.sin(H_alpha/2 + Math.PI/2))
+            //                    + ", " + (-xplt*Math.sin(H_alpha/2 + Math.PI/2) + yplt*Math.cos(H_alpha/2 + Math.PI/2)));                                 // rotated output
         }
+        //System.out.println("accumx ," + Delay_a + ", " + x0 + ", " + accumx);
         //int r = (int) (Math.sqrt(x0*x0 + y0*y0)/range*image.getWidth()/2);
         //DC.setColor(Color.blue);
+        //double scale = 2;
         DC.setColor(new Color(192, 128, 96));
         DC.drawLine(0, image.getHeight()/2, image.getWidth(), image.getHeight()/2);
         DC.drawLine(image.getWidth()/2, 0, image.getWidth()/2, image.getHeight());
         //DC.drawOval(image.getHeight()/2 - r, image.getWidth()/2 - r, 2*r, 2*r);
-        //DC.drawLine((int) (image.getWidth()/2*(1 - costheta)), (int) (image.getHeight()/2*(1 + sintheta)), (int) (image.getWidth()/2*(1 + costheta)), (int) (image.getHeight()/2*(1 - sintheta)));
+        //DC.drawLine((int) (image.getWidth()/2*(1 - scale*Math.cos(H_alpha/2))), (int) (image.getHeight()/2*(1 + scale*Math.sin(H_alpha/2))),
+        //            (int) (image.getWidth()/2*(1 + scale*Math.cos(H_alpha/2))), (int) (image.getHeight()/2*(1 - scale*Math.sin(H_alpha/2))));
+        //draw_cross (2*Math.tan(H_alpha/2), 2*Math.tan(H_alpha/2)*Math.tan(H_alpha/2), DC.getColor());
+        //image.setRGB(image.getWidth()/2   + (int) (2*Math.tan(H_alpha/2)/range*image.getWidth()/2),
+        //             image.getHeight()/2  - (int) (2*Math.tan(H_alpha/2)*Math.tan(H_alpha/2)/range*image.getHeight()/2), Color.MAGENTA.getRGB());
+        //plot_Logistic_boundary();
         lblImage.repaint();
         if (fout != null)
             fout.close();

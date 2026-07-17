@@ -25,7 +25,7 @@ public class Main
 {
     private static Properties pgmProp = new Properties();
     protected static boolean skew_transform = false;
-    protected static final double mu = 4.52028812; // 6.235386;        // Glass mu parameter (Langford_1977)
+    protected static final double mu = 4.1; // 39.46; // 6.0; // 4.52028812; // 6.235386;        // Glass mu parameter (Langford_1977)
     protected static final double a = -1; // 1;         // parameters
     protected static double alpha, beta, gamma, c;      // parameters
     protected static double alpha_s, alpha_e;           // bifurcate range

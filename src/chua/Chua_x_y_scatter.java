@@ -286,6 +286,7 @@ public class Chua_x_y_scatter extends JDialog
             {
                 @Override public void keyPressed(KeyEvent e)
                 {
+                    //System.out.println("keyPressed = " + e.getKeyCode());
                     if (e.getKeyCode() == KeyEvent.VK_ESCAPE)
                     {
                         Main.save_prefs();
