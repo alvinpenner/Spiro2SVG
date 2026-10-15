@@ -128,7 +128,17 @@ public class run_buckle
         wx[iter + 1] = y + (l1 + 2*l2 + 2*l3 + l4)/6;
     }
 
-    private static double Simpson(double[] v)
+    protected static double Trapezoidal(double[] v)
+    {
+        // integrate vector v (any N > 1)
+        double ret = 0;
+        //System.out.println("v " + v.length);
+        for (int i = 0; i < v.length - 1; i += 1)
+            ret += v[i] + v[i + 1];
+        return ret/(v.length - 1)/2;
+    }
+
+    protected static double Simpson(double[] v)
     {
         // integrate vector v (assume N is even)
         double ret = 0;

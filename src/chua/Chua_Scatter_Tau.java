@@ -38,8 +38,9 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Henon_Gonchenko\\";
     //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Henon_sin_cos\\";
     //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\DL_xbar\\";
-    private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Henon_Gonchenko\\final_GHM\\";
-    //private static final String fDir = "\\Windows\\Temp\\";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Henon_Gonchenko\\final_GHM\\";
+    private static final String fDir = "\\Windows\\Temp\\";
+    //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\Chaos_Rotation_Number\\Figs\\";
     //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\uniform_quadratic\\";
     //private static final String fDir = "\\APP\\Java\\ChuaOscillator\\3D_curve_fit\\";
     //private static final String fName = "scatter_angle_99.98_530999600";
@@ -105,7 +106,9 @@ public class Chua_Scatter_Tau extends JDialog
     //private static final String fName = "Henon_1969_scatter_0.24_-0.3490_-0.2732";
     //private static final String fName = "Henon_scatter_1.89_0.93225_-0.1_0.0";
     //private static final String fName = "Chua_Simul_scatter_0_2.174_12";
-    private static final String fName = "Henon_scatter_-0.36_1.0249778_-0.1_0.0";
+    //private static final String fName = "Henon_scatter_-0.36_1.02005_-0.1_0.0";
+    //private static final String fName = "Fig1_DL_raw_2.25531";
+    private static final String fName = "DL_raw_2.2553";
 
     private static final JLabel lblfile = new JLabel("file = '" + fName + "'");
     private static final JLabel lblangle = new JLabel(" : angle = ");
@@ -115,7 +118,7 @@ public class Chua_Scatter_Tau extends JDialog
     private static String source;
     private static double alpha, beta, gamma, a, c, delt, Nhdr, eig, angle;
     private static double ymin = -120; //30; // -100; // 0;
-    private static double ymax = -30; // 90;
+    private static double ymax = 0; // 90;
 
     public Chua_Scatter_Tau()
     {
@@ -128,8 +131,8 @@ public class Chua_Scatter_Tau extends JDialog
         DC.clearRect(0, 0, image.getWidth(), image.getHeight());
         lblImage.setBorder(BorderFactory.createEtchedBorder());
 
-        //slider_start = new JSlider(JSlider.HORIZONTAL, 0, Nfinal, 3);       // set start to test for resonance 1/7
-        slider_start = new JSlider(JSlider.HORIZONTAL, 0, Nfinal, 0);       // set start to test for resonance 1/7
+        slider_start = new JSlider(JSlider.HORIZONTAL, 0, Nfinal, 1);       // set start to test for resonance 1/7
+        //slider_start = new JSlider(JSlider.HORIZONTAL, 0, Nfinal, 0);       // set start to test for resonance 1/7
         slider_start.setMajorTickSpacing(Nfinal/10);
         slider_start.setMinorTickSpacing(1);
         slider_start.setPaintTicks(true);
@@ -310,12 +313,12 @@ public class Chua_Scatter_Tau extends JDialog
 
         int total = 0;
         for (i = 0; i < 360; i++)
-            if (count[i] > 0 && false)
+            if (count[i] > 0 && !false)
             {
                 total++;
                 System.out.println(i + ", " + count[i] + ", " + average[i] + ", " + count[i]*average[i]);
             }
-        //System.out.println("total =" + total);
+        System.out.println("total = " + total);
 
         //System.out.println("calc_dist_" + source + ", " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + a + ", " + c + ", " + delt + ", " + eig + ", " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap);
         System.out.println("calc_dist_" + source + ", " + (int) Nhdr + ", " + nstart + ", " + nend + ", " + alpha + ", " + beta + ", " + gamma + ", " + x_av + ", NaN, NaN, NaN, " + angle + ", " + total_inc/(nend - nstart - 1) + ", " + totalwrap/nwrap);

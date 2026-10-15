@@ -10,7 +10,7 @@ from numpy import linalg as LA
 import math
 
 #beta = 1.08 # 0.9739453 # 0.95238
-alpha = -0.20 # -0.36 # -0.20
+alpha = -0.36 # -0.36 # -0.20
 R     = -0.1
 #alpha = (beta - 1)*(beta - 1 + 2*R)/R/R
 beta = 1 - R + R*np.sqrt(1 + alpha)        # Gonchenko Sec. 3.1.1
@@ -75,3 +75,10 @@ print ('theory reduced form     final,', num, ',', den, ',', num/den)
 #Maxima_1_1 = (-8*C2 - 4)*S1 + 12*C1*S1
 #theory_1_1 = -4*S1*(C1 - 1)*(4*C1 + 1)
 #print (theory_1_1, ',', Maxima_1_1)
+
+# this is the solution obtained from 'Henon_Gonchenko\GHM_dw_db_using_SymPy_no_b0.py'
+print ()
+sol_0 = (4*C1**4*R**2 + 2*C1**3*R**3 + 2*C1**3*R**2 - 16*C1**3*R + C1**2*R**3 + 4*C1**2*R**2*S1**2 - 4*C1**2*R**2 + 16*C1**2 + 2*C1*R**3*S1**2 + C1*R**3 - 6*C1*R**2*S1**2 - 7*C1*R**2 + 12*C1*R - 12*C1 - R**3*S1**2 + 2*R**2*S1**2 - 3*R**2 + 8*R - 4)/(4*C1**2*R**3*S1 - 12*C1**2*R**2*S1 + 8*C1**2*R*S1 - 2*C1*R**3*S1 + 6*C1*R**2*S1 - 4*C1*R*S1 - 2*R**3*S1 + 6*R**2*S1 - 4*R*S1)
+print ('theory from SymPy sol_0,', sol_0)
+sol_1 = (-4*C1**2*R - C1*R**2 + 3*C1*R + 4*C1 + 2*R - 4)/(C1*R**3 - 3*C1*R**2 + 2*C1*R - R**3 + 3*R**2 - 2*R)
+print ('theory from SymPy sol_1,', sol_1)

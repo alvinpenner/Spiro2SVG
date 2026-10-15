@@ -29,12 +29,17 @@ def func(x):
         wrap[j + deg] = fb[j]
     #print ('wrap           [i]:', fw, ',', wrap)
     M = np.full((deg + 1, 2*deg + 1), complex(0, 0))            # array of coeff of constraints
+    disp = np.full((deg + 1, 2*deg + 1), 0)
     for j in range (deg + 1):
         M[j][deg - j] += fb[j]
         M[j][deg]     -= a*fb[j]
+        disp[j][deg - j] = 1
+        disp[j][deg]     = 1
         for k in range (j, 2*deg + 1):
             M[j][k] += a*wrap[k]*wrap[2*deg - k + j]
+            disp[j][k] = 1
     #print ('M =', M, '\n')
+    #print ('disp\n', disp)
 
     ret = np.full(deg + 1, complex(0, 0))                       # array of complex returns
     for j in range (deg + 1):
@@ -55,8 +60,8 @@ def func(x):
     #print ('internal arr:', arr)
     return arr
 
-N = 3
-a = 2.249 # 3
+N = 6
+a = 2.235 # 2.1 # 2.249 # 3
 w = np.arccos((a - 1)/2)
 b0 = 1/a
 b1 = np.sqrt((a - 2)/a/a/(a - 1))
@@ -65,8 +70,10 @@ data_in = [w*180/np.pi, b0, b1]
 if N > 1:
     for i in range (2*(N - 1)):
         data_in.append(0)
+#data_in[0] = -data_in[0]
 #data_in = [0, 0.14961085948676142 , 0.13659693701379186, 0.113546733269272, 0, 0.0844215497293165, 0, 0, 0, 0, 0]
-data_in = [40.37351966920139 , 0.3466225233198259 , 0.21587455604003164, 0.07341036725540125, -0.04725885602123077, 0.0006885692623692628, -0.03319]
+#data_in = [40.37351966920139 , 0.3466225233198259 , 0.21587455604003164, 0.07341036725540125, -0.04725885602123077, 0.0006885692623692628, -0.03319]
+data_in = [50.69327006915021 , 0.42945258153373506 , 0.2019311177952961, 0.03868434306484234, -0.042095744984615976, -0.009968562447054729, -0.014163363012286444, -0.0051160614529509344, 0.005677751754651619, 0.006709021067862725, 0.003767482507654635, 0.008881050302937616, -0.00514]
 print ('DL init = ', N, ',', a, ',', data_in, ',', func(data_in))
 
 root = fsolve(func, data_in, full_output = False)
